@@ -1,0 +1,4255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agencia de Viagens - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --primary-light: #e8f0fe;
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --success: #1e8e3e;
+            --success-light: #e6f4ea;
+            --warning: #f9ab00;
+            --warning-light: #fef7e0;
+            --gray-50: #f8f9fa;
+            --gray-100: #f1f3f4;
+            --gray-200: #e8eaed;
+            --gray-300: #dadce0;
+            --gray-500: #9aa0a6;
+            --gray-700: #5f6368;
+            --gray-900: #202124;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-900);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--gray-900);
+            color: white;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 .icon {
+            font-size: 24px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 8px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-500);
+            padding: 8px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--gray-300);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .nav-item.active .badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: var(--gray-300);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-footer button:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 32px;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-left h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.blue { background: var(--primary-light); }
+        .stat-icon.green { background: var(--success-light); }
+        .stat-icon.orange { background: var(--warning-light); }
+        .stat-icon.red { background: var(--danger-light); }
+
+        .stat-info h3 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-info p {
+            font-size: 13px;
+            color: var(--gray-700);
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c5221f;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1a7e37;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-500);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            justify-content: center;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 13px;
+            width: 260px;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--gray-50);
+        }
+
+        th {
+            padding: 12px 24px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        td {
+            padding: 14px 24px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-empty {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--gray-500);
+        }
+
+        .table-empty .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .table-empty p {
+            font-size: 14px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-badge.inactive {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .status-badge.pending {
+            background: var(--warning-light);
+            color: #e37400;
+        }
+
+        .status-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--gray-700);
+            transition: background 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-100);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+        }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: none;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Page views */
+        .page-view {
+            display: none;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        /* Client card info */
+        .client-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: var(--gray-900);
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--gray-900);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            min-width: 280px;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--primary); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Confirm Dialog */
+        .confirm-dialog .modal {
+            max-width: 400px;
+        }
+
+        .confirm-dialog .modal-body {
+            text-align: center;
+            padding: 32px 24px;
+        }
+
+        .confirm-dialog .confirm-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .confirm-dialog .confirm-text {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .confirm-dialog .confirm-subtext {
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+
+        /* Mobile */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .client-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 10px 12px;
+            }
+        }
+
+        /* Overflow handling for table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        /* File input hidden */
+        #importInput {
+            display: none;
+        }
+
+        /* Action buttons in table */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Highlight row */
+        tbody tr.highlight {
+            background: var(--primary-light);
+        }
+
+        /* Embarques checklist */
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .checklist-item:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .checklist-item.checked {
+            background: var(--success-light);
+            border-color: var(--success);
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--success);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checklist-item label {
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .checklist-item.checked label {
+            text-decoration: line-through;
+            color: var(--gray-500);
+        }
+
+        .embarque-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .embarque-header .embarque-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .embarque-header .embarque-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .embarque-header .embarque-info p {
+            font-size: 13px;
+            color: var(--gray-700);
+        }
+
+        .embarque-progress {
+            margin-bottom: 20px;
+        }
+
+        .embarque-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .embarque-progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .embarque-progress-label {
+            font-size: 12px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .embarque-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .embarque-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .embarque-detail-item .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-500);
+        }
+
+        .embarque-detail-item .value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .embarque-obs {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--warning-light);
+            border-radius: var(--radius);
+            font-size: 13px;
+        }
+
+        .embarque-obs .obs-label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .embarque-obs textarea {
+            width: 100%;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            outline: none;
+        }
+
+        .embarque-obs textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        @media (max-width: 768px) {
+            .checklist-grid {
+                grid-template-columns: 1fr;
+            }
+            .embarque-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cotação upload */
+        .cotacao-upload-area {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: border-color 0.15s ease;
+        }
+
+        .cotacao-upload-area:hover {
+            border-color: var(--primary);
+        }
+
+        .cotacao-imagens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .cotacao-imagens-grid:empty {
+            display: none;
+        }
+
+        .cotacao-img-item {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            aspect-ratio: 1;
+            cursor: pointer;
+        }
+
+        .cotacao-img-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cotacao-img-item .remove-img {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .cotacao-img-item:hover .remove-img {
+            opacity: 1;
+        }
+
+        /* HTML Preview Modal */
+        .html-preview-content {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .html-preview-content table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .html-preview-content th,
+        .html-preview-content td {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .html-preview-content th {
+            background: var(--gray-50);
+            font-weight: 600;
+        }
+
+        /* HTML Editor (contenteditable) */
+        .html-editor {
+            min-height: 120px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            background: white;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .html-editor:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .html-editor:empty:before {
+            content: attr(data-placeholder);
+            color: var(--gray-500);
+            pointer-events: none;
+        }
+
+        .html-editor table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+        }
+
+        .html-editor th,
+        .html-editor td {
+            padding: 6px 10px;
+            border: 1px solid var(--gray-300);
+            font-size: 12px;
+        }
+
+        .html-editor th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+
+        .html-editor img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Excel Import */
+        .excel-map-select {
+            padding: 8px 10px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 13px;
+            background: white;
+            width: 100%;
+            outline: none;
+        }
+
+        .excel-map-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .excel-status-ok {
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .excel-status-warn {
+            color: var(--warning);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1><span class="icon">✈</span> TravelManager</h1>
+            <p>Painel de Controle</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <button class="nav-item active" onclick="showPage('dashboard')">
+                    <span class="nav-icon">📊</span> Dashboard
+                </button>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Gestão</div>
+                <button class="nav-item" onclick="showPage('clientes')">
+                    <span class="nav-icon">👥</span> Clientes
+                    <span class="badge" id="clientesCount">0</span>
+                </button>
+                <button class="nav-item" onclick="showPage('bilhetes')">
+                    <span class="nav-icon">🎫</span> Bilhetes
+                    <span class="badge" id="bilhetesCount">0</span>
+                </button>
+                <button class="nav-item" onclick="showPage('cotacoes')">
+                    <span class="nav-icon">📋</span> Cotações
+                    <span class="badge" id="cotacoesCount">0</span>
+                </button>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Operações</div>
+                <button class="nav-item" onclick="showPage('embarques')">
+                    <span class="nav-icon">🛫</span> Embarques
+                    <span class="badge" id="embarquesCount">0</span>
+                </button>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="exportData()">
+                <span>📤</span> Exportar Dados
+            </button>
+            <button onclick="document.getElementById('importInput').click()" style="margin-top: 8px;">
+                <span>📥</span> Importar Dados
+            </button>
+            <input type="file" id="importInput" accept=".json" onchange="importData(event)">
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                <h2 id="pageTitle">Dashboard</h2>
+            </div>
+            <div class="header-right">
+                <span id="syncBadge" style="font-size: 12px; color: var(--gray-600); display: flex; align-items: center; margin-right: 16px; padding: 4px 10px; background: var(--gray-50); border-radius: 16px; border: 1px solid var(--gray-200);">
+                </span>
+                <span id="currentDate" style="font-size: 13px; color: var(--gray-700);"></span>
+            </div>
+        </header>
+
+        <!-- Dashboard Page -->
+        <div class="page-view active" id="page-dashboard">
+            <div class="content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👥</div>
+                        <div class="stat-info">
+                            <h3 id="statClientes">0</h3>
+                            <p>Total de Clientes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">🎫</div>
+                        <div class="stat-info">
+                            <h3 id="statBilhetes">0</h3>
+                            <p>Bilhetes Não Utilizados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✈</div>
+                        <div class="stat-info">
+                            <h3 id="statValorTotal">R$ 0</h3>
+                            <p>Valor Total em Bilhetes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">⏰</div>
+                        <div class="stat-info">
+                            <h3 id="statProxVencimento">0</h3>
+                            <p>Vencem em 30 dias</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Clients -->
+                <div class="table-container" style="margin-bottom: 24px;">
+                    <div class="table-header">
+                        <h3>Últimos Clientes Cadastrados</h3>
+                        <button class="btn btn-outline btn-sm" onclick="showPage('clientes')">Ver Todos →</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Telefone</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardClientesTable">
+                                <tr>
+                                    <td colspan="4" class="table-empty">
+                                        <div class="empty-icon">👥</div>
+                                        <p>Nenhum cliente cadastrado ainda</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Tickets -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Bilhetes que Vencem em Breve</h3>
+                        <button class="btn btn-outline btn-sm" onclick="showPage('bilhetes')">Ver Todos →</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Rota</th>
+                                    <th>Data do Voo</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardBilhetesTable">
+                                <tr>
+                                    <td colspan="4" class="table-empty">
+                                        <div class="empty-icon">🎫</div>
+                                        <p>Nenhum bilhete registrado ainda</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clientes Page -->
+        <div class="page-view" id="page-clientes">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👥</div>
+                        <div class="stat-info">
+                            <h3 id="statClientesPage">0</h3>
+                            <p>Total de Clientes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✓</div>
+                        <div class="stat-info">
+                            <h3 id="statClientesAtivos">0</h3>
+                            <p>Clientes Ativos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">✕</div>
+                        <div class="stat-info">
+                            <h3 id="statClientesInativos">0</h3>
+                            <p>Clientes Inativos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>CRM de Clientes</h3>
+                        <div class="table-actions">
+                            <select id="filterGrupo" onchange="filterClientes()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todos os Grupos</option>
+                            </select>
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar clientes..." id="searchClientes" oninput="filterClientes()">
+                            </div>
+                            <button class="btn btn-outline" id="btnToggleView" onclick="toggleClientesView()" title="Alternar entre lista e grupos">
+                                📁 Agrupar
+                            </button>
+                            <button class="btn btn-primary" onclick="openClienteModal()">
+                                <span>+</span> Novo Cliente
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper" id="clientesListView">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Grupo</th>
+                                    <th>Telefone</th>
+                                    <th>Passaporte</th>
+                                    <th>Validade</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesTable">
+                                <tr>
+                                    <td colspan="7" class="table-empty">
+                                        <div class="empty-icon">👥</div>
+                                        <p>Nenhum cliente cadastrado. Clique em "Novo Cliente" para começar.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="clientesGroupView" style="display: none; padding: 16px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bilhetes Page -->
+        <div class="page-view" id="page-bilhetes">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon orange">🎫</div>
+                        <div class="stat-info">
+                            <h3 id="statBilhetesPage">0</h3>
+                            <p>Total de Bilhetes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">✈</div>
+                        <div class="stat-info">
+                            <h3 id="statBilhetesValidos">0</h3>
+                            <p>Válidos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">⏰</div>
+                        <div class="stat-info">
+                            <h3 id="statBilhetesProxVencer">0</h3>
+                            <p>Vencem em 30 dias</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">💰</div>
+                        <div class="stat-info">
+                            <h3 id="statValorBilhetes">R$ 0</h3>
+                            <p>Valor Total</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Bilhetes Não Utilizados</h3>
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar bilhetes..." id="searchBilhetes" oninput="filterBilhetes()">
+                            </div>
+                            <button class="btn btn-primary" onclick="openBilheteModal()">
+                                <span>+</span> Novo Bilhete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Rota</th>
+                                    <th>Companhia</th>
+                                    <th>Data do Voo</th>
+                                    <th>Classe</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bilhetesTable">
+                                <tr>
+                                    <td colspan="8" class="table-empty">
+                                        <div class="empty-icon">🎫</div>
+                                        <p>Nenhum bilhete registrado. Clique em "Novo Bilhete" para começar.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cotações Page -->
+        <div class="page-view" id="page-cotacoes">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">📋</div>
+                        <div class="stat-info">
+                            <h3 id="statCotacoesTotal">0</h3>
+                            <p>Total de Cotações</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">⏳</div>
+                        <div class="stat-info">
+                            <h3 id="statCotacoesPendentes">0</h3>
+                            <p>Pendentes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">📤</div>
+                        <div class="stat-info">
+                            <h3 id="statCotacoesEnviadas">0</h3>
+                            <p>Enviadas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✅</div>
+                        <div class="stat-info">
+                            <h3 id="statCotacoesEmitidas">0</h3>
+                            <p>Emitidas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">❌</div>
+                        <div class="stat-info">
+                            <h3 id="statCotacoesCanceladas">0</h3>
+                            <p>Canceladas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Cotações</h3>
+                        <div class="table-actions">
+                            <select id="filterCotacoesStatus" onchange="filterCotacoes()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todos os Status</option>
+                                <option value="pendente">Pendentes</option>
+                                <option value="enviada">Enviadas</option>
+                                <option value="emitida">Emitidas</option>
+                                <option value="cancelada">Canceladas</option>
+                            </select>
+                            <select id="filterCotacoesGrupo" onchange="filterCotacoes()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todos os Grupos</option>
+                            </select>
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar cotações..." id="searchCotacoes" oninput="filterCotacoes()">
+                            </div>
+                            <button class="btn btn-primary" onclick="openCotacaoModal()">
+                                <span>+</span> Nova Cotação
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Grupo</th>
+                                    <th>Destino</th>
+                                    <th>Data da Viagem</th>
+                                    <th>Pax</th>
+                                    <th>Valor Estimado</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cotacoesTable">
+                                <tr>
+                                    <td colspan="8" class="table-empty">
+                                        <div class="empty-icon">📋</div>
+                                        <p>Nenhuma cotação registrada. Clique em "Nova Cotação" para começar.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Embarques Page -->
+        <div class="page-view" id="page-embarques">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">🛫</div>
+                        <div class="stat-info">
+                            <h3 id="statEmbarquesTotal">0</h3>
+                            <p>Embarques Próximos (30 dias)</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">📋</div>
+                        <div class="stat-info">
+                            <h3 id="statEmbarquesPendentes">0</h3>
+                            <p>Com Pendências</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✅</div>
+                        <div class="stat-info">
+                            <h3 id="statEmbarquesProntos">0</h3>
+                            <p>Prontos para Embarque</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">⚠️</div>
+                        <div class="stat-info">
+                            <h3 id="statEmbarquesUrgentes">0</h3>
+                            <p>Embarcam em até 7 dias</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Embarques dos Próximos 30 Dias</h3>
+                        <div class="table-actions">
+                            <input type="file" id="importExcelInput" accept=".xlsx,.xls,.csv" style="display: none;" onchange="handleExcelImport(event)">
+                            <button class="btn btn-outline" onclick="document.getElementById('importExcelInput').click()">
+                                📊 Importar Excel
+                            </button>
+                            <select id="filterEmbarquesStatus" onchange="filterEmbarques()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todos</option>
+                                <option value="pendente">Com Pendências</option>
+                                <option value="pronto">Prontos</option>
+                            </select>
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar embarques..." id="searchEmbarques" oninput="filterEmbarques()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Rota</th>
+                                    <th>Data do Voo</th>
+                                    <th>Dias</th>
+                                    <th>Documentos</th>
+                                    <th>Assentos</th>
+                                    <th>Check-in</th>
+                                    <th>Bagagem</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="embarquesTable">
+                                <tr>
+                                    <td colspan="9" class="table-empty">
+                                        <div class="empty-icon">🛫</div>
+                                        <p>Nenhum embarque programado para os próximos 30 dias.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cliente Modal -->
+    <div class="modal-overlay" id="clienteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="clienteModalTitle">Novo Cliente</h3>
+                <button class="modal-close" onclick="closeClienteModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="clienteForm" class="form-grid">
+                    <input type="hidden" id="clienteId">
+                    <div class="form-group">
+                        <label for="clienteNome">Nome Completo *</label>
+                        <input type="text" id="clienteNome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteEmail">Email *</label>
+                        <input type="email" id="clienteEmail" placeholder="email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteTelefone">Telefone *</label>
+                        <input type="tel" id="clienteTelefone" placeholder="(00) 00000-0000">
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteCPF">CPF</label>
+                        <input type="text" id="clienteCPF" placeholder="000.000.000-00">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientePassaporte">Passaporte</label>
+                        <input type="text" id="clientePassaporte" placeholder="AB1234567">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientePassaporteValidade">Validade do Passaporte</label>
+                        <input type="date" id="clientePassaporteValidade">
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteNascimento">Data de Nascimento</label>
+                        <input type="date" id="clienteNascimento">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="clienteEndereco">Endereço</label>
+                        <input type="text" id="clienteEndereco" placeholder="Rua, Número, Cidade - Estado">
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteStatus">Status</label>
+                        <select id="clienteStatus">
+                            <option value="ativo">Ativo</option>
+                            <option value="inativo">Inativo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteGrupo">Grupo / Família / Empresa</label>
+                        <input type="text" id="clienteGrupo" placeholder="Ex: Família Abdalla" list="gruposList">
+                        <datalist id="gruposList"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="clienteOrigem">Origem (Como nos conheceu)</label>
+                        <select id="clienteOrigem">
+                            <option value="">Selecione...</option>
+                            <option value="indicacao">Indicação</option>
+                            <option value="redes-sociais">Redes Sociais</option>
+                            <option value="google">Google</option>
+                            <option value="publicidade">Publicidade</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="clienteObs">Observações</label>
+                        <textarea id="clienteObs" placeholder="Preferências, restrições, viagens anteriores..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeClienteModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveCliente()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bilhete Modal -->
+    <div class="modal-overlay" id="bilheteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="bilheteModalTitle">Novo Bilhete</h3>
+                <button class="modal-close" onclick="closeBilheteModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="bilheteForm" class="form-grid">
+                    <input type="hidden" id="bilheteId">
+                    <div class="form-group full-width">
+                        <label for="bilheteCliente">Cliente *</label>
+                        <select id="bilheteCliente" required>
+                            <option value="">Selecione um cliente...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteOrigem">Origem (IATA) *</label>
+                        <input type="text" id="bilheteOrigem" required placeholder="GRU" maxlength="3" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteDestino">Destino (IATA) *</label>
+                        <input type="text" id="bilheteDestino" required placeholder="CDG" maxlength="3" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteCompanhia">Companhia Aérea *</label>
+                        <input type="text" id="bilheteCompanhia" required placeholder="LATAM, GOL, AZUL...">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteNumero">Nº do Bilhete</label>
+                        <input type="text" id="bilheteNumero" placeholder="123-4567890123">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteDataVoo">Data do Voo</label>
+                        <input type="date" id="bilheteDataVoo">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteClasse">Classe</label>
+                        <select id="bilheteClasse">
+                            <option value="economica">Econômica</option>
+                            <option value="economica-premium">Econômica Premium</option>
+                            <option value="business">Business</option>
+                            <option value="primeira">Primeira Classe</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteValor">Valor *</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="number" id="bilheteValor" required min="0" step="0.01" placeholder="0.00" style="flex: 1;">
+                            <select id="bilheteMoeda" style="width: 80px; padding: 8px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; background: white;">
+                                <option value="BRL">BRL</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="ARS">ARS</option>
+                                <option value="CLP">CLP</option>
+                                <option value="MXN">MXN</option>
+                                <option value="JPY">JPY</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteStatus">Status</label>
+                        <select id="bilheteStatus">
+                            <option value="nao-utilizado">Não Utilizado</option>
+                            <option value="utilizado">Utilizado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="bilheteObs">Observações</label>
+                        <textarea id="bilheteObs" placeholder="Restrições, bagagem, conexões..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeBilheteModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveBilhete()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cliente Detail Modal -->
+    <div class="modal-overlay" id="clienteDetailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Detalhes do Cliente</h3>
+                <button class="modal-close" onclick="closeClienteDetailModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="client-detail-grid" id="clienteDetailContent">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeClienteDetailModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="modal-overlay confirm-dialog" id="confirmModal">
+        <div class="modal">
+            <div class="modal-body">
+                <div class="confirm-icon" id="confirmIcon">⚠️</div>
+                <div class="confirm-text" id="confirmText">Tem certeza?</div>
+                <div class="confirm-subtext" id="confirmSubtext">Esta ação não pode ser desfeita.</div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-outline" onclick="closeConfirm()">Cancelar</button>
+                <button class="btn btn-danger" id="confirmBtn" onclick="confirmAction()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cotação Modal -->
+    <div class="modal-overlay" id="cotacaoModal">
+        <div class="modal" style="max-width: 720px;">
+            <div class="modal-header">
+                <h3 id="cotacaoModalTitle">Nova Cotação</h3>
+                <button class="modal-close" onclick="closeCotacaoModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="cotacaoForm" class="form-grid">
+                    <input type="hidden" id="cotacaoId">
+                    <div class="form-group full-width">
+                        <label for="cotacaoCliente">Cliente (opcional)</label>
+                        <select id="cotacaoCliente">
+                            <option value="">Sem cliente cadastrado</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="cotacaoClienteNome">Nome do Cliente (se não cadastrado)</label>
+                        <input type="text" id="cotacaoClienteNome" placeholder="Nome do cliente para referência">
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoDestino">Destino *</label>
+                        <input type="text" id="cotacaoDestino" required placeholder="Ex: Paris, França">
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoOrigem">Origem</label>
+                        <input type="text" id="cotacaoOrigem" placeholder="Ex: São Paulo, Brasil">
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoDataIda">Data de Ida *</label>
+                        <input type="date" id="cotacaoDataIda" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoDataVolta">Data de Volta</label>
+                        <input type="date" id="cotacaoDataVolta">
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoPax">Nº de Passageiros *</label>
+                        <input type="number" id="cotacaoPax" required min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoTipoViagem">Tipo de Viagem</label>
+                        <select id="cotacaoTipoViagem">
+                            <option value="lazer">Lazer</option>
+                            <option value="business">Business</option>
+                            <option value="lua-de-mel">Lua de Mel</option>
+                            <option value="familia">Família</option>
+                            <option value="grupo">Grupo</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoValorEstimado">Valor Estimado (R$)</label>
+                        <input type="number" id="cotacaoValorEstimado" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="cotacaoStatus">Status</label>
+                        <select id="cotacaoStatus">
+                            <option value="pendente">Pendente</option>
+                            <option value="enviada">Enviada</option>
+                            <option value="emitida">Emitida</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="cotacaoObs">Observações</label>
+                        <textarea id="cotacaoObs" placeholder="Hotéis, passeios, restrições, preferências do cliente..."></textarea>
+                    </div>
+                </form>
+
+                <!-- Cotação Enviada -->
+                <div style="margin-top: 20px; border-top: 1px solid var(--gray-200); padding-top: 20px;">
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">📎 Cotação Enviada</h4>
+                    <p style="font-size: 12px; color: var(--gray-500); margin-bottom: 12px;">Cole o HTML da cotação enviada ou envie imagens (JPEG/PNG) para referência.</p>
+
+                    <div class="form-group full-width" style="margin-bottom: 12px;">
+                        <label>Conteúdo HTML da Cotação</label>
+                        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                            <button type="button" class="btn btn-outline btn-sm" id="btnHtmlMode" onclick="toggleHtmlMode()">📝 Modo Código</button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="previewCotacaoHtml()">👁 Visualizar</button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="clearCotacaoHtml()">🗑️ Limpar</button>
+                        </div>
+                        <div id="cotacaoHtmlEditor" class="html-editor" contenteditable="true" data-placeholder="Cole aqui a cotação enviada do Outlook (com formatação)..."></div>
+                        <textarea id="cotacaoHtml" style="display: none;" rows="6" placeholder="Código HTML da cotação..."></textarea>
+                    </div>
+
+                    <div class="form-group full-width" style="margin-bottom: 12px;">
+                        <label>Imagens da Cotação</label>
+                        <div class="cotacao-upload-area" id="cotacaoUploadArea">
+                            <input type="file" id="cotacaoImagens" accept="image/*" multiple style="display: none;" onchange="handleCotacaoImagens(event)">
+                            <button type="button" class="btn btn-outline" onclick="document.getElementById('cotacaoImagens').click()">
+                                📷 Adicionar Imagens (JPEG, PNG)
+                            </button>
+                            <div id="cotacaoImagensPreview" class="cotacao-imagens-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeCotacaoModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveCotacao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HTML Preview Modal -->
+    <div class="modal-overlay" id="htmlPreviewModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>Visualização da Cotação</h3>
+                <button class="modal-close" onclick="closeHtmlPreview()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="html-preview-content" id="htmlPreviewContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeHtmlPreview()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel Import Modal -->
+    <div class="modal-overlay" id="excelImportModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>Importar Embarques do Excel</h3>
+                <button class="modal-close" onclick="closeExcelImportModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Column Mapping -->
+                <div id="excelStep1">
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">📋 Mapeamento de Colunas</h4>
+                    <p style="font-size: 12px; color: var(--gray-500); margin-bottom: 16px;">Mapeie as colunas do Excel para os campos do sistema. As linhas de exemplo são as 3 primeiras do arquivo.</p>
+
+                    <div class="form-grid" style="margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label>Cliente (Coluna)</label>
+                            <select id="mapColCliente" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Destino (Coluna)</label>
+                            <select id="mapColDestino" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Origem (Coluna)</label>
+                            <select id="mapColOrigem" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Data do Voo (Coluna)</label>
+                            <select id="mapColDataVoo" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Companhia (Coluna)</label>
+                            <select id="mapColCompanhia" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nº Bilhete (Coluna)</label>
+                            <select id="mapColNumero" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Classe (Coluna)</label>
+                            <select id="mapColClasse" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nº Voo (Coluna)</label>
+                            <select id="mapColVoo" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Horário (Coluna)</label>
+                            <select id="mapColHorario" class="excel-map-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor (Coluna)</label>
+                            <select id="mapColValor" class="excel-map-select"></select>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">👀 Pré-visualização (3 primeiras linhas)</h4>
+                    <div style="overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 16px;">
+                        <table id="excelPreviewTable" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <thead id="excelPreviewHead"></thead>
+                            <tbody id="excelPreviewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Step 2: Data Preview -->
+                <div id="excelStep2" style="display: none;">
+                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ Embarques para Importar</h4>
+                    <p style="font-size: 12px; color: var(--gray-500); margin-bottom: 12px;">Revise os dados antes de importar. <span id="excelTotalCount"></span> registro(s) encontrado(s).</p>
+                    <div style="overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius); max-height: 400px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <thead style="background: var(--gray-50); position: sticky; top: 0;">
+                                <tr>
+                                    <th style="padding: 10px; border-bottom: 1px solid var(--gray-200); text-align: left;">Cliente</th>
+                                    <th style="padding: 10px; border-bottom: 1px solid var(--gray-200); text-align: left;">Rota</th>
+                                    <th style="padding: 10px; border-bottom: 1px solid var(--gray-200); text-align: left;">Data Voo</th>
+                                    <th style="padding: 10px; border-bottom: 1px solid var(--gray-200); text-align: left;">Companhia</th>
+                                    <th style="padding: 10px; border-bottom: 1px solid var(--gray-200); text-align: left;">Nº Bilhete</th>
+                                    <th style="padding: 10px; border-bottom: 1px solid var(--gray-200); text-align: left;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelDataBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeExcelImportModal()">Cancelar</button>
+                <button class="btn btn-outline" id="excelBackBtn" onclick="excelGoStep1()" style="display: none;">← Voltar</button>
+                <button class="btn btn-primary" id="excelNextBtn" onclick="excelGoStep2()">Próximo →</button>
+                <button class="btn btn-success" id="excelImportBtn" onclick="confirmExcelImport()" style="display: none;">📥 Importar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal-overlay" id="imgPreviewModal" onclick="closeImgPreview()">
+        <div style="max-width: 90vw; max-height: 90vh; cursor: pointer;">
+            <img id="imgPreviewSrc" style="max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        </div>
+    </div>
+
+    <!-- Embarque Detail Modal -->
+    <div class="modal-overlay" id="embarqueModal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>acompanhamento do Embarque</h3>
+                <button class="modal-close" onclick="closeEmbarqueModal()">✕</button>
+            </div>
+            <div class="modal-body" id="embarqueModalBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEmbarqueModal()">Fechar</button>
+                <button class="btn btn-primary" onclick="saveEmbarqueChecklist()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Data Store
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvXSFVkMKVhp92JwDFddd5MWnUqptUIdE",
+            authDomain: "agenciaviagens-b1875.firebaseapp.com",
+            projectId: "agenciaviagens-b1875",
+            storageBucket: "agenciaviagens-b1875.firebasestorage.app",
+            messagingSenderId: "513629261012",
+            appId: "1:513629261012:web:6cbdc0ce22044092d07f41",
+            measurementId: "G-9X3LCHZFC9"
+        };
+
+        let firebaseApp = null;
+        let db = null;
+        let useFirestore = false;
+        let syncStatus = 'pending';
+
+        try {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                console.warn('Firestore persistence error:', err.code);
+            });
+            useFirestore = true;
+            syncStatus = 'connected';
+        } catch (e) {
+            console.warn('Firebase init failed, using localStorage only:', e);
+            useFirestore = false;
+            syncStatus = 'offline';
+        }
+
+        let data = {
+            clientes: [],
+            bilhetes: [],
+            cotacoes: [],
+            embarques: {}
+        };
+
+        let confirmCallback = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateDate();
+            renderAll();
+            updateSyncBadge();
+        });
+
+        function updateSyncBadge() {
+            const badge = document.getElementById('syncBadge');
+            if (!badge) return;
+            if (!useFirestore) {
+                badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gray-400);margin-right:6px;"></span>Somente Local';
+                badge.title = 'Firebase não disponível. Dados salvos apenas neste dispositivo.';
+            } else if (syncStatus === 'connected') {
+                badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success);margin-right:6px;"></span>Sincronizado';
+                badge.title = 'Dados sincronizados com a nuvem.';
+            } else if (syncStatus === 'syncing') {
+                badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f9ab00;margin-right:6px;animation:pulse 1s infinite;"></span>Sincronizando...';
+                badge.title = 'Sincronizando dados com a nuvem...';
+            } else {
+                badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:6px;"></span>Sem conexão';
+                badge.title = 'Sem conexão. Usando dados locais.';
+            }
+        }
+
+        // Date
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-BR', options);
+        }
+
+        // Initial data
+        const initialData = {
+            clientes: [
+                {
+                    id: "cli001",
+                    nome: "Antonio Joao Abdalla Filho",
+                    email: "",
+                    telefone: "",
+                    cpf: "376.253.068-87",
+                    passaporte: "FW704500",
+                    passaporteValidade: "2028-08-12",
+                    nascimento: "1952-10-25",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "Global Entry USA 159751903 - Validade 25/12/2028",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli002",
+                    nome: "Cristiana Barros de Oliveira Abdalla",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FV281686",
+                    passaporteValidade: "2028-02-25",
+                    nascimento: "1972-02-02",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "Passaporte anterior válido até 26/02/2018",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli003",
+                    nome: "Jania Cledia Santana de Sousa",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FP900855",
+                    passaporteValidade: "",
+                    nascimento: "1980-03-18",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "Data referência: 19/05/2026",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli004",
+                    nome: "Ruth de Fatima Magalhães Hélcias",
+                    email: "",
+                    telefone: "",
+                    cpf: "543.643.457-68",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1954-03-26",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "Mãe de Isabela",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli005",
+                    nome: "Antonio Joao Abdalla",
+                    email: "",
+                    telefone: "",
+                    cpf: "335.109.698-47",
+                    passaporte: "GA618853",
+                    passaporteValidade: "2029-08-16",
+                    nascimento: "1986-08-24",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "Global Entry USA 159758701",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli006",
+                    nome: "Isabela Magalhaes Helcias Abdalla",
+                    email: "",
+                    telefone: "",
+                    cpf: "034.205.631-08",
+                    passaporte: "GC073083",
+                    passaporteValidade: "2030-11-18",
+                    nascimento: "1988-12-15",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli007",
+                    nome: "Max Helcias Abdalla",
+                    email: "",
+                    telefone: "",
+                    cpf: "003.687.098-68",
+                    passaporte: "GK280496",
+                    passaporteValidade: "2026-10-16",
+                    nascimento: "2023-10-07",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli008",
+                    nome: "Joice Gomes",
+                    email: "",
+                    telefone: "",
+                    cpf: "256.874.958-00",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1975-10-23",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli009",
+                    nome: "Francisco Joao Abdalla",
+                    email: "",
+                    telefone: "",
+                    cpf: "365.220.738-62",
+                    passaporte: "GE879031",
+                    passaporteValidade: "2032-08-01",
+                    nascimento: "1990-03-22",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "Global Entry 161311094",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli010",
+                    nome: "Maria Lucia Egoroff",
+                    email: "",
+                    telefone: "",
+                    cpf: "088.121.029-30",
+                    passaporte: "FW075764",
+                    passaporteValidade: "2028-05-23",
+                    nascimento: "1993-04-03",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli011",
+                    nome: "Fernanda Abdalla",
+                    email: "",
+                    telefone: "",
+                    cpf: "294.896.268-48",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1980-07-14",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                }
+            ],
+            bilhetes: [],
+            cotacoes: [],
+            embarques: {}
+        };
+
+        // Data persistence
+        const DATA_VERSION = '6.0';
+        const DOC_ID = 'agencyData';
+        
+        function loadData() {
+            if (useFirestore) {
+                loadDataFromFirestore();
+            } else {
+                loadDataFromLocal();
+            }
+        }
+
+        function loadDataFromLocal() {
+            const stored = localStorage.getItem('travelAgencyData');
+            const storedVersion = localStorage.getItem('travelAgencyDataVersion');
+            
+            if (stored && storedVersion === DATA_VERSION) {
+                data = JSON.parse(stored);
+            } else {
+                data = JSON.parse(JSON.stringify(initialData));
+                saveDataLocal();
+                localStorage.setItem('travelAgencyDataVersion', DATA_VERSION);
+            }
+        }
+
+        function loadDataFromFirestore() {
+            syncStatus = 'syncing';
+            updateSyncBadge();
+
+            db.collection('agencia').doc(DOC_ID).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const remote = doc.data();
+                        data = {
+                            clientes: remote.clientes || [],
+                            bilhetes: remote.bilhetes || [],
+                            cotacoes: remote.cotacoes || [],
+                            embarques: remote.embarques || {}
+                        };
+                    } else {
+                        const stored = localStorage.getItem('travelAgencyData');
+                        if (stored) {
+                            data = JSON.parse(stored);
+                        } else {
+                            data = JSON.parse(JSON.stringify(initialData));
+                        }
+                        saveDataToFirestore();
+                    }
+                    saveDataLocal();
+                    renderAll();
+                    syncStatus = 'connected';
+                    updateSyncBadge();
+                })
+                .catch(err => {
+                    console.warn('Firestore read failed:', err);
+                    loadDataFromLocal();
+                    syncStatus = 'offline';
+                    updateSyncBadge();
+                });
+
+            db.collection('agencia').doc(DOC_ID).onSnapshot(doc => {
+                if (doc.exists) {
+                    const remote = doc.data();
+                    const newData = {
+                        clientes: remote.clientes || [],
+                        bilhetes: remote.bilhetes || [],
+                        cotacoes: remote.cotacoes || [],
+                        embarques: remote.embarques || {}
+                    };
+                    const remoteStr = JSON.stringify(newData);
+                    const localStr = JSON.stringify(data);
+                    if (remoteStr !== localStr) {
+                        data = newData;
+                        saveDataLocal();
+                        renderAll();
+                    }
+                    syncStatus = 'connected';
+                    updateSyncBadge();
+                }
+            }, err => {
+                console.warn('Firestore snapshot error:', err);
+                syncStatus = 'offline';
+                updateSyncBadge();
+            });
+        }
+
+        function saveData() {
+            saveDataLocal();
+            if (useFirestore) {
+                saveDataToFirestore();
+            }
+            renderAll();
+        }
+
+        function saveDataLocal() {
+            localStorage.setItem('travelAgencyData', JSON.stringify(data));
+            localStorage.setItem('travelAgencyDataVersion', DATA_VERSION);
+        }
+
+        function saveDataToFirestore() {
+            syncStatus = 'syncing';
+            updateSyncBadge();
+            db.collection('agencia').doc(DOC_ID).set({
+                clientes: data.clientes,
+                bilhetes: data.bilhetes,
+                cotacoes: data.cotacoes,
+                embarques: data.embarques,
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                syncStatus = 'connected';
+                updateSyncBadge();
+            }).catch(err => {
+                console.warn('Firestore write failed:', err);
+                syncStatus = 'offline';
+                updateSyncBadge();
+            });
+        }
+
+        // Navigation
+        function showPage(page) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById('page-' + page).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            const titles = {
+                dashboard: 'Dashboard',
+                clientes: 'CRM de Clientes',
+                bilhetes: 'Bilhetes Não Utilizados',
+                cotacoes: 'Cotações',
+                embarques: 'Embarques Próximos'
+            };
+            document.getElementById('pageTitle').textContent = titles[page];
+
+            // Close sidebar on mobile
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Render All
+        function renderAll() {
+            renderStats();
+            renderClientesTable();
+            renderBilhetesTable();
+            renderCotacoesTable();
+            renderEmbarquesTable();
+            renderDashboardTables();
+            updateBadges();
+        }
+
+        // Stats
+        function renderStats() {
+            const clientesAtivos = data.clientes.filter(c => c.status === 'ativo').length;
+            const bilhetesNaoUtilizados = data.bilhetes.filter(b => b.status === 'nao-utilizado');
+            const valorTotal = bilhetesNaoUtilizados.reduce((sum, b) => sum + (parseFloat(b.valor) || 0), 0);
+            const now = new Date();
+            const em30Dias = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const proxVencimento = bilhetesNaoUtilizados.filter(b => {
+                const dataVoo = new Date(b.dataVoo);
+                return dataVoo >= now && dataVoo <= em30Dias;
+            }).length;
+
+            document.getElementById('statClientes').textContent = data.clientes.length;
+            document.getElementById('statBilhetes').textContent = bilhetesNaoUtilizados.length;
+            document.getElementById('statValorTotal').textContent = formatCurrency(valorTotal);
+            document.getElementById('statProxVencimento').textContent = proxVencimento;
+
+            // Client page stats
+            document.getElementById('statClientesPage').textContent = data.clientes.length;
+            document.getElementById('statClientesAtivos').textContent = clientesAtivos;
+            document.getElementById('statClientesInativos').textContent = data.clientes.length - clientesAtivos;
+
+            // Bilhetes page stats
+            document.getElementById('statBilhetesPage').textContent = data.bilhetes.length;
+            document.getElementById('statBilhetesValidos').textContent = bilhetesNaoUtilizados.length;
+            document.getElementById('statBilhetesProxVencer').textContent = proxVencimento;
+            document.getElementById('statValorBilhetes').textContent = formatCurrency(valorTotal);
+
+            // Cotações page stats
+            const cotacoes = data.cotacoes || [];
+            const cotPendentes = cotacoes.filter(c => c.status === 'pendente').length;
+            const cotEnviadas = cotacoes.filter(c => c.status === 'enviada').length;
+            const cotEmitidas = cotacoes.filter(c => c.status === 'emitida').length;
+            const cotCanceladas = cotacoes.filter(c => c.status === 'cancelada').length;
+            document.getElementById('statCotacoesTotal').textContent = cotacoes.length;
+            document.getElementById('statCotacoesPendentes').textContent = cotPendentes;
+            document.getElementById('statCotacoesEnviadas').textContent = cotEnviadas;
+            document.getElementById('statCotacoesEmitidas').textContent = cotEmitidas;
+            document.getElementById('statCotacoesCanceladas').textContent = cotCanceladas;
+
+            // Embarques stats
+            const embarquesProximos = getEmbarquesProximos();
+            const embarquesPendentes = embarquesProximos.filter(e => !isEmbarquePronto(e)).length;
+            const embarquesProntos = embarquesProximos.length - embarquesPendentes;
+            const agora = new Date();
+            const em7Dias = new Date(agora.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const embarquesUrgentes = embarquesProximos.filter(e => {
+                const dataVoo = new Date(e.dataVoo);
+                return dataVoo >= agora && dataVoo <= em7Dias;
+            }).length;
+            document.getElementById('statEmbarquesTotal').textContent = embarquesProximos.length;
+            document.getElementById('statEmbarquesPendentes').textContent = embarquesPendentes;
+            document.getElementById('statEmbarquesProntos').textContent = embarquesProntos;
+            document.getElementById('statEmbarquesUrgentes').textContent = embarquesUrgentes;
+        }
+
+        function updateBadges() {
+            document.getElementById('clientesCount').textContent = data.clientes.length;
+            document.getElementById('bilhetesCount').textContent = data.bilhetes.filter(b => b.status === 'nao-utilizado').length;
+            document.getElementById('cotacoesCount').textContent = (data.cotacoes || []).filter(c => c.status === 'pendente').length;
+            const embarquesProximos = getEmbarquesProximos();
+            const embarquesPendentes = embarquesProximos.filter(e => !isEmbarquePronto(e)).length;
+            document.getElementById('embarquesCount').textContent = embarquesPendentes;
+        }
+
+        // Clientes
+        function renderClientesTable(filter = '') {
+            const tbody = document.getElementById('clientesTable');
+            populateGrupoFilter();
+            const filterGrupoEl = document.getElementById('filterGrupo');
+            const filterGrupo = filterGrupoEl ? filterGrupoEl.value : '';
+            let clientes = data.clientes;
+
+            if (filterGrupo) {
+                clientes = clientes.filter(c => c.grupo === filterGrupo);
+            }
+
+            if (filter) {
+                const term = filter.toLowerCase();
+                clientes = clientes.filter(c =>
+                    c.nome.toLowerCase().includes(term) ||
+                    (c.email && c.email.toLowerCase().includes(term)) ||
+                    (c.telefone && c.telefone.includes(term)) ||
+                    (c.passaporte && c.passaporte.toLowerCase().includes(term)) ||
+                    (c.grupo && c.grupo.toLowerCase().includes(term))
+                );
+            }
+
+            if (clientes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="table-empty">
+                            <div class="empty-icon">👥</div>
+                            <p>${(filter || filterGrupo) ? 'Nenhum cliente encontrado para esta busca.' : 'Nenhum cliente cadastrado. Clique em "Novo Cliente" para começar.'}</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = clientes.map(c => {
+                const validadePassaporte = c.passaporteValidade ? new Date(c.passaporteValidade + 'T00:00:00') : null;
+                const hoje = new Date();
+                const diasRestantes = validadePassaporte ? Math.ceil((validadePassaporte - hoje) / (1000 * 60 * 60 * 24)) : null;
+                let validadeClass = '';
+                let validadeLabel = '—';
+                if (diasRestantes !== null) {
+                    if (diasRestantes < 0) {
+                        validadeClass = 'inactive';
+                        validadeLabel = 'Vencido';
+                    } else if (diasRestantes < 180) {
+                        validadeClass = 'pending';
+                        validadeLabel = formatDate(c.passaporteValidade);
+                    } else {
+                        validadeClass = 'active';
+                        validadeLabel = formatDate(c.passaporteValidade);
+                    }
+                } else if (c.passaporte) {
+                    validadeLabel = 'Sem data';
+                    validadeClass = 'pending';
+                }
+                return `
+                <tr>
+                    <td><strong>${escapeHtml(c.nome)}</strong></td>
+                    <td>${c.grupo ? '<span style="background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; display: inline-block;">' + escapeHtml(c.grupo) + '</span>' : '<span style="color: var(--gray-500);">—</span>'}</td>
+                    <td>${escapeHtml(c.telefone || '—')}</td>
+                    <td>${escapeHtml(c.passaporte || '—')}</td>
+                    <td>
+                        <span class="status-badge ${validadeClass}">
+                            <span class="dot"></span>
+                            ${validadeLabel}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${c.status}">
+                            <span class="dot"></span>
+                            ${c.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-outline btn-icon btn-sm" title="Ver detalhes" onclick="viewCliente('${c.id}')">👁</button>
+                            <button class="btn btn-outline btn-icon btn-sm" title="Editar" onclick="editCliente('${c.id}')">✏️</button>
+                            <button class="btn btn-outline btn-icon btn-sm" title="Excluir" onclick="deleteCliente('${c.id}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        let clientesViewMode = 'list';
+        let expandedGroups = {};
+
+        function toggleClientesView() {
+            clientesViewMode = clientesViewMode === 'list' ? 'group' : 'list';
+            const btn = document.getElementById('btnToggleView');
+            btn.innerHTML = clientesViewMode === 'list' ? '📁 Agrupar' : '📋 Lista';
+            filterClientes();
+        }
+
+        function renderClientesGroupView(filter = '') {
+            const container = document.getElementById('clientesGroupView');
+            populateGrupoFilter();
+            const filterGrupoEl = document.getElementById('filterGrupo');
+            const filterGrupo = filterGrupoEl ? filterGrupoEl.value : '';
+            let clientes = data.clientes;
+
+            if (filterGrupo) {
+                clientes = clientes.filter(c => c.grupo === filterGrupo);
+            }
+
+            if (filter) {
+                const term = filter.toLowerCase();
+                clientes = clientes.filter(c =>
+                    c.nome.toLowerCase().includes(term) ||
+                    (c.email && c.email.toLowerCase().includes(term)) ||
+                    (c.telefone && c.telefone.includes(term)) ||
+                    (c.passaporte && c.passaporte.toLowerCase().includes(term)) ||
+                    (c.grupo && c.grupo.toLowerCase().includes(term))
+                );
+            }
+
+            const semGrupo = clientes.filter(c => !c.grupo || !c.grupo.trim());
+            const grupos = {};
+            clientes.forEach(c => {
+                if (c.grupo && c.grupo.trim()) {
+                    if (!grupos[c.grupo]) grupos[c.grupo] = [];
+                    grupos[c.grupo].push(c);
+                }
+            });
+
+            const sortedGrupoNames = Object.keys(grupos).sort();
+
+            if (clientes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-500);">
+                        <div class="empty-icon">👥</div>
+                        <p>${(filter || filterGrupo) ? 'Nenhum cliente encontrado para esta busca.' : 'Nenhum cliente cadastrado.'}</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+
+            sortedGrupoNames.forEach(grupo => {
+                const membros = grupos[grupo];
+                const isExpanded = expandedGroups[grupo];
+                const countAtivos = membros.filter(c => c.status === 'ativo').length;
+                html += `
+                <div class="group-section" style="margin-bottom: 8px; border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden;">
+                    <div onclick="toggleGroup('${escapeHtml(grupo)}')" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--gray-50); cursor: pointer; user-select: none; transition: background 0.15s;" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='var(--gray-50)'">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 18px; transition: transform 0.2s; display: inline-block; transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}">▶</span>
+                            <span style="background: var(--primary-light); color: var(--primary); padding: 4px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;">${escapeHtml(grupo)}</span>
+                            <span style="font-size: 12px; color: var(--gray-500);">${membros.length} cliente${membros.length > 1 ? 's' : ''} · ${countAtivos} ativo${countAtivos > 1 ? 's' : ''}</span>
+                        </div>
+                    </div>
+                    <div style="display: ${isExpanded ? 'block' : 'none'}; border-top: 1px solid var(--gray-200);">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>Passaporte</th>
+                                    <th>Validade</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${membros.map(c => renderClienteRowCompact(c)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            });
+
+            if (semGrupo.length > 0) {
+                const isExpanded = expandedGroups['_sem_grupo'];
+                html += `
+                <div class="group-section" style="margin-bottom: 8px; border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden;">
+                    <div onclick="toggleGroup('_sem_grupo')" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--gray-50); cursor: pointer; user-select: none; transition: background 0.15s;" onmouseover="this.style.background='var(--gray-100)'" onmouseout="this.style.background='var(--gray-50)'">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 18px; transition: transform 0.2s; display: inline-block; transform: ${isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}">▶</span>
+                            <span style="background: var(--gray-200); color: var(--gray-600); padding: 4px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;">Sem Grupo</span>
+                            <span style="font-size: 12px; color: var(--gray-500);">${semGrupo.length} cliente${semGrupo.length > 1 ? 's' : ''}</span>
+                        </div>
+                    </div>
+                    <div style="display: ${isExpanded ? 'block' : 'none'}; border-top: 1px solid var(--gray-200);">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>Passaporte</th>
+                                    <th>Validade</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${semGrupo.map(c => renderClienteRowCompact(c)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderClienteRowCompact(c) {
+            const validadePassaporte = c.passaporteValidade ? new Date(c.passaporteValidade + 'T00:00:00') : null;
+            const hoje = new Date();
+            const diasRestantes = validadePassaporte ? Math.ceil((validadePassaporte - hoje) / (1000 * 60 * 60 * 24)) : null;
+            let validadeClass = '';
+            let validadeLabel = '—';
+            if (diasRestantes !== null) {
+                if (diasRestantes < 0) {
+                    validadeClass = 'inactive';
+                    validadeLabel = 'Vencido';
+                } else if (diasRestantes < 180) {
+                    validadeClass = 'pending';
+                    validadeLabel = formatDate(c.passaporteValidade);
+                } else {
+                    validadeClass = 'active';
+                    validadeLabel = formatDate(c.passaporteValidade);
+                }
+            } else if (c.passaporte) {
+                validadeLabel = 'Sem data';
+                validadeClass = 'pending';
+            }
+            return `
+            <tr>
+                <td><strong>${escapeHtml(c.nome)}</strong></td>
+                <td>${escapeHtml(c.telefone || '—')}</td>
+                <td>${escapeHtml(c.passaporte || '—')}</td>
+                <td>
+                    <span class="status-badge ${validadeClass}">
+                        <span class="dot"></span>
+                        ${validadeLabel}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge ${c.status}">
+                        <span class="dot"></span>
+                        ${c.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-outline btn-icon btn-sm" title="Ver detalhes" onclick="viewCliente('${c.id}')">👁</button>
+                        <button class="btn btn-outline btn-icon btn-sm" title="Editar" onclick="editCliente('${c.id}')">✏️</button>
+                        <button class="btn btn-outline btn-icon btn-sm" title="Excluir" onclick="deleteCliente('${c.id}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>`;
+        }
+
+        function toggleGroup(grupo) {
+            expandedGroups[grupo] = !expandedGroups[grupo];
+            filterClientes();
+        }
+
+        function filterClientes() {
+            const term = document.getElementById('searchClientes').value;
+            const listView = document.getElementById('clientesListView');
+            const groupView = document.getElementById('clientesGroupView');
+
+            if (clientesViewMode === 'list') {
+                listView.style.display = '';
+                groupView.style.display = 'none';
+                renderClientesTable(term);
+            } else {
+                listView.style.display = 'none';
+                groupView.style.display = '';
+                renderClientesGroupView(term);
+            }
+        }
+
+        function openClienteModal(id = null) {
+            document.getElementById('clienteForm').reset();
+            document.getElementById('clienteId').value = '';
+            populateGruposDatalist();
+
+            if (id) {
+                const cliente = data.clientes.find(c => c.id === id);
+                if (cliente) {
+                    document.getElementById('clienteModalTitle').textContent = 'Editar Cliente';
+                    document.getElementById('clienteId').value = cliente.id;
+                    document.getElementById('clienteNome').value = cliente.nome;
+                    document.getElementById('clienteEmail').value = cliente.email;
+                    document.getElementById('clienteTelefone').value = cliente.telefone;
+                    document.getElementById('clienteCPF').value = cliente.cpf || '';
+                    document.getElementById('clientePassaporte').value = cliente.passaporte || '';
+                    document.getElementById('clientePassaporteValidade').value = cliente.passaporteValidade || '';
+                    document.getElementById('clienteNascimento').value = cliente.nascimento || '';
+                    document.getElementById('clienteEndereco').value = cliente.endereco || '';
+                    document.getElementById('clienteStatus').value = cliente.status;
+                    document.getElementById('clienteGrupo').value = cliente.grupo || '';
+                    document.getElementById('clienteOrigem').value = cliente.origem || '';
+                    document.getElementById('clienteObs').value = cliente.obs || '';
+                }
+            } else {
+                document.getElementById('clienteModalTitle').textContent = 'Novo Cliente';
+            }
+
+            document.getElementById('clienteModal').classList.add('active');
+        }
+
+        function populateGrupoFilter() {
+            const filterGrupoEl = document.getElementById('filterGrupo');
+            if (filterGrupoEl) {
+                const grupos = [...new Set(data.clientes.map(c => c.grupo).filter(g => g && g.trim()))].sort();
+                const currentVal = filterGrupoEl.value;
+                filterGrupoEl.innerHTML = '<option value="">Todos os Grupos</option>' +
+                    grupos.map(g => `<option value="${escapeHtml(g)}" ${g === currentVal ? 'selected' : ''}>${escapeHtml(g)}</option>`).join('');
+            }
+        }
+
+        function populateGruposDatalist() {
+            const grupos = [...new Set(data.clientes.map(c => c.grupo).filter(g => g && g.trim()))];
+            const datalist = document.getElementById('gruposList');
+            datalist.innerHTML = grupos.map(g => `<option value="${escapeHtml(g)}">`).join('');
+        }
+
+        function closeClienteModal() {
+            document.getElementById('clienteModal').classList.remove('active');
+        }
+
+        function saveCliente() {
+            const form = document.getElementById('clienteForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('clienteId').value;
+            const cliente = {
+                id: id || generateId(),
+                nome: document.getElementById('clienteNome').value.trim(),
+                email: document.getElementById('clienteEmail').value.trim(),
+                telefone: document.getElementById('clienteTelefone').value.trim(),
+                cpf: document.getElementById('clienteCPF').value.trim(),
+                passaporte: document.getElementById('clientePassaporte').value.trim(),
+                passaporteValidade: document.getElementById('clientePassaporteValidade').value,
+                nascimento: document.getElementById('clienteNascimento').value,
+                endereco: document.getElementById('clienteEndereco').value.trim(),
+                status: document.getElementById('clienteStatus').value,
+                grupo: document.getElementById('clienteGrupo').value.trim(),
+                origem: document.getElementById('clienteOrigem').value,
+                obs: document.getElementById('clienteObs').value.trim(),
+                dataCadastro: id ? (data.clientes.find(c => c.id === id)?.dataCadastro || new Date().toISOString()) : new Date().toISOString()
+            };
+
+            if (id) {
+                const index = data.clientes.findIndex(c => c.id === id);
+                data.clientes[index] = cliente;
+                showToast('Cliente atualizado com sucesso!', 'success');
+            } else {
+                data.clientes.push(cliente);
+                showToast('Cliente cadastrado com sucesso!', 'success');
+            }
+
+            saveData();
+            closeClienteModal();
+        }
+
+        function editCliente(id) {
+            openClienteModal(id);
+        }
+
+        function viewCliente(id) {
+            const cliente = data.clientes.find(c => c.id === id);
+            if (!cliente) return;
+
+            const content = document.getElementById('clienteDetailContent');
+            const bilhetesCliente = data.bilhetes.filter(b => b.clienteId === id);
+
+            content.innerHTML = `
+                <div class="detail-item full-width">
+                    <span class="detail-label">Nome</span>
+                    <span class="detail-value" style="font-size: 18px; font-weight: 600;">${escapeHtml(cliente.nome)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value">${escapeHtml(cliente.email)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Telefone</span>
+                    <span class="detail-value">${escapeHtml(cliente.telefone)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">CPF</span>
+                    <span class="detail-value">${escapeHtml(cliente.cpf || 'Não informado')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Passaporte</span>
+                    <span class="detail-value">${escapeHtml(cliente.passaporte || 'Não informado')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Validade Passaporte</span>
+                    <span class="detail-value">${cliente.passaporteValidade ? formatDate(cliente.passaporteValidade) : 'Não informado'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Data de Nascimento</span>
+                    <span class="detail-value">${cliente.nascimento ? formatDate(cliente.nascimento) : 'Não informado'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value">
+                        <span class="status-badge ${cliente.status}">
+                            <span class="dot"></span>
+                            ${cliente.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Grupo / Família / Empresa</span>
+                    <span class="detail-value">${cliente.grupo ? '<span style="background: var(--primary-light); color: var(--primary); padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500; display: inline-block;">' + escapeHtml(cliente.grupo) + '</span>' : 'Não informado'}</span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">Endereço</span>
+                    <span class="detail-value">${escapeHtml(cliente.endereco || 'Não informado')}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Origem</span>
+                    <span class="detail-value">${formatOrigem(cliente.origem)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cadastro em</span>
+                    <span class="detail-value">${formatDateTime(cliente.dataCadastro)}</span>
+                </div>
+                ${cliente.obs ? `
+                <div class="detail-item full-width">
+                    <span class="detail-label">Observações</span>
+                    <span class="detail-value">${escapeHtml(cliente.obs)}</span>
+                </div>` : ''}
+                ${bilhetesCliente.length > 0 ? `
+                <div class="detail-item full-width" style="margin-top: 12px; border-top: 1px solid var(--gray-200); padding-top: 16px;">
+                    <span class="detail-label">Bilhetes (${bilhetesCliente.length})</span>
+                    <div style="margin-top: 8px;">
+                        ${bilhetesCliente.map(b => `
+                            <div style="padding: 8px 12px; background: var(--gray-50); border-radius: 6px; margin-bottom: 6px; font-size: 13px;">
+                                <strong>${escapeHtml(b.origem)} → ${escapeHtml(b.destino)}</strong> |
+                                ${formatDate(b.dataVoo)} |
+                                <span class="status-badge ${b.status === 'nao-utilizado' ? 'pending' : b.status === 'utilizado' ? 'active' : 'inactive'}" style="font-size: 11px;">
+                                    ${formatBilheteStatus(b.status)}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>` : ''}
+            `;
+
+            document.getElementById('clienteDetailModal').classList.add('active');
+        }
+
+        function closeClienteDetailModal() {
+            document.getElementById('clienteDetailModal').classList.remove('active');
+        }
+
+        function deleteCliente(id) {
+            const cliente = data.clientes.find(c => c.id === id);
+            if (!cliente) return;
+
+            showConfirm(
+                '🗑️',
+                'Excluir cliente?',
+                `Deseja realmente excluir o cliente "${cliente.nome}"? Os bilhetes associados não serão removidos.`,
+                () => {
+                    data.clientes = data.clientes.filter(c => c.id !== id);
+                    saveData();
+                    showToast('Cliente excluído com sucesso!', 'success');
+                }
+            );
+        }
+
+        // Bilhetes
+        function renderBilhetesTable(filter = '') {
+            const tbody = document.getElementById('bilhetesTable');
+            let bilhetes = data.bilhetes;
+
+            if (filter) {
+                const term = filter.toLowerCase();
+                bilhetes = bilhetes.filter(b => {
+                    const cliente = data.clientes.find(c => c.id === b.clienteId);
+                    const clienteNome = cliente ? cliente.nome.toLowerCase() : '';
+                    return clienteNome.includes(term) ||
+                        b.origem.toLowerCase().includes(term) ||
+                        b.destino.toLowerCase().includes(term) ||
+                        b.companhia.toLowerCase().includes(term) ||
+                        (b.numero && b.numero.toLowerCase().includes(term));
+                });
+            }
+
+            if (bilhetes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="table-empty">
+                            <div class="empty-icon">🎫</div>
+                            <p>${filter ? 'Nenhum bilhete encontrado para esta busca.' : 'Nenhum bilhete registrado. Clique em "Novo Bilhete" para começar.'}</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = bilhetes.map(b => {
+                const cliente = data.clientes.find(c => c.id === b.clienteId);
+                return `
+                <tr>
+                    <td><strong>${escapeHtml(cliente ? cliente.nome : 'Cliente removido')}</strong></td>
+                    <td>${escapeHtml(b.origem)} → ${escapeHtml(b.destino)}</td>
+                    <td>${escapeHtml(b.companhia)}</td>
+                    <td>${formatDateTime(b.dataVoo)}</td>
+                    <td>${formatClasse(b.classe)}</td>
+                    <td>${formatCurrency(b.valor)}</td>
+                    <td>
+                        <span class="status-badge ${b.status === 'nao-utilizado' ? 'pending' : b.status === 'utilizado' ? 'active' : 'inactive'}">
+                            <span class="dot"></span>
+                            ${formatBilheteStatus(b.status)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-outline btn-icon btn-sm" title="Editar" onclick="editBilhete('${b.id}')">✏️</button>
+                            <button class="btn btn-outline btn-icon btn-sm" title="Excluir" onclick="deleteBilhete('${b.id}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterBilhetes() {
+            const term = document.getElementById('searchBilhetes').value;
+            renderBilhetesTable(term);
+        }
+
+        function openBilheteModal(id = null) {
+            document.getElementById('bilheteForm').reset();
+            document.getElementById('bilheteId').value = '';
+
+            // Populate client dropdown
+            const select = document.getElementById('bilheteCliente');
+            select.innerHTML = '<option value="">Selecione um cliente...</option>' +
+                data.clientes.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+
+            if (id) {
+                const bilhete = data.bilhetes.find(b => b.id === id);
+                if (bilhete) {
+                    document.getElementById('bilheteModalTitle').textContent = 'Editar Bilhete';
+                    document.getElementById('bilheteId').value = bilhete.id;
+                    document.getElementById('bilheteCliente').value = bilhete.clienteId;
+                    document.getElementById('bilheteOrigem').value = bilhete.origem;
+                    document.getElementById('bilheteDestino').value = bilhete.destino;
+                    document.getElementById('bilheteCompanhia').value = bilhete.companhia;
+                    document.getElementById('bilheteNumero').value = bilhete.numero || '';
+                    document.getElementById('bilheteDataVoo').value = bilhete.dataVoo;
+                    document.getElementById('bilheteClasse').value = bilhete.classe;
+                    document.getElementById('bilheteValor').value = bilhete.valor;
+                    document.getElementById('bilheteMoeda').value = bilhete.moeda || 'BRL';
+                    document.getElementById('bilheteStatus').value = bilhete.status;
+                    document.getElementById('bilheteObs').value = bilhete.obs || '';
+                }
+            } else {
+                document.getElementById('bilheteModalTitle').textContent = 'Novo Bilhete';
+            }
+
+            document.getElementById('bilheteModal').classList.add('active');
+        }
+
+        function closeBilheteModal() {
+            document.getElementById('bilheteModal').classList.remove('active');
+        }
+
+        function saveBilhete() {
+            const form = document.getElementById('bilheteForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('bilheteId').value;
+            const bilhete = {
+                id: id || generateId(),
+                clienteId: document.getElementById('bilheteCliente').value,
+                origem: document.getElementById('bilheteOrigem').value.trim().toUpperCase(),
+                destino: document.getElementById('bilheteDestino').value.trim().toUpperCase(),
+                companhia: document.getElementById('bilheteCompanhia').value.trim(),
+                numero: document.getElementById('bilheteNumero').value.trim(),
+                dataVoo: document.getElementById('bilheteDataVoo').value,
+                classe: document.getElementById('bilheteClasse').value,
+                valor: document.getElementById('bilheteValor').value,
+                moeda: document.getElementById('bilheteMoeda').value,
+                status: document.getElementById('bilheteStatus').value,
+                obs: document.getElementById('bilheteObs').value.trim(),
+                dataCadastro: id ? (data.bilhetes.find(b => b.id === id)?.dataCadastro || new Date().toISOString()) : new Date().toISOString()
+            };
+
+            if (id) {
+                const index = data.bilhetes.findIndex(b => b.id === id);
+                data.bilhetes[index] = bilhete;
+                showToast('Bilhete atualizado com sucesso!', 'success');
+            } else {
+                data.bilhetes.push(bilhete);
+                showToast('Bilhete cadastrado com sucesso!', 'success');
+            }
+
+            saveData();
+            closeBilheteModal();
+        }
+
+        function editBilhete(id) {
+            openBilheteModal(id);
+        }
+
+        function deleteBilhete(id) {
+            const bilhete = data.bilhetes.find(b => b.id === id);
+            if (!bilhete) return;
+
+            showConfirm(
+                '🗑️',
+                'Excluir bilhete?',
+                'Deseja realmente excluir este bilhete? Esta ação não pode ser desfeita.',
+                () => {
+                    data.bilhetes = data.bilhetes.filter(b => b.id !== id);
+                    saveData();
+                    showToast('Bilhete excluído com sucesso!', 'success');
+                }
+            );
+        }
+
+        // Cotações
+        function renderCotacoesTable(filter = '') {
+            const tbody = document.getElementById('cotacoesTable');
+            const filterStatus = document.getElementById('filterCotacoesStatus').value;
+            const filterGrupo = document.getElementById('filterCotacoesGrupo').value;
+            let cotacoes = data.cotacoes || [];
+
+            // Populate group filter dropdown
+            const filterGrupoEl = document.getElementById('filterCotacoesGrupo');
+            const grupos = [...new Set(data.clientes.map(c => c.grupo).filter(g => g && g.trim()))].sort();
+            const currentGrupoVal = filterGrupoEl.value;
+            filterGrupoEl.innerHTML = '<option value="">Todos os Grupos</option>' +
+                grupos.map(g => `<option value="${escapeHtml(g)}" ${g === currentGrupoVal ? 'selected' : ''}>${escapeHtml(g)}</option>`).join('');
+
+            if (filterStatus) {
+                cotacoes = cotacoes.filter(c => c.status === filterStatus);
+            }
+
+            if (filterGrupo) {
+                const clientesDoGrupo = data.clientes.filter(c => c.grupo === filterGrupo).map(c => c.id);
+                cotacoes = cotacoes.filter(c => clientesDoGrupo.includes(c.clienteId));
+            }
+
+            if (filter) {
+                const term = filter.toLowerCase();
+                cotacoes = cotacoes.filter(c => {
+                    const cliente = data.clientes.find(cl => cl.id === c.clienteId);
+                    const clienteNome = cliente ? cliente.nome.toLowerCase() : '';
+                    const clienteRef = c.clienteNome ? c.clienteNome.toLowerCase() : '';
+                    return clienteNome.includes(term) ||
+                        clienteRef.includes(term) ||
+                        c.destino.toLowerCase().includes(term) ||
+                        (c.origem && c.origem.toLowerCase().includes(term)) ||
+                        (c.obs && c.obs.toLowerCase().includes(term));
+                });
+            }
+
+            if (cotacoes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="table-empty">
+                            <div class="empty-icon">📋</div>
+                            <p>${(filter || filterStatus || filterGrupo) ? 'Nenhuma cotação encontrada para esta busca.' : 'Nenhuma cotação registrada. Clique em "Nova Cotação" para começar.'}</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = cotacoes.sort((a, b) => new Date(b.dataCadastro) - new Date(a.dataCadastro)).map(c => {
+                const cliente = data.clientes.find(cl => cl.id === c.clienteId);
+                const grupo = cliente ? cliente.grupo : '';
+                const clienteNome = c.clienteId ? (cliente ? cliente.nome : 'Cliente removido') : (c.clienteNome ? escapeHtml(c.clienteNome) : '<span style="color: var(--gray-500); font-style: italic;">Sem cliente</span>');
+                const statusClass = c.status === 'pendente' ? 'pending' : c.status === 'enviada' ? 'active' : c.status === 'emitida' ? 'active' : 'inactive';
+                const statusLabel = c.status === 'pendente' ? 'Pendente' : c.status === 'enviada' ? 'Enviada' : c.status === 'emitida' ? 'Emitida' : 'Cancelada';
+                const diasRestantes = c.dataIda ? Math.ceil((new Date(c.dataIda) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                let viagemInfo = formatDate(c.dataIda);
+                if (c.dataVolta) {
+                    viagemInfo += ' → ' + formatDate(c.dataVolta);
+                }
+                if (diasRestantes !== null && diasRestantes > 0 && c.status === 'pendente') {
+                    viagemInfo += ` <span style="color: var(--gray-500); font-size: 12px;">(${diasRestantes} dias)</span>`;
+                }
+                return `
+                <tr>
+                    <td><strong>${clienteNome}</strong></td>
+                    <td>${grupo ? '<span style="background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;">' + escapeHtml(grupo) + '</span>' : '—'}</td>
+                    <td>${escapeHtml(c.origem ? c.origem + ' → ' : '')}${escapeHtml(c.destino)}</td>
+                    <td>${viagemInfo}</td>
+                    <td>${c.pax || 1}</td>
+                    <td>${c.valorEstimado ? formatCurrency(c.valorEstimado) : '—'}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">
+                            <span class="dot"></span>
+                            ${statusLabel}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            ${(c.htmlCotacao || (c.imagens && c.imagens.length > 0)) ? `<button class="btn btn-outline btn-icon btn-sm" title="Ver cotação enviada" onclick="viewCotacaoEnviada('${c.id}')">📎</button>` : ''}
+                            <button class="btn btn-outline btn-icon btn-sm" title="Editar" onclick="editCotacao('${c.id}')">✏️</button>
+                            <button class="btn btn-outline btn-icon btn-sm" title="Excluir" onclick="deleteCotacao('${c.id}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterCotacoes() {
+            const term = document.getElementById('searchCotacoes').value;
+            renderCotacoesTable(term);
+        }
+
+        function openCotacaoModal(id = null) {
+            document.getElementById('cotacaoForm').reset();
+            document.getElementById('cotacaoId').value = '';
+            currentCotacaoImagens = [];
+
+            // Populate client dropdown
+            const select = document.getElementById('cotacaoCliente');
+            select.innerHTML = '<option value="">Sem cliente cadastrado</option>' +
+                data.clientes.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}${c.grupo ? ' (' + escapeHtml(c.grupo) + ')' : ''}</option>`).join('');
+
+            if (id) {
+                const cotacao = data.cotacoes.find(c => c.id === id);
+                if (cotacao) {
+                    document.getElementById('cotacaoModalTitle').textContent = 'Editar Cotação';
+                    document.getElementById('cotacaoId').value = cotacao.id;
+                    document.getElementById('cotacaoCliente').value = cotacao.clienteId || '';
+                    document.getElementById('cotacaoClienteNome').value = cotacao.clienteNome || '';
+                    document.getElementById('cotacaoDestino').value = cotacao.destino;
+                    document.getElementById('cotacaoOrigem').value = cotacao.origem || '';
+                    document.getElementById('cotacaoDataIda').value = cotacao.dataIda || '';
+                    document.getElementById('cotacaoDataVolta').value = cotacao.dataVolta || '';
+                    document.getElementById('cotacaoPax').value = cotacao.pax || 1;
+                    document.getElementById('cotacaoTipoViagem').value = cotacao.tipoViagem || 'lazer';
+                    document.getElementById('cotacaoValorEstimado').value = cotacao.valorEstimado || '';
+                    document.getElementById('cotacaoStatus').value = cotacao.status;
+                    document.getElementById('cotacaoObs').value = cotacao.obs || '';
+                    document.getElementById('cotacaoHtml').value = cotacao.htmlCotacao || '';
+                    document.getElementById('cotacaoHtmlEditor').innerHTML = cotacao.htmlCotacao || '';
+                    currentCotacaoImagens = cotacao.imagens ? [...cotacao.imagens] : [];
+                    renderCotacaoImagensPreview();
+                }
+            } else {
+                document.getElementById('cotacaoModalTitle').textContent = 'Nova Cotação';
+                document.getElementById('cotacaoHtmlEditor').innerHTML = '';
+                renderCotacaoImagensPreview();
+            }
+
+            document.getElementById('cotacaoModal').classList.add('active');
+        }
+
+        function closeCotacaoModal() {
+            document.getElementById('cotacaoModal').classList.remove('active');
+        }
+
+        // Cotação images management
+        let currentCotacaoImagens = [];
+
+        function handleCotacaoImagens(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentCotacaoImagens.push({
+                        name: file.name,
+                        data: e.target.result
+                    });
+                    renderCotacaoImagensPreview();
+                };
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        function renderCotacaoImagensPreview() {
+            const container = document.getElementById('cotacaoImagensPreview');
+            container.innerHTML = currentCotacaoImagens.map((img, i) => `
+                <div class="cotacao-img-item" onclick="showImgPreview('${img.data}')">
+                    <img src="${img.data}" alt="${escapeHtml(img.name)}">
+                    <button class="remove-img" onclick="event.stopPropagation(); removeCotacaoImagem(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function removeCotacaoImagem(index) {
+            currentCotacaoImagens.splice(index, 1);
+            renderCotacaoImagensPreview();
+        }
+
+        let htmlSourceMode = false;
+
+        function toggleHtmlMode() {
+            const editor = document.getElementById('cotacaoHtmlEditor');
+            const textarea = document.getElementById('cotacaoHtml');
+            const btn = document.getElementById('btnHtmlMode');
+
+            htmlSourceMode = !htmlSourceMode;
+
+            if (htmlSourceMode) {
+                textarea.value = editor.innerHTML;
+                editor.style.display = 'none';
+                textarea.style.display = 'block';
+                btn.textContent = '👁 Modo Visual';
+            } else {
+                editor.innerHTML = textarea.value;
+                textarea.style.display = 'none';
+                editor.style.display = 'block';
+                btn.textContent = '📝 Modo Código';
+            }
+        }
+
+        function clearCotacaoHtml() {
+            const editor = document.getElementById('cotacaoHtmlEditor');
+            const textarea = document.getElementById('cotacaoHtml');
+            editor.innerHTML = '';
+            textarea.value = '';
+        }
+
+        function previewCotacaoHtml() {
+            const editor = document.getElementById('cotacaoHtmlEditor');
+            const html = editor.innerHTML;
+            if (!html.trim() || html === '<br>') {
+                showToast('Nenhum conteúdo para visualizar.', 'info');
+                return;
+            }
+            document.getElementById('htmlPreviewContent').innerHTML = html;
+            document.getElementById('htmlPreviewModal').classList.add('active');
+        }
+
+        function closeHtmlPreview() {
+            document.getElementById('htmlPreviewModal').classList.remove('active');
+        }
+
+        function showImgPreview(src) {
+            document.getElementById('imgPreviewSrc').src = src;
+            document.getElementById('imgPreviewModal').classList.add('active');
+        }
+
+        function closeImgPreview() {
+            document.getElementById('imgPreviewModal').classList.remove('active');
+        }
+
+        // Excel Import
+        let excelDataRaw = [];
+        let excelHeaders = [];
+        let excelMappedData = [];
+
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                    if (jsonData.length < 2) {
+                        showToast('Arquivo vazio ou sem dados.', 'error');
+                        return;
+                    }
+
+                    excelHeaders = jsonData[0].map(h => String(h).trim());
+                    excelDataRaw = jsonData.slice(1).filter(row => row.some(cell => cell !== ''));
+
+                    openExcelImportModal();
+                } catch (err) {
+                    showToast('Erro ao ler arquivo Excel: ' + err.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function openExcelImportModal() {
+            excelMappedData = [];
+
+            // Populate column mapping selects
+            const selectIds = ['mapColCliente', 'mapColDestino', 'mapColOrigem', 'mapColDataVoo', 'mapColCompanhia', 'mapColNumero', 'mapColClasse', 'mapColVoo', 'mapColHorario', 'mapColValor'];
+            selectIds.forEach(id => {
+                const sel = document.getElementById(id);
+                sel.innerHTML = '<option value="">-- Não mapear --</option>' +
+                    excelHeaders.map((h, i) => `<option value="${i}">${escapeHtml(h)}</option>`).join('');
+            });
+
+            // Auto-map common columns
+            autoMapColumns();
+
+            // Render preview table
+            renderExcelPreview();
+
+            // Show step 1
+            document.getElementById('excelStep1').style.display = 'block';
+            document.getElementById('excelStep2').style.display = 'none';
+            document.getElementById('excelBackBtn').style.display = 'none';
+            document.getElementById('excelNextBtn').style.display = '';
+            document.getElementById('excelImportBtn').style.display = 'none';
+
+            document.getElementById('excelImportModal').classList.add('active');
+        }
+
+        function autoMapColumns() {
+            const mappingRules = {
+                'mapColCliente': ['cliente', 'passageiro', 'nome', 'pax', 'tourist', 'passenger', 'client'],
+                'mapColDestino': ['destino', 'destination', 'city', 'cidade', 'para', 'to'],
+                'mapColOrigem': ['origem', 'origin', 'from', 'de', 'saindo'],
+                'mapColDataVoo': ['data', 'date', 'voo', 'flight', 'departure', 'embarque', 'data voo', 'dt voo', 'dt. voo'],
+                'mapColCompanhia': ['companhia', 'cia', 'airline', 'transportadora', 'operador'],
+                'mapColNumero': ['numero', 'nº', 'n°', 'bilhete', 'ticket', 'coupon', 'n. bilhete'],
+                'mapColClasse': ['classe', 'class', 'cabine', 'cabin', 'fare'],
+                'mapColVoo': ['nº voo', 'n. voo', 'flight', 'nº. voo', 'voo nro', 'flight no'],
+                'mapColHorario': ['horario', 'hora', 'time', 'departure time', 'hr'],
+                'mapColValor': ['valor', 'price', 'preço', 'total', 'amount', 'fare']
+            };
+
+            Object.keys(mappingRules).forEach(selectId => {
+                const sel = document.getElementById(selectId);
+                const keywords = mappingRules[selectId];
+                for (let i = 0; i < excelHeaders.length; i++) {
+                    const headerLower = excelHeaders[i].toLowerCase().trim();
+                    if (keywords.some(kw => headerLower.includes(kw))) {
+                        sel.value = i;
+                        break;
+                    }
+                }
+            });
+        }
+
+        function renderExcelPreview() {
+            const thead = document.getElementById('excelPreviewHead');
+            const tbody = document.getElementById('excelPreviewBody');
+
+            thead.innerHTML = '<tr>' + excelHeaders.map(h => `<th style="padding: 8px 12px; border-bottom: 1px solid var(--gray-200); text-align: left; font-size: 12px; background: var(--gray-50);">${escapeHtml(h)}</th>`).join('') + '</tr>';
+
+            const previewRows = excelDataRaw.slice(0, 3);
+            tbody.innerHTML = previewRows.map(row =>
+                '<tr>' + row.map(cell => {
+                    let val = cell;
+                    if (cell instanceof Date) val = cell.toLocaleDateString('pt-BR');
+                    return `<td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;">${escapeHtml(String(val))}</td>`;
+                }).join('') + '</tr>'
+            ).join('');
+        }
+
+        function excelGoStep2() {
+            // Map data
+            excelMappedData = [];
+            const now = new Date();
+
+            const getClientIdx = () => parseInt(document.getElementById('mapColCliente').value);
+            const getDestIdx = () => parseInt(document.getElementById('mapColDestino').value);
+            const getOrigIdx = () => parseInt(document.getElementById('mapColOrigem').value);
+            const getDataIdx = () => parseInt(document.getElementById('mapColDataVoo').value);
+            const getCiaIdx = () => parseInt(document.getElementById('mapColCompanhia').value);
+            const getNumIdx = () => parseInt(document.getElementById('mapColNumero').value);
+            const getClasseIdx = () => parseInt(document.getElementById('mapColClasse').value);
+            const getVooIdx = () => parseInt(document.getElementById('mapColVoo').value);
+            const getHorarioIdx = () => parseInt(document.getElementById('mapColHorario').value);
+            const getValorIdx = () => parseInt(document.getElementById('mapColValor').value);
+
+            excelDataRaw.forEach((row, idx) => {
+                const destino = getDestIdx() >= 0 ? String(row[getDestIdx()] || '').trim() : '';
+                if (!destino) return; // Skip rows without destination
+
+                let dataVoo = '';
+                const dataIdx = getDataIdx();
+                if (dataIdx >= 0) {
+                    const cellVal = row[dataIdx];
+                    if (cellVal instanceof Date) {
+                        dataVoo = cellVal.toISOString().slice(0, 10) + 'T12:00:00';
+                    } else {
+                        const parsed = parseDateBR(String(cellVal));
+                        if (parsed) dataVoo = parsed;
+                    }
+                }
+
+                const horarioIdx = getHorarioIdx();
+                if (horarioIdx >= 0 && row[horarioIdx]) {
+                    const horario = String(row[horarioIdx]).trim();
+                    if (dataVoo && horario.match(/\d{1,2}:\d{2}/)) {
+                        const timePart = horario.match(/(\d{1,2}:\d{2})/)[1];
+                        dataVoo = dataVoo.replace('T12:00:00', 'T' + timePart + ':00');
+                    }
+                }
+
+                let clienteNome = getClientIdx() >= 0 ? String(row[getClientIdx()] || '').trim() : '';
+
+                const embarque = {
+                    id: 'embimp_' + generateId(),
+                    clienteId: '',
+                    clienteNome: clienteNome,
+                    origem: getOrigIdx() >= 0 ? String(row[getOrigIdx()] || '').trim() : '',
+                    destino: destino,
+                    companhia: getCiaIdx() >= 0 ? String(row[getCiaIdx()] || '').trim() : '',
+                    numero: getNumIdx() >= 0 ? String(row[getNumIdx()] || '').trim() : '',
+                    numeroVoo: getVooIdx() >= 0 ? String(row[getVooIdx()] || '').trim() : '',
+                    classe: getClasseIdx() >= 0 ? String(row[getClasseIdx()] || '').trim() : '',
+                    dataVoo: dataVoo,
+                    valor: getValorIdx() >= 0 ? String(row[getValorIdx()] || '').trim() : '',
+                    status: 'importado',
+                    dataImportacao: new Date().toISOString(),
+                    checklist: {
+                        documentos: false, passaporte: false, visto: false,
+                        seguros: false, assentos: false, checkin: false,
+                        bagagem: false, transfer: false, hospedagem: false,
+                        observacoes: ''
+                    }
+                };
+
+                excelMappedData.push(embarque);
+            });
+
+            if (excelMappedData.length === 0) {
+                showToast('Nenhum registro válido encontrado. Verifique o mapeamento de colunas.', 'error');
+                return;
+            }
+
+            // Render data preview
+            document.getElementById('excelTotalCount').textContent = excelMappedData.length;
+            const tbody = document.getElementById('excelDataBody');
+            tbody.innerHTML = excelMappedData.map(e => {
+                const dataFormatada = e.dataVoo ? formatDateTime(e.dataVoo) : '—';
+                return `
+                <tr>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;">${escapeHtml(e.clienteNome || '—')}</td>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;">${escapeHtml(e.origem ? e.origem + ' → ' : '')}${escapeHtml(e.destino)}</td>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;">${dataFormatada}</td>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;">${escapeHtml(e.companhia || '—')}</td>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;">${escapeHtml(e.numero || '—')}</td>
+                    <td style="padding: 8px 12px; border-bottom: 1px solid var(--gray-100); font-size: 12px;"><span class="excel-status-ok">✓ Pronto</span></td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('excelStep1').style.display = 'none';
+            document.getElementById('excelStep2').style.display = 'block';
+            document.getElementById('excelBackBtn').style.display = '';
+            document.getElementById('excelNextBtn').style.display = 'none';
+            document.getElementById('excelImportBtn').style.display = '';
+        }
+
+        function excelGoStep1() {
+            document.getElementById('excelStep1').style.display = 'block';
+            document.getElementById('excelStep2').style.display = 'none';
+            document.getElementById('excelBackBtn').style.display = 'none';
+            document.getElementById('excelNextBtn').style.display = '';
+            document.getElementById('excelImportBtn').style.display = 'none';
+        }
+
+        function confirmExcelImport() {
+            if (!data.embarquesExcel) data.embarquesExcel = [];
+            data.embarquesExcel = data.embarquesExcel.concat(excelMappedData);
+            saveData();
+            closeExcelImportModal();
+            showToast(`${excelMappedData.length} embarque(s) importado(s) com sucesso!`, 'success');
+        }
+
+        function closeExcelImportModal() {
+            document.getElementById('excelImportModal').classList.remove('active');
+            excelDataRaw = [];
+            excelHeaders = [];
+            excelMappedData = [];
+        }
+
+        function parseDateBR(str) {
+            if (!str) return null;
+            str = String(str).trim();
+
+            // DD/MM/YYYY or DD-MM-YYYY
+            let match = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            if (match) {
+                let day = parseInt(match[1]);
+                let month = parseInt(match[2]) - 1;
+                let year = parseInt(match[3]);
+                if (year < 100) year += 2000;
+                const d = new Date(year, month, day, 12, 0, 0);
+                if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10) + 'T12:00:00';
+            }
+
+            // Excel serial date
+            if (!isNaN(str) && parseFloat(str) > 40000) {
+                const d = new Date((parseFloat(str) - 25569) * 86400 * 1000);
+                if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10) + 'T12:00:00';
+            }
+
+            // Try native parsing
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10) + 'T12:00:00';
+
+            return null;
+        }
+
+        function saveCotacao() {
+            const form = document.getElementById('cotacaoForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('cotacaoId').value;
+
+            // Preserve existing images if not modified
+            const existingCotacao = id ? data.cotacoes.find(c => c.id === id) : null;
+            const imagens = currentCotacaoImagens.length > 0 ? currentCotacaoImagens : (existingCotacao ? existingCotacao.imagens || [] : []);
+
+            const cotacao = {
+                id: id || generateId(),
+                clienteId: document.getElementById('cotacaoCliente').value,
+                clienteNome: document.getElementById('cotacaoClienteNome').value.trim(),
+                destino: document.getElementById('cotacaoDestino').value.trim(),
+                origem: document.getElementById('cotacaoOrigem').value.trim(),
+                dataIda: document.getElementById('cotacaoDataIda').value,
+                dataVolta: document.getElementById('cotacaoDataVolta').value,
+                pax: document.getElementById('cotacaoPax').value,
+                tipoViagem: document.getElementById('cotacaoTipoViagem').value,
+                valorEstimado: document.getElementById('cotacaoValorEstimado').value,
+                status: document.getElementById('cotacaoStatus').value,
+                obs: document.getElementById('cotacaoObs').value.trim(),
+                htmlCotacao: document.getElementById('cotacaoHtmlEditor').innerHTML,
+                imagens: imagens,
+                dataCadastro: id ? (existingCotacao ? existingCotacao.dataCadastro : new Date().toISOString()) : new Date().toISOString()
+            };
+
+            if (id) {
+                const index = data.cotacoes.findIndex(c => c.id === id);
+                data.cotacoes[index] = cotacao;
+                showToast('Cotação atualizada com sucesso!', 'success');
+            } else {
+                data.cotacoes.push(cotacao);
+                showToast('Cotação criada com sucesso!', 'success');
+            }
+
+            saveData();
+            closeCotacaoModal();
+        }
+
+        function viewCotacaoEnviada(id) {
+            const cotacao = data.cotacoes.find(c => c.id === id);
+            if (!cotacao) return;
+
+            let content = '';
+            if (cotacao.htmlCotacao) {
+                content += `<div style="margin-bottom: 16px;">
+                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--gray-700);">📄 Conteúdo HTML</h4>
+                    <div class="html-preview-content">${cotacao.htmlCotacao}</div>
+                </div>`;
+            }
+            if (cotacao.imagens && cotacao.imagens.length > 0) {
+                content += `<div>
+                    <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--gray-700);">📷 Imagens (${cotacao.imagens.length})</h4>
+                    <div class="cotacao-imagens-grid">
+                        ${cotacao.imagens.map(img => `
+                            <div class="cotacao-img-item" onclick="showImgPreview('${img.data}')">
+                                <img src="${img.data}" alt="${escapeHtml(img.name)}">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('htmlPreviewContent').innerHTML = content || '<p style="text-align: center; color: var(--gray-500);">Nenhum conteúdo salvo.</p>';
+            document.getElementById('htmlPreviewModal').classList.add('active');
+        }
+
+        function editCotacao(id) {
+            openCotacaoModal(id);
+        }
+
+        function deleteCotacao(id) {
+            const cotacao = data.cotacoes.find(c => c.id === id);
+            if (!cotacao) return;
+
+            showConfirm(
+                '🗑️',
+                'Excluir cotação?',
+                'Deseja realmente excluir esta cotação? Esta ação não pode ser desfeita.',
+                () => {
+                    data.cotacoes = data.cotacoes.filter(c => c.id !== id);
+                    saveData();
+                    showToast('Cotação excluída com sucesso!', 'success');
+                }
+            );
+        }
+
+        // Embarques
+        function getEmbarquesProximos() {
+            const agora = new Date();
+            const em30Dias = new Date(agora.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const embarques = [];
+
+            // From bilhetes
+            (data.bilhetes || []).forEach(b => {
+                if (b.status !== 'nao-utilizado' || !b.dataVoo) return;
+                const dataVoo = new Date(b.dataVoo);
+                if (dataVoo >= agora && dataVoo <= em30Dias) {
+                    const cliente = data.clientes.find(c => c.id === b.clienteId);
+                    embarques.push({
+                        id: 'emb_' + b.id,
+                        origemId: b.id,
+                        tipo: 'bilhete',
+                        clienteId: b.clienteId,
+                        clienteNome: cliente ? cliente.nome : 'N/A',
+                        clienteGrupo: cliente ? cliente.grupo : '',
+                        origem: b.origem,
+                        destino: b.destino,
+                        companhia: b.companhia,
+                        numero: b.numero || '',
+                        dataVoo: b.dataVoo,
+                        classe: b.classe,
+                        pax: 1
+                    });
+                }
+            });
+
+            // From cotações emitidas with travel dates
+            (data.cotacoes || []).forEach(c => {
+                if (c.status !== 'emitida' || !c.dataIda) return;
+                const dataIda = new Date(c.dataIda + 'T12:00:00');
+                if (dataIda >= agora && dataIda <= em30Dias) {
+                    const cliente = data.clientes.find(cl => cl.id === c.clienteId);
+                    embarques.push({
+                        id: 'emb_' + c.id,
+                        origemId: c.id,
+                        tipo: 'cotacao',
+                        clienteId: c.clienteId,
+                        clienteNome: c.clienteId ? (cliente ? cliente.nome : 'N/A') : (c.clienteNome || 'Sem cliente'),
+                        clienteGrupo: cliente ? cliente.grupo : '',
+                        origem: c.origem || '',
+                        destino: c.destino,
+                        companhia: '',
+                        numero: '',
+                        dataVoo: c.dataIda + 'T12:00:00',
+                        classe: '',
+                        pax: c.pax || 1
+                    });
+                }
+            });
+
+            // From Excel imports
+            (data.embarquesExcel || []).forEach(e => {
+                if (!e.dataVoo) return;
+                const dataVoo = new Date(e.dataVoo);
+                if (dataVoo >= agora && dataVoo <= em30Dias) {
+                    embarques.push({
+                        id: e.id,
+                        origemId: e.id,
+                        tipo: 'excel',
+                        clienteId: e.clienteId || '',
+                        clienteNome: e.clienteNome || 'N/A',
+                        clienteGrupo: '',
+                        origem: e.origem || '',
+                        destino: e.destino,
+                        companhia: e.companhia || '',
+                        numero: e.numero || '',
+                        dataVoo: e.dataVoo,
+                        classe: e.classe || '',
+                        pax: 1,
+                        numeroVoo: e.numeroVoo || '',
+                        valor: e.valor || ''
+                    });
+                }
+            });
+
+            return embarques.sort((a, b) => new Date(a.dataVoo) - new Date(b.dataVoo));
+        }
+
+        function getEmbarqueChecklist(embarqueId) {
+            const checklists = data.embarques || {};
+            return checklists[embarqueId] || {
+                documentos: false,
+                passaporte: false,
+                visto: false,
+                seguros: false,
+                assentos: false,
+                checkin: false,
+                bagagem: false,
+                transfer: false,
+                hospedagem: false,
+                observacoes: ''
+            };
+        }
+
+        function saveEmbarqueChecklistToData(embarqueId, checklist) {
+            if (!data.embarques) data.embarques = {};
+            data.embarques[embarqueId] = checklist;
+            saveData();
+        }
+
+        function isEmbarquePronto(embarque) {
+            const cl = getEmbarqueChecklist(embarque.id);
+            return cl.documentos && cl.passaporte && cl.assentos && cl.checkin;
+        }
+
+        function renderEmbarquesTable(filter = '') {
+            const tbody = document.getElementById('embarquesTable');
+            const filterStatus = document.getElementById('filterEmbarquesStatus').value;
+            let embarques = getEmbarquesProximos();
+
+            if (filterStatus === 'pendente') {
+                embarques = embarques.filter(e => !isEmbarquePronto(e));
+            } else if (filterStatus === 'pronto') {
+                embarques = embarques.filter(e => isEmbarquePronto(e));
+            }
+
+            if (filter) {
+                const term = filter.toLowerCase();
+                embarques = embarques.filter(e =>
+                    e.clienteNome.toLowerCase().includes(term) ||
+                    e.destino.toLowerCase().includes(term) ||
+                    (e.origem && e.origem.toLowerCase().includes(term)) ||
+                    (e.companhia && e.companhia.toLowerCase().includes(term))
+                );
+            }
+
+            if (embarques.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="table-empty">
+                            <div class="empty-icon">🛫</div>
+                            <p>${(filter || filterStatus) ? 'Nenhum embarque encontrado.' : 'Nenhum embarque programado para os próximos 30 dias.'}</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            const agora = new Date();
+
+            tbody.innerHTML = embarques.map(e => {
+                const cl = getEmbarqueChecklist(e.id);
+                const dataVoo = new Date(e.dataVoo);
+                const diasRestantes = Math.ceil((dataVoo - agora) / (1000 * 60 * 60 * 24));
+                const isUrgente = diasRestantes <= 7;
+                const pronto = isEmbarquePronto(e);
+
+                let diasLabel = '';
+                if (diasRestantes === 0) diasLabel = '<span style="color: var(--danger); font-weight: 600;">HOJE</span>';
+                else if (diasRestantes === 1) diasLabel = '<span style="color: var(--danger); font-weight: 600;">AMANHÃ</span>';
+                else if (isUrgente) diasLabel = `<span style="color: var(--danger); font-weight: 600;">${diasRestantes}d</span>`;
+                else diasLabel = `<span>${diasRestantes} dias</span>`;
+
+                const tipoIcon = e.tipo === 'bilhete' ? '🎫' : e.tipo === 'excel' ? '📊' : '📋';
+                const tipoLabel = e.tipo === 'bilhete' ? 'Bilhete' : e.tipo === 'excel' ? 'WinTour/Excel' : 'Cotação';
+
+                const checkIcon = (val) => val ? '<span style="color: var(--success);">✓</span>' : '<span style="color: var(--danger);">✕</span>';
+
+                return `
+                <tr style="${isUrgente && !pronto ? 'background: #fff8f8;' : ''}">
+                    <td>
+                        <strong>${escapeHtml(e.clienteNome)}</strong>
+                        <div style="font-size: 11px; color: var(--gray-500);">${tipoIcon} ${tipoLabel}</div>
+                    </td>
+                    <td>${escapeHtml(e.origem ? e.origem + ' → ' : '')}${escapeHtml(e.destino)}</td>
+                    <td>${formatDateTime(e.dataVoo)}</td>
+                    <td>${diasLabel}</td>
+                    <td>${checkIcon(cl.documentos && cl.passaporte && cl.visto && cl.seguros)}</td>
+                    <td>${checkIcon(cl.assentos)}</td>
+                    <td>${checkIcon(cl.checkin)}</td>
+                    <td>${checkIcon(cl.bagagem)}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="openEmbarqueModal('${e.id}')" title="Acompanhar embarque">
+                            ${pronto ? '✅' : '📋'} Detalhes
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterEmbarques() {
+            const term = document.getElementById('searchEmbarques').value;
+            renderEmbarquesTable(term);
+        }
+
+        let currentEmbarqueId = null;
+
+        function openEmbarqueModal(embarqueId) {
+            currentEmbarqueId = embarqueId;
+            const embarques = getEmbarquesProximos();
+            const embarque = embarques.find(e => e.id === embarqueId);
+            if (!embarque) return;
+
+            const cl = getEmbarqueChecklist(embarqueId);
+            const dataVoo = new Date(embarque.dataVoo);
+            const agora = new Date();
+            const diasRestantes = Math.ceil((dataVoo - agora) / (1000 * 60 * 60 * 24));
+
+            const checks = [
+                { key: 'documentos', label: 'Documentos em dia', icon: '📄' },
+                { key: 'passaporte', label: 'Passaporte válido', icon: '📘' },
+                { key: 'visto', label: 'Visto/ETA confirmado', icon: '🏛️' },
+                { key: 'seguros', label: 'Seguro viagem', icon: '🛡️' },
+                { key: 'assentos', label: 'Assentos marcados', icon: '💺' },
+                { key: 'checkin', label: 'Check-in realizado', icon: '✅' },
+                { key: 'bagagem', label: 'Bagagem despachada', icon: '🧳' },
+                { key: 'transfer', label: 'Transfer/transporte', icon: '🚗' },
+                { key: 'hospedagem', label: 'Hospedagem confirmada', icon: '🏨' }
+            ];
+
+            const totalChecks = checks.length;
+            const checksFeitos = checks.filter(ck => cl[ck.key]).length;
+            const percentual = totalChecks > 0 ? Math.round((checksFeitos / totalChecks) * 100) : 0;
+
+            let diasLabel = '';
+            if (diasRestantes === 0) diasLabel = 'Embarca HOJE!';
+            else if (diasRestantes === 1) diasLabel = 'Embarca AMANHÃ';
+            else diasLabel = `Embarca em ${diasRestantes} dias`;
+
+            const body = document.getElementById('embarqueModalBody');
+            body.innerHTML = `
+                <div class="embarque-header">
+                    <div class="embarque-icon">${diasRestantes <= 7 ? '⚠️' : '🛫'}</div>
+                    <div class="embarque-info">
+                        <h4>${escapeHtml(embarque.clienteNome)}</h4>
+                        <p>${escapeHtml(embarque.origem ? embarque.origem + ' → ' : '')}${escapeHtml(embarque.destino)} • ${diasLabel}</p>
+                    </div>
+                </div>
+
+                <div class="embarque-detail-grid">
+                    <div class="embarque-detail-item">
+                        <span class="label">Data do Voo</span>
+                        <span class="value">${formatDateTime(embarque.dataVoo)}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Companhia</span>
+                        <span class="value">${escapeHtml(embarque.companhia || 'A definir')}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Nº Voo</span>
+                        <span class="value">${escapeHtml(embarque.numeroVoo || 'A definir')}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Nº Bilhete</span>
+                        <span class="value">${escapeHtml(embarque.numero || 'A definir')}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Classe</span>
+                        <span class="value">${formatClasse(embarque.classe) || 'A definir'}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Valor</span>
+                        <span class="value">${embarque.valor ? formatCurrency(embarque.valor) : 'A definir'}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Grupo</span>
+                        <span class="value">${escapeHtml(embarque.clienteGrupo || 'Sem grupo')}</span>
+                    </div>
+                    <div class="embarque-detail-item">
+                        <span class="label">Passageiros</span>
+                        <span class="value">${embarque.pax || 1}</span>
+                    </div>
+                </div>
+
+                <div class="embarque-progress">
+                    <div class="embarque-progress-label">Progresso: ${checksFeitos}/${totalChecks} itens (${percentual}%)</div>
+                    <div class="embarque-progress-bar">
+                        <div class="embarque-progress-fill" style="width: ${percentual}%; ${percentual === 100 ? 'background: var(--success);' : percentual >= 50 ? 'background: var(--warning);' : 'background: var(--danger);'}"></div>
+                    </div>
+                </div>
+
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Checklist de Embarque</h4>
+                <div class="checklist-grid">
+                    ${checks.map(ck => `
+                        <div class="checklist-item ${cl[ck.key] ? 'checked' : ''}" onclick="toggleChecklist(this, '${ck.key}')">
+                            <input type="checkbox" id="check_${ck.key}" ${cl[ck.key] ? 'checked' : ''}>
+                            <label for="check_${ck.key}">${ck.icon} ${ck.label}</label>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="embarque-obs">
+                    <span class="obs-label">📝 Observações do Embarque</span>
+                    <textarea id="embarqueObs" placeholder="Notas sobre a viagem, contatos de emergência, dicas...">${escapeHtml(cl.observacoes || '')}</textarea>
+                </div>
+            `;
+
+            document.getElementById('embarqueModal').classList.add('active');
+        }
+
+        function closeEmbarqueModal() {
+            document.getElementById('embarqueModal').classList.remove('active');
+            currentEmbarqueId = null;
+        }
+
+        function toggleChecklist(element, key) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('checked', checkbox.checked);
+        }
+
+        function saveEmbarqueChecklist() {
+            if (!currentEmbarqueId) return;
+
+            const keys = ['documentos', 'passaporte', 'visto', 'seguros', 'assentos', 'checkin', 'bagagem', 'transfer', 'hospedagem'];
+            const checklist = {};
+            keys.forEach(key => {
+                const checkbox = document.getElementById('check_' + key);
+                checklist[key] = checkbox ? checkbox.checked : false;
+            });
+            checklist.observacoes = document.getElementById('embarqueObs').value.trim();
+
+            saveEmbarqueChecklistToData(currentEmbarqueId, checklist);
+            showToast('Checklist salvo com sucesso!', 'success');
+            closeEmbarqueModal();
+        }
+
+        // Dashboard Tables
+        function renderDashboardTables() {
+            // Recent clients
+            const recentClientes = [...data.clientes].sort((a, b) => new Date(b.dataCadastro) - new Date(a.dataCadastro)).slice(0, 5);
+            const clientesTbody = document.getElementById('dashboardClientesTable');
+
+            if (recentClientes.length === 0) {
+                clientesTbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="table-empty">
+                            <div class="empty-icon">👥</div>
+                            <p>Nenhum cliente cadastrado ainda</p>
+                        </td>
+                    </tr>`;
+            } else {
+                clientesTbody.innerHTML = recentClientes.map(c => `
+                    <tr>
+                        <td><strong>${escapeHtml(c.nome)}</strong></td>
+                        <td>${escapeHtml(c.email)}</td>
+                        <td>${escapeHtml(c.telefone)}</td>
+                        <td>
+                            <span class="status-badge ${c.status}">
+                                <span class="dot"></span>
+                                ${c.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Upcoming tickets
+            const now = new Date();
+            const upcomingBilhetes = data.bilhetes
+                .filter(b => b.status === 'nao-utilizado' && new Date(b.dataVoo) >= now)
+                .sort((a, b) => new Date(a.dataVoo) - new Date(b.dataVoo))
+                .slice(0, 5);
+            const bilhetesTbody = document.getElementById('dashboardBilhetesTable');
+
+            if (upcomingBilhetes.length === 0) {
+                bilhetesTbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="table-empty">
+                            <div class="empty-icon">🎫</div>
+                            <p>Nenhum bilhete registrado ainda</p>
+                        </td>
+                    </tr>`;
+            } else {
+                bilhetesTbody.innerHTML = upcomingBilhetes.map(b => {
+                    const cliente = data.clientes.find(c => c.id === b.clienteId);
+                    return `
+                    <tr>
+                        <td><strong>${escapeHtml(cliente ? cliente.nome : 'N/A')}</strong></td>
+                        <td>${escapeHtml(b.origem)} → ${escapeHtml(b.destino)}</td>
+                        <td>${formatDateTime(b.dataVoo)}</td>
+                    <td>${formatCurrency(b.valor)} <span style="font-size: 11px; color: var(--gray-500);">${escapeHtml(b.moeda || 'BRL')}</span></td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // Export / Import
+        function exportData() {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `travel-agency-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Dados exportados com sucesso!', 'success');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.clientes && imported.bilhetes) {
+                        showConfirm(
+                            '📥',
+                            'Importar dados?',
+                            'Isso irá substituir todos os dados atuais. Deseja continuar?',
+                            () => {
+                                data = imported;
+                                saveData();
+                                showToast('Dados importados com sucesso!', 'success');
+                            }
+                        );
+                    } else {
+                        showToast('Formato de arquivo inválido.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Erro ao ler o arquivo. Verifique se é um JSON válido.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Confirm Dialog
+        function showConfirm(icon, text, subtext, callback) {
+            document.getElementById('confirmIcon').textContent = icon;
+            document.getElementById('confirmText').textContent = text;
+            document.getElementById('confirmSubtext').textContent = subtext;
+            confirmCallback = callback;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        function confirmAction() {
+            if (confirmCallback) {
+                confirmCallback();
+                confirmCallback = null;
+            }
+            closeConfirm();
+        }
+
+        // Toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+
+            const icons = { success: '✓', error: '✕', info: 'ℹ' };
+            toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${message}`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Helpers
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(value) || 0);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '—';
+            return new Date(dateStr).toLocaleDateString('pt-BR') + ' ' + new Date(dateStr).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatClasse(classe) {
+            const map = {
+                'economica': 'Econômica',
+                'economica-premium': 'Eco. Premium',
+                'business': 'Business',
+                'primeira': '1ª Classe'
+            };
+            return map[classe] || classe;
+        }
+
+        function formatBilheteStatus(status) {
+            const map = {
+                'nao-utilizado': 'Não Utilizado',
+                'utilizado': 'Utilizado',
+                'cancelado': 'Cancelado'
+            };
+            return map[status] || status;
+        }
+
+        function formatOrigem(origem) {
+            const map = {
+                'indicacao': 'Indicação',
+                'redes-sociais': 'Redes Sociais',
+                'google': 'Google',
+                'publicidade': 'Publicidade',
+                'outro': 'Outro'
+            };
+            return map[origem] || 'Não informado';
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+    </script>
+</body>
+</html>
