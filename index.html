@@ -3079,6 +3079,157 @@
                     grupo: "Suno",
                     obs: "",
                     dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli060",
+                    nome: "Rodrigo Heilberg",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli061",
+                    nome: "Marcelo Vannucci Bronze",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli062",
+                    nome: "Tommy Miyata",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli063",
+                    nome: "Dalton Jose Patricio",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                }
+            ],
+            bilhetes: [
+                {
+                    id: "tkt001",
+                    clienteId: "cli060",
+                    origem: "CGH",
+                    destino: "BSB",
+                    companhia: "LATAM",
+                    numero: "957 2272473171",
+                    localizador: "AFIHOK",
+                    dataEmissao: "2025-03-19",
+                    dataVoo: "2026-02-27",
+                    classe: "economica",
+                    valor: "2513.72",
+                    moeda: "BRL",
+                    status: "nao-utilizado",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "tkt002",
+                    clienteId: "cli061",
+                    origem: "CGH",
+                    destino: "IMP",
+                    companhia: "LATAM",
+                    numero: "957-2285439590",
+                    localizador: "SQDRJW",
+                    dataEmissao: "2026-06-24",
+                    dataVoo: "",
+                    classe: "economica",
+                    valor: "2498.34",
+                    moeda: "BRL",
+                    status: "nao-utilizado",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "tkt003",
+                    clienteId: "cli054",
+                    origem: "POA",
+                    destino: "CGH",
+                    companhia: "LATAM",
+                    numero: "957 2278154236",
+                    localizador: "FDJLGO",
+                    dataEmissao: "2026-03-16",
+                    dataVoo: "2026-05-18",
+                    classe: "economica",
+                    valor: "692.96",
+                    moeda: "BRL",
+                    status: "nao-utilizado",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "tkt004",
+                    clienteId: "cli062",
+                    origem: "BSB",
+                    destino: "CGH",
+                    companhia: "GOL",
+                    numero: "127 2154175110",
+                    localizador: "OABCPW",
+                    dataEmissao: "2026-01-21",
+                    dataVoo: "2026-01-29",
+                    classe: "economica",
+                    valor: "1647.78",
+                    moeda: "BRL",
+                    status: "nao-utilizado",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "tkt005",
+                    clienteId: "cli063",
+                    origem: "BSB",
+                    destino: "CGH",
+                    companhia: "GOL",
+                    numero: "127 2154175109",
+                    localizador: "OABCPW",
+                    dataEmissao: "2026-01-21",
+                    dataVoo: "2026-01-29",
+                    classe: "economica",
+                    valor: "1647.78",
+                    moeda: "BRL",
+                    status: "nao-utilizado",
+                    obs: "",
+                    dataCadastro: "2024-01-01T00:00:00.000Z"
                 }
             ],
         };
@@ -3116,6 +3267,15 @@
                 initialData.clientes.forEach(initC => {
                     if (!existingIds.has(initC.id) && !existingCpfs.has(initC.cpf)) {
                         merged.clientes.push(JSON.parse(JSON.stringify(initC)));
+                    }
+                });
+            }
+            if (initialData.bilhetes && merged.bilhetes) {
+                const existingBilheteIds = new Set(merged.bilhetes.map(b => b.id));
+                const existingBilheteNums = new Set(merged.bilhetes.map(b => b.numero).filter(n => n));
+                initialData.bilhetes.forEach(initB => {
+                    if (!existingBilheteIds.has(initB.id) && !existingBilheteNums.has(initB.numero)) {
+                        merged.bilhetes.push(JSON.parse(JSON.stringify(initB)));
                     }
                 });
             }
