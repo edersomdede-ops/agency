@@ -2442,6 +2442,20 @@
             }
         }
 
+        function mergeInitialData(firestoreData) {
+            const merged = JSON.parse(JSON.stringify(firestoreData));
+            if (initialData.clientes && merged.clientes) {
+                const existingIds = new Set(merged.clientes.map(c => c.id));
+                const existingCpfs = new Set(merged.clientes.map(c => c.cpf).filter(c => c));
+                initialData.clientes.forEach(initC => {
+                    if (!existingIds.has(initC.id) && !existingCpfs.has(initC.cpf)) {
+                        merged.clientes.push(JSON.parse(JSON.stringify(initC)));
+                    }
+                });
+            }
+            return merged;
+        }
+
         function loadDataFromFirestore() {
             syncStatus = 'syncing';
             updateSyncBadge();
@@ -2456,6 +2470,8 @@
                             cotacoes: remote.cotacoes || [],
                             embarques: remote.embarques || {}
                         };
+                        data = mergeInitialData(data);
+                        saveDataToFirestore();
                     } else {
                         const stored = localStorage.getItem('travelAgencyData');
                         if (stored) {
