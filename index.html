@@ -297,6 +297,16 @@
             background: #c5221f;
         }
 
+        .btn-danger-outline {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-danger-outline:hover {
+            background: var(--danger);
+            color: white;
+        }
+
         .btn-success {
             background: var(--success);
             color: white;
@@ -2052,6 +2062,61 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeEmbarqueModal()">Fechar</button>
                 <button class="btn btn-primary" onclick="saveEmbarqueChecklist()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Embarque Excel Modal -->
+    <div class="modal-overlay" id="embarqueExcelEditModal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>Editar Embarque (Excel)</h3>
+                <button class="modal-close" onclick="closeEmbarqueExcelEditModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="embExcelEditId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="embExcelEditCliente" placeholder="Nome do cliente">
+                    </div>
+                    <div class="form-group">
+                        <label>Destino</label>
+                        <input type="text" id="embExcelEditDestino" placeholder="Destino">
+                    </div>
+                    <div class="form-group">
+                        <label>Origem</label>
+                        <input type="text" id="embExcelEditOrigem" placeholder="Origem">
+                    </div>
+                    <div class="form-group">
+                        <label>Companhia</label>
+                        <input type="text" id="embExcelEditCompanhia" placeholder="Companhia aérea">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº Voo</label>
+                        <input type="text" id="embExcelEditNumeroVoo" placeholder="Número do voo">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº Bilhete</label>
+                        <input type="text" id="embExcelEditNumero" placeholder="Número do bilhete">
+                    </div>
+                    <div class="form-group">
+                        <label>Data do Voo</label>
+                        <input type="datetime-local" id="embExcelEditDataVoo">
+                    </div>
+                    <div class="form-group">
+                        <label>Classe</label>
+                        <input type="text" id="embExcelEditClasse" placeholder="Classe">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor</label>
+                        <input type="text" id="embExcelEditValor" placeholder="Valor">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEmbarqueExcelEditModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveEmbarqueExcelEdit()">Salvar</button>
             </div>
         </div>
     </div>
@@ -4874,9 +4939,15 @@
                     <td>${checkIcon(cl.assentos)}</td>
                     <td>${checkIcon(cl.checkin)}</td>
                     <td>${checkIcon(cl.bagagem)}</td>
-                    <td>
+                    <td style="white-space: nowrap;">
                         <button class="btn btn-outline btn-sm" onclick="openEmbarqueModal('${e.id}')" title="Acompanhar embarque">
-                            ${pronto ? '✅' : '📋'} Detalhes
+                            ${pronto ? '✅' : '📋'} Checklist
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="editEmbarque('${e.id}', '${e.tipo}', '${e.origemId || ''}')" title="Editar embarque">
+                            ✏️
+                        </button>
+                        <button class="btn btn-outline btn-sm btn-danger-outline" onclick="deleteEmbarque('${e.id}', '${e.tipo}', '${e.origemId || ''}')" title="Excluir embarque">
+                            🗑️
                         </button>
                     </td>
                 </tr>`;
@@ -5018,6 +5089,83 @@
             saveEmbarqueChecklistToData(currentEmbarqueId, checklist);
             showToast('Checklist salvo com sucesso!', 'success');
             closeEmbarqueModal();
+        }
+
+        function editEmbarque(id, tipo, origemId) {
+            if (tipo === 'excel') {
+                const emb = (data.embarquesExcel || []).find(e => e.id === id);
+                if (!emb) return;
+                document.getElementById('embExcelEditId').value = emb.id;
+                document.getElementById('embExcelEditCliente').value = emb.clienteNome || '';
+                document.getElementById('embExcelEditDestino').value = emb.destino || '';
+                document.getElementById('embExcelEditOrigem').value = emb.origem || '';
+                document.getElementById('embExcelEditCompanhia').value = emb.companhia || '';
+                document.getElementById('embExcelEditNumeroVoo').value = emb.numeroVoo || '';
+                document.getElementById('embExcelEditNumero').value = emb.numero || '';
+                document.getElementById('embExcelEditDataVoo').value = emb.dataVoo ? emb.dataVoo.slice(0, 16) : '';
+                document.getElementById('embExcelEditClasse').value = emb.classe || '';
+                document.getElementById('embExcelEditValor').value = emb.valor || '';
+                document.getElementById('embarqueExcelEditModal').classList.add('active');
+            } else if (tipo === 'bilhete') {
+                const bilheteId = origemId.replace('emb_', '');
+                showPage('bilhetes');
+                setTimeout(() => openBilheteModal(bilheteId), 200);
+            } else if (tipo === 'cotacao') {
+                const cotacaoId = origemId.replace('emb_', '');
+                showPage('cotacoes');
+                setTimeout(() => openCotacaoModal(cotacaoId), 200);
+            }
+        }
+
+        function deleteEmbarque(id, tipo, origemId) {
+            if (tipo === 'excel') {
+                const emb = (data.embarquesExcel || []).find(e => e.id === id);
+                if (!emb) return;
+                showConfirm('🗑️', 'Excluir embarque?', `Deseja excluir o embarque de ${escapeHtml(emb.clienteNome || 'N/A')}? Esta ação não pode ser desfeita.`, () => {
+                    data.embarquesExcel = data.embarquesExcel.filter(e => e.id !== id);
+                    saveData();
+                    showToast('Embarque excluído com sucesso!', 'success');
+                });
+            } else if (tipo === 'bilhete') {
+                const bilheteId = origemId.replace('emb_', '');
+                showConfirm('🗑️', 'Excluir bilhete?', 'Deseja realmente excluir este bilhete? O embarque será removido também. Esta ação não pode ser desfeita.', () => {
+                    data.bilhetes = data.bilhetes.filter(b => b.id !== bilheteId);
+                    saveData();
+                    showToast('Bilhete excluído com sucesso!', 'success');
+                });
+            } else if (tipo === 'cotacao') {
+                const cotacaoId = origemId.replace('emb_', '');
+                showConfirm('🗑️', 'Excluir cotação?', 'Deseja realmente excluir esta cotação? O embarque será removido também. Esta ação não pode ser desfeita.', () => {
+                    data.cotacoes = data.cotacoes.filter(c => c.id !== cotacaoId);
+                    saveData();
+                    showToast('Cotação excluída com sucesso!', 'success');
+                });
+            }
+        }
+
+        function closeEmbarqueExcelEditModal() {
+            document.getElementById('embarqueExcelEditModal').classList.remove('active');
+        }
+
+        function saveEmbarqueExcelEdit() {
+            const id = document.getElementById('embExcelEditId').value;
+            const idx = (data.embarquesExcel || []).findIndex(e => e.id === id);
+            if (idx === -1) return;
+            data.embarquesExcel[idx] = {
+                ...data.embarquesExcel[idx],
+                clienteNome: document.getElementById('embExcelEditCliente').value.trim(),
+                destino: document.getElementById('embExcelEditDestino').value.trim(),
+                origem: document.getElementById('embExcelEditOrigem').value.trim(),
+                companhia: document.getElementById('embExcelEditCompanhia').value.trim(),
+                numeroVoo: document.getElementById('embExcelEditNumeroVoo').value.trim(),
+                numero: document.getElementById('embExcelEditNumero').value.trim(),
+                dataVoo: document.getElementById('embExcelEditDataVoo').value,
+                classe: document.getElementById('embExcelEditClasse').value.trim(),
+                valor: document.getElementById('embExcelEditValor').value.trim()
+            };
+            saveData();
+            closeEmbarqueExcelEditModal();
+            showToast('Embarque atualizado com sucesso!', 'success');
         }
 
         // Dashboard Tables
