@@ -1418,6 +1418,8 @@
                                     <th>Cliente</th>
                                     <th>Rota</th>
                                     <th>Companhia</th>
+                                    <th>Localizador</th>
+                                    <th>Data Emissão</th>
                                     <th>Data do Voo</th>
                                     <th>Classe</th>
                                     <th>Valor</th>
@@ -1427,7 +1429,7 @@
                             </thead>
                             <tbody id="bilhetesTable">
                                 <tr>
-                                    <td colspan="8" class="table-empty">
+                                    <td colspan="10" class="table-empty">
                                         <div class="empty-icon">🎫</div>
                                         <p>Nenhum bilhete registrado. Clique em "Novo Bilhete" para começar.</p>
                                     </td>
@@ -1723,6 +1725,14 @@
                     <div class="form-group">
                         <label for="bilheteNumero">Nº do Bilhete</label>
                         <input type="text" id="bilheteNumero" placeholder="123-4567890123">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteLocalizador">Localizador</label>
+                        <input type="text" id="bilheteLocalizador" placeholder="ABC123" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group">
+                        <label for="bilheteDataEmissao">Data de Emissão</label>
+                        <input type="date" id="bilheteDataEmissao">
                     </div>
                     <div class="form-group">
                         <label for="bilheteDataVoo">Data do Voo</label>
@@ -3803,7 +3813,7 @@
             if (bilhetes.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="table-empty">
+                        <td colspan="10" class="table-empty">
                             <div class="empty-icon">🎫</div>
                             <p>${filter ? 'Nenhum bilhete encontrado para esta busca.' : 'Nenhum bilhete registrado. Clique em "Novo Bilhete" para começar.'}</p>
                         </td>
@@ -3818,6 +3828,8 @@
                     <td><strong>${escapeHtml(cliente ? cliente.nome : 'Cliente removido')}</strong></td>
                     <td>${escapeHtml(b.origem)} → ${escapeHtml(b.destino)}</td>
                     <td>${escapeHtml(b.companhia)}</td>
+                    <td>${b.localizador ? '<strong>' + escapeHtml(b.localizador) + '</strong>' : '<span style="color: var(--gray-400);">—</span>'}</td>
+                    <td>${b.dataEmissao ? formatDate(b.dataEmissao) : '<span style="color: var(--gray-400);">—</span>'}</td>
                     <td>${formatDateTime(b.dataVoo)}</td>
                     <td>${formatClasse(b.classe)}</td>
                     <td>${formatCurrency(b.valor)}</td>
@@ -3861,6 +3873,8 @@
                     document.getElementById('bilheteDestino').value = bilhete.destino;
                     document.getElementById('bilheteCompanhia').value = bilhete.companhia;
                     document.getElementById('bilheteNumero').value = bilhete.numero || '';
+                    document.getElementById('bilheteLocalizador').value = bilhete.localizador || '';
+                    document.getElementById('bilheteDataEmissao').value = bilhete.dataEmissao || '';
                     document.getElementById('bilheteDataVoo').value = bilhete.dataVoo;
                     document.getElementById('bilheteClasse').value = bilhete.classe;
                     document.getElementById('bilheteValor').value = bilhete.valor;
@@ -3894,6 +3908,8 @@
                 destino: document.getElementById('bilheteDestino').value.trim().toUpperCase(),
                 companhia: document.getElementById('bilheteCompanhia').value.trim(),
                 numero: document.getElementById('bilheteNumero').value.trim(),
+                localizador: document.getElementById('bilheteLocalizador').value.trim().toUpperCase(),
+                dataEmissao: document.getElementById('bilheteDataEmissao').value,
                 dataVoo: document.getElementById('bilheteDataVoo').value,
                 classe: document.getElementById('bilheteClasse').value,
                 valor: document.getElementById('bilheteValor').value,
