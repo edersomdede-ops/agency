@@ -2095,7 +2095,8 @@
             clientes: [],
             bilhetes: [],
             cotacoes: [],
-            embarques: {}
+            embarques: {},
+            embarquesExcel: []
         };
 
         let confirmCallback = null;
@@ -3308,7 +3309,8 @@
                             clientes: remote.clientes || [],
                             bilhetes: remote.bilhetes || [],
                             cotacoes: remote.cotacoes || [],
-                            embarques: remote.embarques || {}
+                            embarques: remote.embarques || {},
+                            embarquesExcel: remote.embarquesExcel || []
                         };
                         data = mergeInitialData(data);
                         data = normalizeAllData(data);
@@ -3341,7 +3343,8 @@
                         clientes: remote.clientes || [],
                         bilhetes: remote.bilhetes || [],
                         cotacoes: remote.cotacoes || [],
-                        embarques: remote.embarques || {}
+                        embarques: remote.embarques || {},
+                        embarquesExcel: remote.embarquesExcel || []
                     };
                     const merged = mergeInitialData(newData);
                     const normalized = normalizeAllData(merged);
@@ -3385,6 +3388,7 @@
                 bilhetes: data.bilhetes,
                 cotacoes: data.cotacoes,
                 embarques: data.embarques,
+                embarquesExcel: data.embarquesExcel || [],
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 syncStatus = 'connected';
