@@ -3259,6 +3259,20 @@
             }
         }
 
+        function normalizeGrupo(nome) {
+            if (!nome || !nome.trim()) return '';
+            return nome.trim().replace(/\s+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        function normalizeAllData(d) {
+            if (d.clientes) {
+                d.clientes.forEach(c => {
+                    if (c.grupo) c.grupo = normalizeGrupo(c.grupo);
+                });
+            }
+            return d;
+        }
+
         function mergeInitialData(firestoreData) {
             const merged = JSON.parse(JSON.stringify(firestoreData));
             if (initialData.clientes && merged.clientes) {
@@ -3297,6 +3311,7 @@
                             embarques: remote.embarques || {}
                         };
                         data = mergeInitialData(data);
+                        data = normalizeAllData(data);
                         saveDataToFirestore();
                     } else {
                         const stored = localStorage.getItem('travelAgencyData');
@@ -3329,10 +3344,11 @@
                         embarques: remote.embarques || {}
                     };
                     const merged = mergeInitialData(newData);
-                    const mergedStr = JSON.stringify(merged);
+                    const normalized = normalizeAllData(merged);
+                    const mergedStr = JSON.stringify(normalized);
                     const localStr = JSON.stringify(data);
                     if (mergedStr !== localStr) {
-                        data = merged;
+                        data = normalized;
                         saveDataLocal();
                         saveDataToFirestore();
                         renderAll();
@@ -3348,6 +3364,7 @@
         }
 
         function saveData() {
+            data = normalizeAllData(data);
             saveDataLocal();
             if (useFirestore) {
                 saveDataToFirestore();
