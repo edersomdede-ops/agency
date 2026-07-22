@@ -751,7 +751,7 @@
             }
 
             .content {
-                padding: 20px;
+                padding: 12px;
             }
 
             .stats-grid {
@@ -761,6 +761,10 @@
             .table-header {
                 flex-direction: column;
                 align-items: stretch;
+            }
+
+            .table-actions {
+                flex-wrap: wrap;
             }
 
             .search-box input {
@@ -776,11 +780,25 @@
             }
 
             table {
-                font-size: 13px;
+                font-size: 12px;
             }
 
             th, td {
-                padding: 10px 12px;
+                padding: 8px 6px;
+            }
+
+            .emb-hide-mobile {
+                display: none;
+            }
+
+            .btn-sm {
+                padding: 4px 6px;
+                font-size: 12px;
+            }
+
+            #embarquesTable .action-btns,
+            #embarquesTable td:last-child {
+                white-space: nowrap;
             }
         }
 
@@ -1604,10 +1622,10 @@
                                     <th>Rota</th>
                                     <th>Data do Voo</th>
                                     <th>Dias</th>
-                                    <th>Documentos</th>
-                                    <th>Assentos</th>
-                                    <th>Check-in</th>
-                                    <th>Bagagem</th>
+                                    <th class="emb-hide-mobile">Documentos</th>
+                                    <th class="emb-hide-mobile">Assentos</th>
+                                    <th class="emb-hide-mobile">Check-in</th>
+                                    <th class="emb-hide-mobile">Bagagem</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -4936,9 +4954,9 @@
                     <td>${formatDateTime(e.dataVoo)}</td>
                     <td>${diasLabel}</td>
                     <td>${checkIcon(cl.documentos && cl.passaporte && cl.visto && cl.seguros)}</td>
-                    <td>${checkIcon(cl.assentos)}</td>
-                    <td>${checkIcon(cl.checkin)}</td>
-                    <td>${checkIcon(cl.bagagem)}</td>
+                    <td class="emb-hide-mobile">${checkIcon(cl.assentos)}</td>
+                    <td class="emb-hide-mobile">${checkIcon(cl.checkin)}</td>
+                    <td class="emb-hide-mobile">${checkIcon(cl.bagagem)}</td>
                     <td style="white-space: nowrap;">
                         <button class="btn btn-outline btn-sm" onclick="openEmbarqueModal('${e.id}')" title="Acompanhar embarque">
                             ${pronto ? '✅' : '📋'} Checklist
