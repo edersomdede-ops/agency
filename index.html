@@ -1198,6 +1198,10 @@
                     <span class="nav-icon">🛫</span> Embarques
                     <span class="badge" id="embarquesCount">0</span>
                 </button>
+                <button class="nav-item" onclick="showPage('pendencias')">
+                    <span class="nav-icon">📌</span> Pendências
+                    <span class="badge" id="pendenciasCount">0</span>
+                </button>
             </div>
         </nav>
         <div class="sidebar-footer">
@@ -1634,6 +1638,98 @@
                                     <td colspan="9" class="table-empty">
                                         <div class="empty-icon">🛫</div>
                                         <p>Nenhum embarque programado para os próximos 30 dias.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pendencias Page -->
+        <div class="page-view" id="page-pendencias">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">📌</div>
+                        <div class="stat-info">
+                            <h3 id="statPendTotal">0</h3>
+                            <p>Total Pendências</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">⏳</div>
+                        <div class="stat-info">
+                            <h3 id="statPendAbertas">0</h3>
+                            <p>Em Aberto</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">🔥</div>
+                        <div class="stat-info">
+                            <h3 id="statPendUrgentes">0</h3>
+                            <p>Urgentes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✅</div>
+                        <div class="stat-info">
+                            <h3 id="statPendConcluidas">0</h3>
+                            <p>Concluídas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Pendências Administrativas</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-primary" onclick="openPendenciaModal()">
+                                ➕ Nova Pendência
+                            </button>
+                            <select id="filterPendenciaStatus" onchange="filterPendencias()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todas</option>
+                                <option value="aberta">Em Aberto</option>
+                                <option value="em-andamento">Em Andamento</option>
+                                <option value="concluida">Concluídas</option>
+                                <option value="cancelada">Canceladas</option>
+                            </select>
+                            <select id="filterPendenciaCategoria" onchange="filterPendencias()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todas Categorias</option>
+                                <option value="reclamacao">Reclamação</option>
+                                <option value="assentos">Comprar Assentos</option>
+                                <option value="monitoramento">Monitorar Valor</option>
+                                <option value="documentacao">Documentação</option>
+                                <option value="bagagem">Bagagem</option>
+                                <option value="transfer">Transfer/Transporte</option>
+                                <option value="hospedagem">Hospedagem</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar pendências..." id="searchPendencias" oninput="filterPendencias()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Prioridade</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Cliente</th>
+                                    <th>Prazo</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendenciasTable">
+                                <tr>
+                                    <td colspan="7" class="table-empty">
+                                        <div class="empty-icon">📌</div>
+                                        <p>Nenhuma pendência registrada.</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -2139,6 +2235,74 @@
         </div>
     </div>
 
+    <!-- Pendencia Modal -->
+    <div class="modal-overlay" id="pendenciaModal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3 id="pendenciaModalTitle">Nova Pendência</h3>
+                <button class="modal-close" onclick="closePendenciaModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="pendenciaForm" class="form-grid">
+                    <input type="hidden" id="pendenciaId">
+                    <div class="form-group">
+                        <label for="pendenciaTitulo">Descrição *</label>
+                        <input type="text" id="pendenciaTitulo" required placeholder="Ex: Monitorar valor voo CGH-MIA 15/08">
+                    </div>
+                    <div class="form-group">
+                        <label for="pendenciaCategoria">Categoria *</label>
+                        <select id="pendenciaCategoria" required>
+                            <option value="reclamacao">Reclamação do Cliente</option>
+                            <option value="assentos">Comprar Assentos</option>
+                            <option value="monitoramento">Monitorar Valor de Voo</option>
+                            <option value="documentacao">Documentação</option>
+                            <option value="bagagem">Bagagem</option>
+                            <option value="transfer">Transfer/Transporte</option>
+                            <option value="hospedagem">Hospedagem</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pendenciaCliente">Cliente</label>
+                        <select id="pendenciaCliente">
+                            <option value="">Selecione um cliente...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pendenciaPrioridade">Prioridade *</label>
+                        <select id="pendenciaPrioridade" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pendenciaPrazo">Prazo</label>
+                        <input type="date" id="pendenciaPrazo">
+                    </div>
+                    <div class="form-group">
+                        <label for="pendenciaStatus">Status *</label>
+                        <select id="pendenciaStatus" required>
+                            <option value="aberta">Em Aberto</option>
+                            <option value="em-andamento">Em Andamento</option>
+                            <option value="concluida">Concluída</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="pendenciaObs">Observações</label>
+                        <textarea id="pendenciaObs" rows="3" placeholder="Detalhes adicionais, links, valores a monitorar..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closePendenciaModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="savePendencia()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -2180,7 +2344,8 @@
             bilhetes: [],
             cotacoes: [],
             embarques: {},
-            embarquesExcel: []
+            embarquesExcel: [],
+            pendencias: []
         };
 
         let confirmCallback = null;
@@ -3400,7 +3565,7 @@
         };
 
         // Data persistence
-        const DATA_VERSION = '7.0';
+        const DATA_VERSION = '8.0';
         const DOC_ID = 'agencyData';
         
         function loadData() {
@@ -3474,7 +3639,8 @@
                             bilhetes: remote.bilhetes || [],
                             cotacoes: remote.cotacoes || [],
                             embarques: remote.embarques || {},
-                            embarquesExcel: remote.embarquesExcel || []
+                            embarquesExcel: remote.embarquesExcel || [],
+                            pendencias: remote.pendencias || []
                         };
                         data = mergeInitialData(data);
                         data = normalizeAllData(data);
@@ -3508,7 +3674,8 @@
                         bilhetes: remote.bilhetes || [],
                         cotacoes: remote.cotacoes || [],
                         embarques: remote.embarques || {},
-                        embarquesExcel: remote.embarquesExcel || []
+                        embarquesExcel: remote.embarquesExcel || [],
+                        pendencias: remote.pendencias || []
                     };
                     const merged = mergeInitialData(newData);
                     const normalized = normalizeAllData(merged);
@@ -3553,6 +3720,7 @@
                 cotacoes: data.cotacoes,
                 embarques: data.embarques,
                 embarquesExcel: data.embarquesExcel || [],
+                pendencias: data.pendencias || [],
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 syncStatus = 'connected';
@@ -3579,7 +3747,8 @@
                 clientes: 'CRM de Clientes',
                 bilhetes: 'Bilhetes Não Utilizados',
                 cotacoes: 'Cotações',
-                embarques: 'Embarques Próximos'
+                embarques: 'Embarques Próximos',
+                pendencias: 'Pendências Administrativas'
             };
             document.getElementById('pageTitle').textContent = titles[page];
 
@@ -3598,6 +3767,7 @@
             renderBilhetesTable();
             renderCotacoesTable();
             renderEmbarquesTable();
+            renderPendenciasTable();
             renderDashboardTables();
             updateBadges();
         }
@@ -3665,6 +3835,7 @@
             const embarquesProximos = getEmbarquesProximos();
             const embarquesPendentes = embarquesProximos.filter(e => !isEmbarquePronto(e)).length;
             document.getElementById('embarquesCount').textContent = embarquesPendentes;
+            document.getElementById('pendenciasCount').textContent = (data.pendencias || []).filter(p => p.status !== 'concluida' && p.status !== 'cancelada').length;
         }
 
         // Clientes
@@ -5267,6 +5438,188 @@
             saveData();
             closeEmbarqueExcelEditModal();
             showToast('Embarque atualizado com sucesso!', 'success');
+        }
+
+        // Pendências
+        const pendenciaCategorias = {
+            reclamacao: 'Reclamação',
+            assentos: 'Assentos',
+            monitoramento: 'Monitorar Valor',
+            documentacao: 'Documentação',
+            bagagem: 'Bagagem',
+            transfer: 'Transfer',
+            hospedagem: 'Hospedagem',
+            outro: 'Outro'
+        };
+
+        const pendenciaPrioridades = {
+            baixa: { label: 'Baixa', color: 'var(--gray-400)', icon: '🔽' },
+            media: { label: 'Média', color: 'var(--primary)', icon: '➖' },
+            alta: { label: 'Alta', color: 'var(--warning)', icon: '🔼' },
+            urgente: { label: 'Urgente', color: 'var(--danger)', icon: '🔥' }
+        };
+
+        const pendenciaStatuses = {
+            'aberta': { label: 'Em Aberto', color: 'var(--primary)', bg: 'var(--primary-light)' },
+            'em-andamento': { label: 'Em Andamento', color: 'var(--warning)', bg: '#fff8e1' },
+            'concluida': { label: 'Concluída', color: 'var(--success)', bg: '#e8f5e9' },
+            'cancelada': { label: 'Cancelada', color: 'var(--gray-400)', bg: 'var(--gray-100)' }
+        };
+
+        function renderPendenciasTable(filter = '') {
+            const tbody = document.getElementById('pendenciasTable');
+            const filterStatus = document.getElementById('filterPendenciaStatus').value;
+            const filterCategoria = document.getElementById('filterPendenciaCategoria').value;
+            let pendencias = [...(data.pendencias || [])];
+
+            if (filterStatus) pendencias = pendencias.filter(p => p.status === filterStatus);
+            if (filterCategoria) pendencias = pendencias.filter(p => p.categoria === filterCategoria);
+
+            const priorityOrder = { urgente: 0, alta: 1, media: 2, baixa: 3 };
+            pendencias.sort((a, b) => (priorityOrder[a.prioridade] ?? 4) - (priorityOrder[b.prioridade] ?? 4));
+
+            if (filter) {
+                const term = filter.toLowerCase();
+                pendencias = pendencias.filter(p =>
+                    p.titulo.toLowerCase().includes(term) ||
+                    (p.obs && p.obs.toLowerCase().includes(term)) ||
+                    getClienteNameById(p.clienteId).toLowerCase().includes(term)
+                );
+            }
+
+            const now = new Date();
+            pendencias = pendencias.filter(p => {
+                if (p.status === 'concluida' || p.status === 'cancelada') {
+                    const dt = new Date(p.dataCadastro);
+                    return (now - dt) < 30 * 24 * 60 * 60 * 1000;
+                }
+                return true;
+            });
+
+            document.getElementById('statPendTotal').textContent = (data.pendencias || []).length;
+            document.getElementById('statPendAbertas').textContent = (data.pendencias || []).filter(p => p.status === 'aberta' || p.status === 'em-andamento').length;
+            document.getElementById('statPendUrgentes').textContent = (data.pendencias || []).filter(p => p.prioridade === 'urgente' && p.status !== 'concluida' && p.status !== 'cancelada').length;
+            document.getElementById('statPendConcluidas').textContent = (data.pendencias || []).filter(p => p.status === 'concluida').length;
+
+            if (pendencias.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="table-empty"><div class="empty-icon">📌</div><p>${(filter || filterStatus || filterCategoria) ? 'Nenhuma pendência encontrada.' : 'Nenhuma pendência registrada.'}</p></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = pendencias.map(p => {
+                const cat = pendenciaCategorias[p.categoria] || p.categoria;
+                const pri = pendenciaPrioridades[p.prioridade] || pendenciaPrioridades.media;
+                const st = pendenciaStatuses[p.status] || pendenciaStatuses.aberta;
+                const clienteNome = getClienteNameById(p.clienteId);
+                const prazoText = p.prazo ? formatDateTime(p.prazo) : '—';
+                const isAtrasado = p.prazo && new Date(p.prazo) < now && p.status !== 'concluida' && p.status !== 'cancelada';
+
+                return `<tr${isAtrasado ? ' style="background: #fff8f8;"' : ''}>
+                    <td><span style="color: ${pri.color}; font-weight: 600;">${pri.icon} ${pri.label}</span></td>
+                    <td>
+                        <strong>${escapeHtml(p.titulo)}</strong>
+                        ${p.obs ? `<div style="font-size: 11px; color: var(--gray-500); margin-top: 2px; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(p.obs)}</div>` : ''}
+                    </td>
+                    <td><span style="font-size: 12px;">${cat}</span></td>
+                    <td>${clienteNome !== 'N/A' ? escapeHtml(clienteNome) : '<span style="color: var(--gray-400);">—</span>'}</td>
+                    <td${isAtrasado ? ' style="color: var(--danger); font-weight: 600;"' : ''}>${isAtrasado ? '⚠️ ' : ''}${prazoText}</td>
+                    <td><span style="background: ${st.bg}; color: ${st.color}; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;">${st.label}</span></td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn btn-outline btn-sm" onclick="editPendencia('${p.id}')" title="Editar">✏️</button>
+                        <button class="btn btn-outline btn-sm btn-danger-outline" onclick="deletePendencia('${p.id}')" title="Excluir">🗑️</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterPendencias() {
+            const term = document.getElementById('searchPendencias').value;
+            renderPendenciasTable(term);
+        }
+
+        function getClienteNameById(id) {
+            if (!id) return 'N/A';
+            const c = data.clientes.find(cl => cl.id === id);
+            return c ? c.nome : 'N/A';
+        }
+
+        function openPendenciaModal(id = null) {
+            document.getElementById('pendenciaForm').reset();
+            document.getElementById('pendenciaId').value = '';
+
+            const select = document.getElementById('pendenciaCliente');
+            select.innerHTML = '<option value="">Sem cliente vinculado</option>' +
+                data.clientes.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+
+            if (id) {
+                const p = data.pendencias.find(x => x.id === id);
+                if (p) {
+                    document.getElementById('pendenciaModalTitle').textContent = 'Editar Pendência';
+                    document.getElementById('pendenciaId').value = p.id;
+                    document.getElementById('pendenciaTitulo').value = p.titulo;
+                    document.getElementById('pendenciaCategoria').value = p.categoria;
+                    document.getElementById('pendenciaCliente').value = p.clienteId || '';
+                    document.getElementById('pendenciaPrioridade').value = p.prioridade;
+                    document.getElementById('pendenciaPrazo').value = p.prazo || '';
+                    document.getElementById('pendenciaStatus').value = p.status;
+                    document.getElementById('pendenciaObs').value = p.obs || '';
+                }
+            } else {
+                document.getElementById('pendenciaModalTitle').textContent = 'Nova Pendência';
+            }
+
+            document.getElementById('pendenciaModal').classList.add('active');
+        }
+
+        function closePendenciaModal() {
+            document.getElementById('pendenciaModal').classList.remove('active');
+        }
+
+        function savePendencia() {
+            const form = document.getElementById('pendenciaForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('pendenciaId').value;
+            const pendencia = {
+                id: id || generateId(),
+                titulo: document.getElementById('pendenciaTitulo').value.trim(),
+                categoria: document.getElementById('pendenciaCategoria').value,
+                clienteId: document.getElementById('pendenciaCliente').value,
+                prioridade: document.getElementById('pendenciaPrioridade').value,
+                prazo: document.getElementById('pendenciaPrazo').value,
+                status: document.getElementById('pendenciaStatus').value,
+                obs: document.getElementById('pendenciaObs').value.trim(),
+                dataCadastro: id ? (data.pendencias.find(p => p.id === id)?.dataCadastro || new Date().toISOString()) : new Date().toISOString()
+            };
+
+            if (!data.pendencias) data.pendencias = [];
+
+            if (id) {
+                const index = data.pendencias.findIndex(p => p.id === id);
+                data.pendencias[index] = pendencia;
+                showToast('Pendência atualizada com sucesso!', 'success');
+            } else {
+                data.pendencias.push(pendencia);
+                showToast('Pendência criada com sucesso!', 'success');
+            }
+
+            saveData();
+            closePendenciaModal();
+        }
+
+        function editPendencia(id) {
+            openPendenciaModal(id);
+        }
+
+        function deletePendencia(id) {
+            showConfirm('🗑️', 'Excluir pendência?', 'Deseja realmente excluir esta pendência? Esta ação não pode ser desfeita.', () => {
+                data.pendencias = data.pendencias.filter(p => p.id !== id);
+                saveData();
+                showToast('Pendência excluída com sucesso!', 'success');
+            });
         }
 
         // Dashboard Tables
