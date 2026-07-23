@@ -3385,7 +3385,7 @@
             syncStatus = 'syncing';
             updateSyncBadge();
 
-            db.collection('agencia').doc(DOC_ID).get()
+            db.collection('agencia').doc(DOC_ID).get({ source: 'server' })
                 .then(doc => {
                     if (doc.exists) {
                         const remote = doc.data();
@@ -3398,7 +3398,6 @@
                         };
                         data = mergeInitialData(data);
                         data = normalizeAllData(data);
-                        saveDataToFirestore();
                     } else {
                         const stored = localStorage.getItem('travelAgencyData');
                         if (stored) {
@@ -3414,18 +3413,14 @@
                     updateSyncBadge();
                 })
                 .catch(err => {
-                    console.warn('Firestore read failed:', err);
+                    console.warn('Firestore read failed, falling back to localStorage:', err);
                     loadDataFromLocal();
                     syncStatus = 'offline';
                     updateSyncBadge();
                 });
 
             db.collection('agencia').doc(DOC_ID).onSnapshot(doc => {
-                if (isSaving) {
-                    syncStatus = 'connected';
-                    updateSyncBadge();
-                    return;
-                }
+                if (isSaving) return;
                 if (doc.exists) {
                     const remote = doc.data();
                     const newData = {
