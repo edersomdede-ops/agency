@@ -2159,6 +2159,7 @@
         let db = null;
         let useFirestore = false;
         let syncStatus = 'pending';
+        let isSaving = false;
 
         try {
             firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -3420,6 +3421,11 @@
                 });
 
             db.collection('agencia').doc(DOC_ID).onSnapshot(doc => {
+                if (isSaving) {
+                    syncStatus = 'connected';
+                    updateSyncBadge();
+                    return;
+                }
                 if (doc.exists) {
                     const remote = doc.data();
                     const newData = {
@@ -3436,7 +3442,6 @@
                     if (mergedStr !== localStr) {
                         data = normalized;
                         saveDataLocal();
-                        saveDataToFirestore();
                         renderAll();
                     }
                     syncStatus = 'connected';
@@ -3465,6 +3470,7 @@
 
         function saveDataToFirestore() {
             syncStatus = 'syncing';
+            isSaving = true;
             updateSyncBadge();
             db.collection('agencia').doc(DOC_ID).set({
                 clientes: data.clientes,
@@ -3475,10 +3481,12 @@
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 syncStatus = 'connected';
+                isSaving = false;
                 updateSyncBadge();
             }).catch(err => {
                 console.warn('Firestore write failed:', err);
                 syncStatus = 'offline';
+                isSaving = false;
                 updateSyncBadge();
             });
         }
