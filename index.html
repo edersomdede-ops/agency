@@ -2324,6 +2324,7 @@
         let useFirestore = false;
         let syncStatus = 'pending';
         let isSaving = false;
+        let saveGeneration = 0;
 
         try {
             firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -3728,13 +3729,18 @@
             });
         }
 
+        let saveDataTimeout = null;
+
         function saveData() {
             data = normalizeAllData(data);
             saveDataLocal();
-            if (useFirestore) {
-                saveDataToFirestore();
-            }
             renderAll();
+            if (useFirestore) {
+                if (saveDataTimeout) clearTimeout(saveDataTimeout);
+                saveDataTimeout = setTimeout(() => {
+                    saveDataToFirestore();
+                }, 300);
+            }
         }
 
         function saveDataLocal() {
@@ -3745,23 +3751,32 @@
         function saveDataToFirestore() {
             syncStatus = 'syncing';
             isSaving = true;
-            updateSyncBadge();
-            db.collection('agencia').doc(DOC_ID).set({
-                clientes: data.clientes,
-                bilhetes: data.bilhetes,
-                cotacoes: data.cotacoes,
-                embarques: data.embarques,
-                embarquesExcel: data.embarquesExcel || [],
-                pendencias: data.pendencias || [],
+            saveGeneration++;
+            const myGeneration = saveGeneration;
+            const snapshot = {
+                clientes: JSON.parse(JSON.stringify(data.clientes)),
+                bilhetes: JSON.parse(JSON.stringify(data.bilhetes)),
+                cotacoes: JSON.parse(JSON.stringify(data.cotacoes)),
+                embarques: JSON.parse(JSON.stringify(data.embarques)),
+                embarquesExcel: JSON.parse(JSON.stringify(data.embarquesExcel || [])),
+                pendencias: JSON.parse(JSON.stringify(data.pendencias || [])),
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                syncStatus = 'connected';
-                isSaving = false;
+            };
+            updateSyncBadge();
+            db.collection('agencia').doc(DOC_ID).set(snapshot).then(() => {
+                if (myGeneration === saveGeneration) {
+                    syncStatus = 'connected';
+                    isSaving = false;
+                } else {
+                    syncStatus = 'syncing';
+                }
                 updateSyncBadge();
             }).catch(err => {
                 console.warn('Firestore write failed:', err);
                 syncStatus = 'offline';
-                isSaving = false;
+                if (myGeneration === saveGeneration) {
+                    isSaving = false;
+                }
                 updateSyncBadge();
             });
         }
