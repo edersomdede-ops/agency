@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotacao E-mail - Converter Sabre</title>
+    <style>
+<style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --primary-light: #e8f0fe;
+            --danger: #d93025;
+            --danger-light: #fce8e6;
+            --success: #1e8e3e;
+            --success-light: #e6f4ea;
+            --warning: #f9ab00;
+            --warning-light: #fef7e0;
+            --gray-50: #f8f9fa;
+            --gray-100: #f1f3f4;
+            --gray-200: #e8eaed;
+            --gray-300: #dadce0;
+            --gray-400: #bdc1c6;
+            --gray-500: #9aa0a6;
+            --gray-700: #5f6368;
+            --gray-900: #202124;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-900);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--gray-900);
+            color: white;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h1 .icon {
+            font-size: 24px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 8px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-500);
+            padding: 8px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--gray-300);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .nav-item.active .badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: var(--gray-300);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-footer button:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 32px;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-left h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.blue { background: var(--primary-light); }
+        .stat-icon.green { background: var(--success-light); }
+        .stat-icon.orange { background: var(--warning-light); }
+        .stat-icon.red { background: var(--danger-light); }
+
+        .stat-info h3 {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-info p {
+            font-size: 13px;
+            color: var(--gray-700);
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c5221f;
+        }
+
+        .btn-danger-outline {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-danger-outline:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1a7e37;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-500);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            justify-content: center;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 13px;
+            width: 260px;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .sabre-cat-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        .sabre-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+        }
+        .sabre-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid var(--gray-200);
+        }
+        .sabre-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .sabre-cmd {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            background: var(--primary-light);
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: inline-block;
+            word-break: break-all;
+        }
+        .sabre-desc {
+            font-size: 13px;
+            color: var(--gray-900);
+            line-height: 1.5;
+        }
+        .sabre-ex {
+            font-size: 12px;
+            color: var(--gray-700);
+            background: var(--gray-50);
+            border-left: 3px solid var(--primary);
+            padding: 6px 10px;
+            border-radius: 0 6px 6px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .sabre-ex strong {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+        .sabre-note {
+            font-size: 12px;
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+        .sabre-empty {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .ct-cell {
+            width: 100%;
+            padding: 8px 6px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            background: transparent;
+        }
+        .ct-cell:hover {
+            border-color: var(--gray-300);
+            background: var(--gray-50);
+        }
+        .ct-cell:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+        .ct-cell.ct-cmd {
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .ct-del {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+            padding: 4px 6px;
+        }
+        .ct-del:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        .ct-tarifa-line {
+            font-size: 13px;
+            color: var(--gray-900);
+            background: var(--gray-50);
+            border: 1px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            line-height: 1.6;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--gray-50);
+        }
+
+        th {
+            padding: 12px 24px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        td {
+            padding: 14px 24px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-empty {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--gray-500);
+        }
+
+        .table-empty .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .table-empty p {
+            font-size: 14px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-badge.inactive {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .status-badge.pending {
+            background: var(--warning-light);
+            color: #e37400;
+        }
+
+        .status-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--gray-700);
+            transition: background 0.15s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-100);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+        }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: none;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Page views */
+        .page-view {
+            display: none;
+        }
+
+        .page-view.active {
+            display: block;
+        }
+
+        /* Client card info */
+        .client-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: var(--gray-900);
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--gray-900);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            min-width: 280px;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--primary); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Confirm Dialog */
+        .confirm-dialog .modal {
+            max-width: 400px;
+        }
+
+        .confirm-dialog .modal-body {
+            text-align: center;
+            padding: 32px 24px;
+        }
+
+        .confirm-dialog .confirm-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .confirm-dialog .confirm-text {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .confirm-dialog .confirm-subtext {
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+
+        /* Mobile */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .content {
+                padding: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-actions {
+                flex-wrap: wrap;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .client-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            .emb-hide-mobile {
+                display: none;
+            }
+
+            .btn-sm {
+                padding: 4px 6px;
+                font-size: 12px;
+            }
+
+            #embarquesTable .action-btns,
+            #embarquesTable td:last-child {
+                white-space: nowrap;
+            }
+        }
+
+        /* Overflow handling for table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        /* File input hidden */
+        #importInput {
+            display: none;
+        }
+
+        /* Action buttons in table */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Highlight row */
+        tbody tr.highlight {
+            background: var(--primary-light);
+        }
+
+        /* Embarques checklist */
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .checklist-item:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .checklist-item.checked {
+            background: var(--success-light);
+            border-color: var(--success);
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--success);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checklist-item label {
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .checklist-item.checked label {
+            text-decoration: line-through;
+            color: var(--gray-500);
+        }
+
+        .embarque-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .embarque-header .embarque-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .embarque-header .embarque-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .embarque-header .embarque-info p {
+            font-size: 13px;
+            color: var(--gray-700);
+        }
+
+        .embarque-progress {
+            margin-bottom: 20px;
+        }
+
+        .embarque-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .embarque-progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .embarque-progress-label {
+            font-size: 12px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .embarque-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .embarque-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .embarque-detail-item .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray-500);
+        }
+
+        .embarque-detail-item .value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .embarque-obs {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--warning-light);
+            border-radius: var(--radius);
+            font-size: 13px;
+        }
+
+        .embarque-obs .obs-label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .embarque-obs textarea {
+            width: 100%;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            outline: none;
+        }
+
+        .embarque-obs textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        @media (max-width: 768px) {
+            .checklist-grid {
+                grid-template-columns: 1fr;
+            }
+            .embarque-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cotação upload */
+        .cotacao-upload-area {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: border-color 0.15s ease;
+        }
+
+        .cotacao-upload-area:hover {
+            border-color: var(--primary);
+        }
+
+        .cotacao-imagens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .cotacao-imagens-grid:empty {
+            display: none;
+        }
+
+        .cotacao-img-item {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            aspect-ratio: 1;
+            cursor: pointer;
+        }
+
+        .cotacao-img-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cotacao-img-item .remove-img {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .cotacao-img-item:hover .remove-img {
+            opacity: 1;
+        }
+
+        /* HTML Preview Modal */
+        .html-preview-content {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .html-preview-content table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .html-preview-content th,
+        .html-preview-content td {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .html-preview-content th {
+            background: var(--gray-50);
+            font-weight: 600;
+        }
+
+        /* HTML Editor (contenteditable) */
+        .html-editor {
+            min-height: 120px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            background: white;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .html-editor:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .html-editor:empty:before {
+            content: attr(data-placeholder);
+            color: var(--gray-500);
+            pointer-events: none;
+        }
+
+        .html-editor table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+        }
+
+        .html-editor th,
+        .html-editor td {
+            padding: 6px 10px;
+            border: 1px solid var(--gray-300);
+            font-size: 12px;
+        }
+
+        .html-editor th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+
+        .html-editor img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Excel Import */
+        .excel-map-select {
+            padding: 8px 10px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 13px;
+            background: white;
+            width: 100%;
+            outline: none;
+        }
+
+        .excel-map-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .excel-status-ok {
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .excel-status-warn {
+            color: var(--warning);
+            font-weight: 500;
+        }
+        /* Kanban Board */
+        .kanban-toggle {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .kanban-toggle button {
+            padding: 6px 16px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-700);
+            transition: all 0.2s;
+        }
+        .kanban-toggle button.active {
+            background: var(--primary);
+            color: white;
+        }
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 16px;
+            min-height: 400px;
+        }
+        .kanban-column {
+            min-width: 280px;
+            max-width: 340px;
+            flex: 1;
+            background: var(--gray-100);
+            border-radius: var(--radius-lg);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        .kanban-column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .kanban-column-header .kanban-count {
+            background: rgba(255,255,255,0.7);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+        .kanban-cards {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 60px;
+            border-radius: var(--radius);
+            padding: 4px;
+            transition: background 0.2s;
+        }
+        .kanban-cards.drag-over {
+            background: rgba(26, 115, 232, 0.08);
+            outline: 2px dashed var(--primary);
+            outline-offset: -2px;
+        }
+        .kanban-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 12px;
+            box-shadow: var(--shadow);
+            cursor: grab;
+            transition: box-shadow 0.2s, transform 0.1s;
+            border-left: 4px solid transparent;
+            position: relative;
+        }
+        .kanban-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .kanban-card:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+        .kanban-card.dragging {
+            opacity: 0.4;
+            transform: rotate(2deg);
+        }
+        .kanban-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--gray-900);
+            line-height: 1.3;
+        }
+        .kanban-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+        .kanban-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .kanban-card-client {
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+        .kanban-card-deadline {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        .kanban-card-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: none;
+            gap: 4px;
+        }
+        .kanban-card:hover .kanban-card-actions {
+            display: flex;
+        }
+        .kanban-card-actions button {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .kanban-card-actions button:hover {
+            background: var(--gray-200);
+        }
+        .kanban-card-actions button.btn-del:hover {
+            background: var(--danger-light);
+        }
+        .quick-paste-area {
+            background: white;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .quick-paste-area h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+        .quick-paste-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .quick-paste-row textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            outline: none;
+        }
+        .quick-paste-row textarea:focus {
+            border-color: var(--primary);
+        }
+        .quick-paste-options {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .quick-paste-options select {
+            padding: 6px 10px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 12px;
+            outline: none;
+            background: white;
+        }
+        @media (max-width: 768px) {
+            .kanban-board {
+                flex-direction: column;
+            }
+            .kanban-column {
+                min-width: 100%;
+                max-width: 100%;
+            }
+            .quick-paste-row {
+                flex-direction: column;
+            }
+            .quick-paste-options {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+    <style>
+        /* ===== Design personalizado (standalone) ===== */
+        :root {
+            --sidebar-width: 0px;
+            --sky: #0ea5e9;
+            --sky-dark: #0369a1;
+            --amber: #f59e0b;
+            --amber-dark: #b45309;
+            --mint: #10b981;
+            --mint-dark: #047857;
+        }
+        .mobile-menu-btn { display: none !important; }
+
+        body {
+            background: linear-gradient(180deg, #e9f0fb 0%, #e6f7f0 100%) !important;
+            background-attachment: fixed;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f6cbd 0%, #0ea5e9 55%, #14b8a6 100%) !important;
+            border-bottom: none !important;
+            box-shadow: 0 2px 14px rgba(15, 108, 189, 0.35);
+        }
+        .header-left h2 { color: #ffffff !important; font-weight: 700; }
+        #pageTitle::before { content: '✈️  '; }
+        #currentDate {
+            color: rgba(255,255,255,0.95) !important;
+            background: rgba(255,255,255,0.18);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 12.5px !important;
+        }
+
+        /* Cards de estatísticas coloridos */
+        #page-cotacao-sabre .stats-grid .stat-card {
+            background: linear-gradient(135deg, #1a73e8, #0ea5e9) !important;
+            color: #fff;
+            border: none;
+            box-shadow: 0 6px 18px rgba(26,115,232,0.30);
+        }
+        #page-cotacao-sabre .stats-grid .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+            box-shadow: 0 6px 18px rgba(124,58,237,0.30);
+        }
+        #page-cotacao-sabre .stats-grid .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #0d9488, #14b8a6) !important;
+            box-shadow: 0 6px 18px rgba(13,148,136,0.30);
+        }
+        #page-cotacao-sabre .stats-grid .stat-card .stat-icon {
+            background: rgba(255,255,255,0.22) !important;
+        }
+        #page-cotacao-sabre .stats-grid .stat-info h3 { color: #fff; font-size: 30px; }
+        #page-cotacao-sabre .stats-grid .stat-info p { color: rgba(255,255,255,0.92); }
+
+        /* Cartões das seções com cor própria */
+        #page-cotacao-sabre .content > .table-container {
+            border-top: 4px solid var(--sky);
+            box-shadow: 0 4px 14px rgba(15,108,189,0.10);
+        }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(2) { border-top-color: var(--amber); }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(3) { border-top-color: var(--mint); }
+
+        #page-cotacao-sabre .content > .table-container .table-header {
+            background: linear-gradient(180deg, #f0f7ff, #ffffff);
+        }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(2) .table-header {
+            background: linear-gradient(180deg, #fff8e9, #ffffff);
+        }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(3) .table-header {
+            background: linear-gradient(180deg, #ecfdf5, #ffffff);
+        }
+        #page-cotacao-sabre .table-header h3 { font-size: 17px; font-weight: 700; }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(1) .table-header h3 { color: var(--sky-dark); }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(2) .table-header h3 { color: var(--amber-dark); }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(3) .table-header h3 { color: var(--mint-dark); }
+
+        /* Textarea */
+        #ctPaste {
+            border: 1px solid #bcd9f2 !important;
+            background: #f6faff !important;
+            font-size: 13.5px;
+        }
+        #ctPaste:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.18);
+        }
+
+        /* Botões */
+        .btn-primary {
+            background: linear-gradient(135deg, #1a73e8, #0d8bf5) !important;
+            box-shadow: 0 3px 10px rgba(26,115,232,0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(26,115,232,0.45);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #1e8e3e, #34a853) !important;
+            box-shadow: 0 3px 10px rgba(30,142,62,0.35);
+        }
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(30,142,62,0.45);
+        }
+
+        /* Seção Tarifa */
+        #page-cotacao-sabre .quick-paste-options .form-group label { font-weight: 700; }
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(1) label,
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(2) label,
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(3) label,
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(5) label { color: var(--amber-dark); }
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(4) label { color: var(--sky-dark); }
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(6) label,
+        #page-cotacao-sabre .quick-paste-options .form-group:nth-child(7) label { color: var(--mint-dark); }
+        #ctTarTotal { background: #eaf3ff !important; font-weight: 700; color: #0b4f8a; }
+        #ctTarTotalBRL { background: #e9f9ef !important; font-weight: 700; color: #0f7b34; }
+        #page-cotacao-sabre .quick-paste-options input:focus,
+        #page-cotacao-sabre .quick-paste-options select:focus {
+            border-color: var(--amber) !important;
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.18);
+        }
+
+        /* Tabela de pré-visualização */
+        #ctTable thead th {
+            background: linear-gradient(135deg, #1a73e8, #0d8bf5) !important;
+            color: #ffffff !important;
+            border-bottom: none !important;
+            letter-spacing: 0.4px;
+        }
+        #ctTable tbody tr:nth-child(even) td { background: #f6f9ff; }
+        #ctTable tbody tr:hover td { background: #eef4ff; }
+        #ctTable td { border-bottom: 1px solid #eef1f5; }
+        .ct-cell:focus {
+            border-color: var(--primary) !important;
+            background: #fff !important;
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+        }
+
+        /* Linha da tarifa (destaque verde) */
+        .ct-tarifa-line {
+            background: linear-gradient(180deg, #ecfdf3, #f6fef9) !important;
+            border: 1px solid #86efac !important;
+            border-left: 5px solid var(--mint) !important;
+            color: #065f46 !important;
+            font-weight: 600;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.12);
+            padding: 14px 16px !important;
+            font-size: 13.5px;
+        }
+        .ct-tarifa-line strong { color: #047857; }
+
+        /* Estado vazio */
+        .table-empty .empty-icon {
+            width: 64px;
+            height: 64px;
+            background: #eaf3ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 12px;
+        }
+        .table-empty p { color: var(--gray-700); }
+    </style>
+</head>
+<body>
+    <main class="main">
+        <header class="header">
+            <div class="header-left">
+                <h2 id="pageTitle">Cotacao E-mail</h2>
+            </div>
+            <div class="header-right">
+                <span id="currentDate" style="font-size: 13px; color: var(--gray-700);"></span>
+            </div>
+        </header>
+<!-- Cotação E-mail Page -->
+        <div class="page-view active" id="page-cotacao-sabre">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon orange">📧</div>
+                        <div class="stat-info">
+                            <h3 id="statCtVoos">0</h3>
+                            <p>Trechos Convertidos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">✈</div>
+                        <div class="stat-info">
+                            <h3 id="statCtCias">0</h3>
+                            <p>Companhias</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">🌍</div>
+                        <div class="stat-info">
+                            <h3 id="statCtRota">-</h3>
+                            <p>Rota</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom: 20px;">
+                    <div class="table-header">
+                        <h3>1. Colar Voos do Sabre</h3>
+                        <div class="table-actions">
+                            <input type="text" id="ctDefaultDate" placeholder="Data padrão (ex.: 03AUG)" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
+                            <input type="text" id="ctYear" placeholder="Ano (ex.: 2026)" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 110px;">
+                            <button class="btn btn-outline" onclick="clearCotacao()">Limpar</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <textarea id="ctPaste" oninput="scheduleCotacao()" placeholder="Cole aqui o itinerário do PNR (após ER / IR / *I) ou a disponibilidade do Sabre.&#10;&#10;Exemplo (itinerário):&#10;1. EK 399Y 03AUG 5*DPSDXB HK1 0035 0535 /DCEK*FMDSDK /E&#10;2. EK 261Y 03AUG 5*DXBGRU HK1 0905 1715 /DCEK*FMDSDK /E&#10;&#10;Exemplo (disponibilidade):&#10;20FEB TUE SAO/Z-3 BUE/¤1&#10;7AR1263 J7 D7 Y7 L7 B7 H7 K7* GRUEZE N 0730 1025 737 S 0 XS /E" style="width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; font-family: 'Consolas', 'Courier New', monospace; outline: none; resize: vertical; line-height: 1.5;"></textarea>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                            <button class="btn btn-primary" onclick="convertCotacao()">
+                                🔄 Converter Voos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom: 20px;">
+                    <div class="table-header">
+                        <h3>2. Tarifa</h3>
+                    </div>
+                    <div class="quick-paste-options" style="padding: 20px 24px; flex-wrap: wrap;">
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tipo</label>
+                            <select id="ctTarTipo" onchange="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="econômica">econômica</option>
+                                <option value="executiva">executiva</option>
+                                <option value="premium econômica">premium econômica</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tarifa (USD)</label>
+                            <input type="text" id="ctTarValor" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Taxas (USD)</label>
+                            <input type="text" id="ctTarTaxas" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (USD) — calculado</label>
+                            <input type="text" id="ctTarTotal" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Câmbio (USD→BRL)</label>
+                            <input type="text" id="ctTarCambio" placeholder="5,20" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (BRL) — calculado</label>
+                            <input type="text" id="ctTarTotalBRL" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
+                            <input type="text" id="ctTarBag" value="BAG 1 PÇ 23KG" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>3. Pré-visualização</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-outline" onclick="addCotacaoRow()">+ Linha</button>
+                            <button class="btn btn-success" onclick="copiarCotacaoHtml(true)">📋 Copiar Tabela + Tarifa</button>
+                            <button class="btn btn-outline" onclick="copiarCotacaoHtml(false)">Copiar Tabela</button>
+                            <button class="btn btn-outline" onclick="copiarCotacaoTexto()">Copiar Texto</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px; overflow-x: auto;">
+                        <div id="ctTarifaPreview" style="margin-bottom: 16px;"></div>
+                        <div class="table-wrapper" style="overflow-x: auto;">
+                            <table id="ctTable" style="min-width: 1100px;">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 70px;">DATA</th>
+                                        <th style="min-width: 120px;">SEMANA</th>
+                                        <th style="min-width: 130px;">CIA. AEREA</th>
+                                        <th style="min-width: 60px;">VOO</th>
+                                        <th style="min-width: 130px;">CLASSE</th>
+                                        <th style="min-width: 160px;">ORIGEM</th>
+                                        <th style="min-width: 160px;">DESTINO</th>
+                                        <th style="min-width: 60px;">SAIDA</th>
+                                        <th style="min-width: 80px;">CHEGADA</th>
+                                        <th style="min-width: 70px;">DURACAO</th>
+                                        <th style="min-width: 110px;">AERONAVE</th>
+                                        <th style="min-width: 60px;">ESCALAS</th>
+                                        <th style="width: 36px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ctTableBody">
+                                    <tr>
+                                        <td colspan="13" class="table-empty">
+                                            <div class="empty-icon">📧</div>
+                                            <p>Cole os voos do Sabre no campo acima e clique em "Converter Voos".</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Cotação E-mail (Sabre -> formato de e-mail)
+        const AIRLINES = {
+            EK: 'EMIRATES', TP: 'TAP AIR PORTUGAL', AR: 'AEROLINEAS ARGENTINAS',
+            AA: 'AMERICAN AIRLINES', UA: 'UNITED AIRLINES', DL: 'DELTA AIR LINES',
+            G3: 'GOL LINHAS AEREAS', AD: 'AZUL LINHAS AEREAS', LA: 'LATAM AIRLINES',
+            JJ: 'LATAM AIRLINES BRASIL', IB: 'IBERIA', AF: 'AIR FRANCE',
+            KL: 'KLM ROYAL DUTCH', LH: 'LUFTHANSA', BA: 'BRITISH AIRWAYS',
+            ET: 'ETHIOPIAN AIRLINES', QR: 'QATAR AIRWAYS', AC: 'AIR CANADA',
+            AV: 'AVIANCA', CM: 'COPA AIRLINES', AZ: 'ITA AIRWAYS', LX: 'SWISS',
+            OS: 'AUSTRIAN AIRLINES', TK: 'TURKISH AIRLINES', AY: 'FINNAIR',
+            SK: 'SAS', SN: 'BRUSSELS AIRLINES', VY: 'VUELING', FR: 'RYANAIR',
+            U2: 'EASYJET', SU: 'AEROFLOT', NH: 'ALL NIPPON AIRWAYS',
+            JL: 'JAPAN AIRLINES', KE: 'KOREAN AIR', OZ: 'ASIANA AIRLINES',
+            CX: 'CATHAY PACIFIC', SQ: 'SINGAPORE AIRLINES', TG: 'THAI AIRWAYS',
+            EY: 'ETIHAD AIRWAYS', SV: 'SAUDIA', MS: 'EGYPTAIR', AM: 'AEROMEXICO',
+            H2: 'SKY AIRLINE', JA: 'JETSMART', W4: 'WIZZ AIR', PY: 'SURINAM AIRWAYS'
+        };
+        const AIRPORTS = {
+            DPS: 'DENPASAR BALI', DXB: 'DUBAI', LIS: 'LISBON',
+            GRU: 'SAO PAULO - GUARULHOS', SAO: 'SAO PAULO', CGH: 'SAO PAULO - CONGONHAS',
+            VCP: 'CAMPINAS - VIRACOPOS', GIG: 'RIO DE JANEIRO - GALEAO',
+            SDU: 'RIO DE JANEIRO - SANTOS DUMONT', BSB: 'BRASILIA',
+            CNF: 'BELO HORIZONTE - CONFINS', POA: 'PORTO ALEGRE', FLN: 'FLORIANOPOLIS',
+            CWB: 'CURITIBA', SSA: 'SALVADOR', REC: 'RECIFE', FOR: 'FORTALEZA',
+            NAT: 'NATAL', MAO: 'MANAUS', BEL: 'BELEM', MCZ: 'MACEIO', JPA: 'JOAO PESSOA',
+            AJU: 'ARACAJU', VIX: 'VITORIA', GOJ: 'GOIANIA', CGB: 'CUIABA',
+            PMW: 'PALMAS', SLZ: 'SAO LUIS', MCO: 'ORLANDO', ORL: 'ORLANDO',
+            MIA: 'MIAMI', JFK: 'NEW YORK - JFK', EWR: 'NEW YORK - NEWARK',
+            LAX: 'LOS ANGELES', ORD: 'CHICAGO - O HARE', IAH: 'HOUSTON',
+            DFW: 'DALLAS', ATL: 'ATLANTA', BOS: 'BOSTON', IAD: 'WASHINGTON - DULLES',
+            SFO: 'SAO FRANCISCO', SEA: 'SEATTLE', LAS: 'LAS VEGAS', DEN: 'DENVER',
+            SLC: 'SALT LAKE CITY', MEX: 'CIDADE DO MEXICO', CUN: 'CANCUN',
+            PUJ: 'PUNTA CANA', HAV: 'HAVANA', SJU: 'SAN JUAN', PTY: 'PANAMA CITY',
+            SJO: 'SAN JOSE', LIM: 'LIMA', BOG: 'BOGOTA', UIO: 'QUITO',
+            GYE: 'GUAYAQUIL', CCS: 'CARACAS', EZE: 'BUENOS AIRES - EZEIZA',
+            AEP: 'BUENOS AIRES - JORGE NEWBERY', MVD: 'MONTEVIDEO', ASU: 'ASUNCION',
+            SCL: 'SANTIAGO', CDG: 'PARIS - CHARLES DE GAULLE', ORY: 'PARIS - ORLY',
+            FRA: 'FRANKFURT', MUC: 'MUNIQUE', LHR: 'LONDRES - HEATHROW',
+            LGW: 'LONDRES - GATWICK', AMS: 'AMSTERDAM', BRU: 'BRUXELAS',
+            MAD: 'MADRID', BCN: 'BARCELONA', OPO: 'PORTO', FCO: 'ROMA - FIUMICINO',
+            MXP: 'MILAO - MALPENSA', ZRH: 'ZURIQUE', VIE: 'VIENA', ATH: 'ATENAS',
+            IST: 'ISTAMBUL', DOH: 'DOHA', AUH: 'ABU DHABI', RUH: 'RIADE',
+            JNB: 'JOHANNESBURG', CPT: 'CIDADE DO CABO', CAI: 'CAIRO', LAD: 'LUANDA',
+            SIN: 'CINGAPURA', BKK: 'BANGKOK', HKG: 'HONG KONG', KUL: 'KUALA LUMPUR',
+            NRT: 'TOQUIO - NARITA', HND: 'TOQUIO - HANEDA', ICN: 'SEUL',
+            PVG: 'XANGAI', PEK: 'PEQUIM', SYD: 'SYDNEY', MEL: 'MELBOURNE',
+            AKL: 'AUCKLAND', DEL: 'NOVA DELHI', BOM: 'MUMBAI', DMM: 'DAMAM',
+            AAX: 'ARAXA, MG', ADA: 'ADANA SAKIRPASA AIRPORT', ADB: 'AEROPORTO DE ESMIRNA-ADNAN MENDERES', ADD: 'ADDIS ABABA', ADZ: 'GUSTAVO ROJAS PINILA', AFL: 'ALTA FLORESTA, MT',
+            AGP: 'MALAGA', AGT: 'CIUDAD DEL ESTE, PARAGUAI', ALC: 'ALICANTE', AMM: 'AMMAN', ANC: 'ANCHORAGE', ANU: 'AEROPORTO INTERNACIONAL V. C. BIRD',
+            AQA: 'ARARAQUARA, SP', AQP: 'AEROPORTO INTERNACIONAL RODRÍGUEZ BALLÓN', ARN: 'STOCKHOLM', ARU: 'ARAÇATUBA, SP', AS: 'AEROPORTO ANCHORAGE', ASE: 'ASPEN',
+            ATM: 'ALTAMIRA, PA', AUA: 'ARUBA, ANTILHAS HOLANDESAS', AUS: 'AUSTIN BERGSTROM', AUX: 'ARAGUAINA, TO', AVP: 'WILKES-BARRE SCRANTON INTERNATIONAL AIRP', AXM: 'ARMENIA',
+            BAU: 'BAURU, SP', BDQ: 'VADODARA', BDS: 'AEROPORTO DE BRINDISI', BEG: 'BELGRADE', BER: 'AEROPORTO DE BERLIM-BRANDEMBURGO', BEY: 'BEIRUT',
+            BGY: 'BERGAMO', BIQ: 'BIARRITZ', BJV: 'AEROPORTO DE MILAS–BODRUM', BJX: 'LEON', BLQ: 'AEROPORTO INTERNACIONAL GUGLIELMO MARCON', BLR: 'AEROPORTO INTERNACIONAL KEMPEGOWDA',
+            BNA: 'AEROPORTO INTERNACIONAL DE NASHVILLE', BNE: 'BRISBANE', BOD: 'AEROPORTO DE BORDEAUX-MÉRIGNAC', BPG: 'BARRA DO GARCA', BPS: 'PORTO SEGURO, BA', BRA: 'BARREIRAS',
+            BRC: 'S.C.BARILOCH, ARGENTINA-RN', BRI: 'BARI', BSL: 'BASLE', BSR: 'BASRA INTERNATIONAL AIRPORT', BUD: 'BUDAPEST', BVA: 'PARIS BEAUVAIS',
+            BVB: 'BOA VISTA, RR', BVS: 'AEROPORTO DE BREVES', BYO: 'AEROPORTO BONITO', BZC: 'BUZIOS', BZV: 'AEROPORTO INTERNACIONAL MAYA-MAYA', CAC: 'CASCAVEL, PR',
+            CAN: 'GUANGZHOU', CAW: 'CAMPOS, RJ', CAY: 'CAIENNA, GUIANA FRANCESA', CBB: 'COCHABAMBA, BOLIVIA', CCM: 'CRICIUMA, SC', CEI: 'CHIANG RAI',
+            CFU: 'CORFU', CGK: 'HATTA', CGN: 'COLONIA ALEMANHA', CGO: 'ZHENGZHOU', CGQ: 'CHANGCHUN', CGR: 'CAMPO GRANDE, MS',
+            CHA: 'CHATTANOOGA', CHC: 'CHRISTCHURCH', CJC: 'CALAMA', CKS: 'CARAJAS, PA', CLE: 'HELIPARK', CLO: 'CALI',
+            CLT: 'CHARLOTTE', CLY: 'CALVI', CMG: 'CORUMBA, MS', CMH: 'AEROPORTO INTERNACIONAL JOHN GLENN COLUM', CMN: 'CASABLANCA-MOHAMED', CNX: 'CHIANG MAI',
+            COR: 'CORDOBA', CPH: 'COPENHAGEM, DINAMARCA', CPO: 'COPIAPO', CPQ: 'CAMPINAS, SP - CPQ', CPV: 'CAMPINA GRANDE, PB', CSX: 'CHANGSHA',
+            CTA: 'CATANIA', CTG: 'CARTAGENA', CTS: 'SAPPORO', CUR: 'AEROPORTO INTERNACIONAL HATO', CUZ: 'CUZCO', CVG: 'AEROPORTO INTERNACIONAL DE CINCINNATI',
+            CXJ: 'CAXIAS DO SUL, RS', DAC: 'DHAKA', DBV: 'DUBROVNIK', DCA: 'AEROPORTO NACIONAL RONALD REAGAN DE WASH', DED: 'DEHRADUN', DGO: 'DURANGO',
+            DME: 'MOSCOW', DOU: 'DOURADOS, MS', DTW: 'DETROIT', DUB: 'DUBLIN', DUS: 'DUSSELDORF', EAP: 'BASEL MULHOUSE FREIBURG',
+            EDI: 'EDIMBURGO', EGE: 'VAIL EAGLE', EIS: 'TORTOLA', ELH: 'ELEUTHERA', ETM: 'AEROPORTO INTERNACIONAL RAMON', EUG: 'AEROPORTO DE EUGENE',
+            EVN: 'YEREVAN', FAO: 'FARO', FDF: 'FORTE DE FRANCE, MARTINIQUE', FEN: 'FERNANDO DE NORONHA, PE', FLL: 'FORT LAUDERDALE', FLR: 'FLR FLORENCE',
+            FSC: 'FIGARI', FTE: 'EL CALAFATE, ARGENTINA', FWA: 'FORT WAYNE', GCM: 'OWEN ROBERTS INTERNATIONAL AIRPORT', GDL: 'AEROPORTO INTERNACIONAL DON MIGUEL HIDAL', GEL: 'SANTO ANGELO, RS',
+            GMP: 'SEOUL GIMPO INTL', GOA: 'GENOA', GOT: 'GOTHENBURG', GPB: 'AEROPORTO REGIONAL DE GUARAPUAVA - TANCR', GRB: 'AEROPORTO INTERNACIONAL AUSTIN STRAUBEL', GRZ: 'GRAZ',
+            GTF: 'MONTANA', GUA: 'GUATEMALA CITY', GVA: 'GENEVA', GVR: 'GOVERNADOR VALADARES, MG', GYD: 'HEYDAR ALIYEV', GYN: 'GOIANIA, GO',
+            HAJ: 'HANOVER', HAM: 'AEROPORTO DE HAMBURGO', HBA: 'AEROPORTO INTERNACIONAL DE HOBART', HDS: 'HOEDSPRUIT', HEL: 'HELSINKI', HGH: 'HANGZHOU',
+            HKT: 'PHUKET', HNL: 'HONOLULU', HPN: 'WESTCHESTER', HRL: 'AEROPORTO DE HARLINGEN', HSN: 'ZHOUSHAN', HUX: 'HUATULCO',
+            IBZ: 'IBIZA', IGR: 'IGUAZU, ARGENTINA', IGU: 'FOZ DO IGUAÇU, PR', IKA: 'TEHRAN', IMP: 'IMPERATRIZ, MA', IND: 'INDIANAPOLIS',
+            INN: 'INNSBRUCK', IOS: 'ILHEUS, BA', IPN: 'IPATINGA, MG', ITB: 'ITAITUBA, PA', ITM: 'OSAKA ITAMI', IZA: 'AEROPORTO ZONA DA MATA - PRESIDENTE ITAM',
+            JAI: 'JAIPUR INTL AIRPORT', JDF: 'JUIZ DE FORA, MG', JDO: 'JUAZEIRO DO NORTE, CE', JED: 'KING ABDULAZIZ INTERNATIONAL AIRPORT', JJD: 'JERICOACOARA', JJG: 'JAGUARUNA',
+            JJN: 'JINJIANG', JMK: 'MYKONOS', JOI: 'JOINVILLE, SC', JPR: 'JI PARANA', JPY: 'PARATY', JRO: 'KILIMANJARO',
+            JSI: 'AEROPORTO INTERNACIONALDE SKIATHOS', JTC: 'BAURU-AREALVA', JTR: 'SANTORINI', KEF: 'REYKJAVIK', KGL: 'AEROPORTO INTERNACIONAL DE KIGALI', KIX: 'AEROPORTO INTERNACIONAL DE KANSAI',
+            KOA: 'KOA KONA', KRK: 'CRACOVIA', LBJ: 'LABUAN BAJO', LCG: 'GALIZA', LCY: 'LONDON CITY', LDB: 'LONDRINA, PR',
+            LEC: 'LENÇOIS, BA', LED: 'SAINT PETERSBURG', LGA: 'NEW YORK (LA GUARDIA), NY', LIH: 'LIHUE', LIN: 'LINATE', LIR: 'GUANACASTE AIRPORT COSTA RICA',
+            LJU: 'LJUBLJANA', LNZ: 'AEROPORTO DE LINZ', LPB: 'LA PAZ, BOLIVIA', LSC: 'AEROPORTO LA FLORIDA', LUX: 'AEROPORTO LUXEMBURGO', LYS: 'LYON',
+            LZS: 'LINZ HAUPTBAHNHOF CODE', MAB: 'MARABA, PA', MAH: 'MAHON', MAN: 'MANCHERTER INGLATERRA', MCI: 'KANSAS CITY', MCP: 'MACAPA, AP',
+            MCT: 'MUSCAT', MCY: 'AEROPORTO SUNSHINE COAST', MDE: 'MEDELLIN', MDZ: 'MENDOZA', MEA: 'MACAÉ, RJ', MFE: 'MCALLEN',
+            MGF: 'MARINGA, PR', MII: 'MARILIA, SP', MIR: 'AEROPORTO INTERNACIONAL DE MONASTIR - HA', MLA: 'AEROPORTO DE MALTA', MLE: 'MALE', MNL: 'MANILA',
+            MOC: 'MONTES CLAROS, MG', MRS: 'MARSEILLE', MSP: 'AEROPORTO INT.DE MINEAPOLIS-SAINT PAUL', MSY: 'LOUIS ARMSTRONG NEW ORLEANS', MTJ: 'MONTROSE REGIONAL AIRPORT', MTY: 'AEROPORTO INTERNACIONAL MARIANO ESCOBEDO',
+            MVF: 'AEROPORTO DE MOSSORÓ', MVS: 'MUCURI, BA', NAP: 'NAPLES', NAS: 'NASSAU', NAV: 'KAPADOKYA', NBO: 'NAIROBI',
+            NCE: 'NICE', NGB: 'NINGBO LISHE INTERNATIONAL AIRPORT', NKG: 'AEROPORTO INTERNACIONAL DE NANJING LUKOU', NOS: 'AEROPORTO DE FASCENE', NQN: 'NEUQUÉN', NRN: 'NIEDERRHEIN',
+            NTE: 'AEROPORTO NANTES ATLANTIQUE', NVT: 'NAVEGANTES, SC', OAL: 'CACOAL', OAX: 'OAXACA', OKJ: 'OKAYAMA', OLB: 'OLBIA',
+            OMA: 'OMAHA', OPF: 'OPA-LOCKA', OPS: 'SINOP, MT', OSL: 'GARDERMOEN, NORUEGA', OXB: 'AEROPORTO INTERNACIONAL OSVALDO VIEIRA', PAS: 'PAROS',
+            PBI: 'AEROPORTO INT. PALM BEACH', PBM: 'PARAMARIBO, SURINAME', PCL: 'PUCALIPA', PDG: 'AEROPORTO DE PADANG', PDP: 'PUNTA DEL ESTE, URUGUAY', PDX: 'PORTLAND - OREGON',
+            PEI: 'AEROPORTO INTERNACIONAL MATECAÑA', PET: 'PELOTAS', PFB: 'PASSO FUNDO, RS', PHB: 'PARNAIBA, PI', PHL: 'PHILADELPHIA', PHX: 'PHOENIX SKY HARBOR',
+            PIN: 'PARINTINS, AM', PIT: 'PITTSBURGH INTERNATIONAL AIRPORT', PKX: 'AEROPORTO INTERNACIONAL DE PEQUIM - DAXI', PLS: 'PROVIDENCIALES', PLU: 'BELO HORIZONTE, MG - PLU', PMC: 'PUERTO MONTT',
+            PMI: 'PALMA MALLORCA', PMO: 'AEROPORTO FALCONE BORSELLINO', PNA: 'AEROPORTO DE PAMPLONA', PNT: 'AEROPORTO TENIENTE JULIO GALLARDO', PNZ: 'PETROLINA, PE', POP: 'AEROPORTO INTERNACIONAL GENERAL GREGORIO',
+            POS: 'PORTO SEGURO', PPB: 'PRESIDENTE PRUDENTE, SP', PRA: 'REPÚBLICA TCHECA', PRG: 'PRAGUE', PSZ: 'PUERTO SOAREZ, BOLIVIA', PTO: 'PATO BRANCO',
+            PTP: 'POINTE A PITRE, GUADALOUPE, GUADALOUPE', PVH: 'PORTO VELHO, RO', PWM: 'PORTLAND - MAINE', QNS: 'AEROPORTO DE CANOAS', RAK: 'MARRAKECH', RAO: 'RIBEIRAO PRETO, SP',
+            RBR: 'RIO BRANCO, AC', RDU: 'RALEIGH-DURHAM INTERNATIONAL AIRPORT', REG: 'AEROPORTO REGGIO CALABRIA', REP: 'SIEM REAP', RIX: 'SKULTE APT', RNO: 'AEROPORTO INTERNACIONAL DE RENO-TAHOL',
+            ROC: 'ROCHESTER', ROO: 'RONDONOPOLIS, MT', ROS: 'ROSARIO', RRJ: 'AEROPORTO DE JACAREPAGUA', RSI: 'RED SEA INTERNATIONAL AIRPORT', RVN: 'ROVANIEMI',
+            SAL: 'SAN SALVADOR', SAN: 'SAN DIEGO', SAP: 'SAN PEDRO SULA', SAW: 'AEROPORTO INTERNACIONAL SABIHA GÖKÇEN', SBH: 'SAINT BARTHELEMY', SBN: 'SOUTH BEND',
+            SCQ: 'AEROPORTO DE SANTIAGO DE COMPOSTELA - RO', SCS: 'SÃO CARLOS, SP', SDQ: 'SANTO DOMINGO, REP. DOMINICANA', SEZ: 'MAHE ISLANDS', SHA: 'SHANGHAI', SID: 'ILHA DO SAL, CABO VERDE',
+            SJD: 'SAN JOSE CABO', SJK: 'SAO JOSE DOS CAMPOS, SP', SJP: 'SAO JOSE DO RIO PRETO, SP', SKP: 'SKOPJE', SLP: 'SAN LUIS POTOSI', SMT: 'SORRISO',
+            SNA: 'LOS ANGELES', SOD: 'SOROCABA, SP', SPU: 'SPLIT', STM: 'SANTAREM, PA', STR: 'STUTTGART', STT: 'SAINT THOMAS ISLAND',
+            SVG: 'STAVANGER', SVO: 'SHEREMETYEVO', SVQ: 'SEVILLE', SXM: 'SAINT MAARTEN', SZG: 'SALZBURG', SZX: 'SHENZEN',
+            TAO: 'QINGDAO', TBS: 'AEROPORTO INTERNACIONAL DE TBLILISI', TGU: 'TEGUCIGALPA', THE: 'TERESINA, PI', TIJ: 'TIJUANA', TIV: 'TIVAT',
+            TLN: 'TOULON', TLV: 'TEL AVIV', TMT: 'TROMBETAS, PA', TMU: 'TAMBOR', TNA: 'JINAN', TOS: 'HELIPORTO TRESCO',
+            TPA: 'TAMPA', TPE: 'TAIPEI TAIWAN', TQO: 'AEROPUERTO INTERNACIONAL DE TULUM FELIPE', TRN: 'TURIN', TRS: 'TRIESTE', TRU: 'TRUJILLO',
+            TSA: 'TAIPEI SONGSHAN', TSN: 'TIANJIN', TUR: 'TUCURUI, PA', TUS: 'TUCSON', TVS: 'TVS TANGSHAN', TXL: 'BERLIN - TEGEL',
+            UBA: 'UBERABA, MG', UBJ: 'YAMAGUCHI-UBE', UBN: 'AEROPORTO INTERNACIONAL CHINGGIS KHAAN', UDI: 'UBERLANDIA, MG', UNA: 'UNA, BA (ILHA DE COMANDATUBA)', USH: 'USHUAIA, ARGENTINA-TF',
+            USM: 'AEROPORTO DE SAMUI', VCE: 'VENICE, ITALY', VDC: 'VITORIA DA CONQUISTA, BA', VFA: 'AEROPORTO DE VICTORIA FALLS', VIA: 'VIDEIRA, SC', VKO: 'VNUKOVO',
+            VLC: 'VALENCIA', VVI: 'SANTA CRUZ DE LA SIERRA, BOLIVIA', WAW: 'VARSOVIA', WNZ: 'AEROPORTO DE WENZHOU YONGQIANG', WUH: 'WUHAN', XAP: 'CHAPECO, SC',
+            XHJ: 'AEROPORTO DE AACHEN', XPL: 'TEGUCIGALPA PAMEROLA', YEG: 'EDMONTON', YIH: 'YICHANG AIRPORT', YKA: 'KAMLOOPS', YLW: 'AEROPORTO INTERNACIONAL DE KELOWNA',
+            YNT: 'AEROPORTO INTERNACIONAL DE YANTAI PENGLA', YOW: 'AEROPORTO DO CANADÁ', YQR: 'REGINA', YUL: 'MONTREAL', YVR: 'VANCOUVER', YYC: 'CALGARY',
+            YYZ: 'TORONTO, CANADA - YYZ', ZAD: 'ZADAR', ZAG: 'AEROPORTO INTERNACIONAL FRANJO TUÐMAN', ZHT: 'ESTAÇÃO FERROVIÁRIA GENEVA-CORNAVIN', ZNZ: 'ZANZIBAR', ZTH: 'AEROPORTO EM ZAKYNTHOS',
+            ZYR: 'BRUSSELS MIDI TRAIN STATION',
+        };
+        const AIRCRAFT = {
+            '388': 'AIRBUS 388', '380': 'AIRBUS 380', '333': 'AIRBUS 333',
+            '332': 'AIRBUS 332', '330': 'AIRBUS 330', '339': 'AIRBUS 339',
+            '359': 'AIRBUS 359', '350': 'AIRBUS 350', '320': 'AIRBUS 320',
+            '321': 'AIRBUS 321', '319': 'AIRBUS 319', '318': 'AIRBUS 318',
+            '32N': 'AIRBUS 320 NEO', '21N': 'AIRBUS 220', '223': 'AIRBUS 223',
+            '788': 'BOEING 788', '789': 'BOEING 789', '787': 'BOEING 787',
+            '772': 'BOEING 772', '77W': 'BOEING 777', '773': 'BOEING 773',
+            '777': 'BOEING 777', '747': 'BOEING 747', '738': 'BOEING 738',
+            '739': 'BOEING 739', '737': 'BOEING 737', '73H': 'BOEING 737',
+            '73G': 'BOEING 737', '76W': 'BOEING 767', '763': 'BOEING 763',
+            '757': 'BOEING 757', '717': 'BOEING 717', 'E90': 'EMBRAER 190',
+            'E95': 'EMBRAER 195', 'E75': 'EMBRAER 175', 'E70': 'EMBRAER 170',
+            'AT7': 'ATR 72', 'AT4': 'ATR 42', '7M8': 'BOEING 737 MAX 8',
+            '7M9': 'BOEING 737 MAX 9'
+        };
+        const CLASS_NAMES = {
+            F: 'PRIMEIRA', P: 'PRIMEIRA', R: 'PRIMEIRA', J: 'EXECUTIVA',
+            C: 'EXECUTIVA', D: 'EXECUTIVA', I: 'EXECUTIVA', Z: 'EXECUTIVA',
+            W: 'PREMIUM ECONOMICA', A: 'PREMIUM ECONOMICA', Y: 'ECONOMICA',
+            B: 'ECONOMICA', M: 'ECONOMICA', K: 'ECONOMICA', U: 'ECONOMICA',
+            H: 'ECONOMICA', Q: 'ECONOMICA', L: 'ECONOMICA', T: 'ECONOMICA',
+            V: 'ECONOMICA', E: 'ECONOMICA', G: 'ECONOMICA', N: 'ECONOMICA',
+            O: 'ECONOMICA', S: 'ECONOMICA', X: 'ECONOMICA'
+        };
+        const TZ = {
+            GRU: -3, SAO: -3, CGH: -3, VCP: -3, GIG: -3, SDU: -3, BSB: -3,
+            CNF: -3, POA: -3, FLN: -3, CWB: -3, SSA: -3, REC: -3, FOR: -3,
+            NAT: -3, MAO: -4, BEL: -3, MCZ: -3, JPA: -3, AJU: -3, VIX: -3,
+            GOJ: -3, CGB: -4, PMW: -3, SLZ: -3, EZE: -3, AEP: -3, MVD: -3,
+            ASU: -4, SCL: '-3:cl', LIM: -5, BOG: -5, UIO: -5, GYE: -5,
+            CCS: -4, MEX: -6, CUN: -5, PUJ: -4, HAV: -5, SJO: -6, PTY: -5,
+            MIA: '-5:us', MCO: '-5:us', ORL: '-5:us', JFK: '-5:us',
+            EWR: '-5:us', BOS: '-5:us', IAD: '-5:us', ATL: '-5:us',
+            ORD: '-6:us', IAH: '-6:us', DFW: '-6:us', DEN: '-7:us',
+            LAX: '-8:us', SFO: '-8:us', SEA: '-8:us', LAS: '-8:us',
+            SLC: '-7:us', LIS: '0:eu', OPO: '0:eu', MAD: '1:eu', BCN: '1:eu',
+            CDG: '1:eu', ORY: '1:eu', FRA: '1:eu', MUC: '1:eu', LHR: '0:eu',
+            LGW: '0:eu', AMS: '1:eu', BRU: '1:eu', ZRH: '1:eu', VIE: '1:eu',
+            ATH: '2:eu', FCO: '1:eu', MXP: '1:eu', DUB: '0:eu', BUD: '1:eu',
+            PRG: '1:eu', WAW: '1:eu', CPH: '1:eu', ARN: '1:eu', HEL: '2:eu',
+            IST: 3, DOH: 3, AUH: 4, DXB: 4, DMM: 3, RUH: 3, JNB: 2, CPT: 2,
+            CAI: 2, LAD: 1, SIN: 8, BKK: 7, HKG: 8, KUL: 8, NRT: 9, HND: 9,
+            ICN: 9, PVG: 8, PEK: 8, MNL: 8, TPE: 8, SGN: 7, HAN: 7, DPS: 8,
+            CGK: 7, DEL: 5.5, BOM: 5.5, SYD: '10:au', MEL: '10:au',
+            BNE: '10:au', PER: 8, AKL: 12
+        };
+        const DIAS_PT = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERCA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SABADO'];
+        const MESES = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+        const MESES_RX = 'JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC';
+
+        let cotacaoRows = [];
+        let ctLastTarifaLine = '';
+
+        function ctEsc(v) {
+            return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function ctParseNum(v) {
+            if (v == null) return 0;
+            return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+        }
+        function ctParseCambio(v) {
+            if (v == null) return 0;
+            const s = String(v).trim();
+            if (!s) return 0;
+            if (s.indexOf(',') >= 0) return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+            const parts = s.split('.');
+            if (parts.length === 2) return parseFloat(s) || 0;
+            if (parts.length > 2) return parseFloat(s.replace(/\./g, '')) || 0;
+            return parseFloat(s) || 0;
+        }
+        function ctFmtCurrency(v) {
+            if (String(v).trim() === '') return 'XXX,XX';
+            const n = ctParseNum(v);
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function ctGetMonth(dateStr) {
+            const m = String(dateStr || '').match(new RegExp('(' + MESES_RX + ')', 'i'));
+            return m ? MESES[m[1].toUpperCase()] : null;
+        }
+        function ctDiaSemana(dateStr, year) {
+            const m = String(dateStr || '').match(new RegExp('^(\\d{2})(' + MESES_RX + ')$', 'i'));
+            if (!m) return '';
+            const d = new Date(year, MESES[m[2].toUpperCase()], +m[1]);
+            return DIAS_PT[d.getDay()];
+        }
+        function ctTz(code, month) {
+            let v = TZ[code];
+            if (v === undefined) return null;
+            let base = v, dst = null;
+            if (typeof v === 'string') {
+                const parts = v.split(':');
+                base = parseFloat(parts[0]);
+                dst = parts[1];
+            }
+            const m1 = month + 1;
+            if (dst === 'us' || dst === 'eu') return (m1 >= 4 && m1 <= 10) ? base + 1 : base;
+            if (dst === 'au') return (m1 >= 11 || m1 <= 3) ? base + 1 : base;
+            if (dst === 'cl') return (m1 >= 10 || m1 <= 3) ? base + 1 : base;
+            return base;
+        }
+        function ctToMin(t) {
+            return (+t.slice(0, 2)) * 60 + (+t.slice(2, 4));
+        }
+        function ctDuracao(dep, arr, orig, dest, month, nextDay) {
+            const o = ctTz(orig, month), d = ctTz(dest, month);
+            let depM = ctToMin(dep), arrM = ctToMin(arr);
+            if (nextDay) arrM += 1440;
+            let dur;
+            if (o == null || d == null) {
+                dur = arrM - depM;
+                if (dur < 0) dur += 1440;
+            } else {
+                dur = (arrM + (o - d) * 60) - depM;
+                if (dur < 0) dur += 1440;
+            }
+            return Math.floor(dur / 60) + '.' + String(dur % 60).padStart(2, '0');
+        }
+        function ctMakeRow(seg) {
+            const date = seg.date || '';
+            const month = ctGetMonth(date);
+            const nextDay = !!seg.nextDate;
+            const dur = (seg.dep && seg.arr && month != null) ? ctDuracao(seg.dep, seg.arr, seg.orig, seg.dest, month, nextDay) : '';
+            return {
+                date: date,
+                semana: ctDiaSemana(date, seg.year),
+                cia: AIRLINES[seg.cia] || seg.cia || '',
+                voo: seg.flight || '',
+                classe: (seg.cls ? seg.cls + ' - ' + (CLASS_NAMES[seg.cls] || 'ECONOMICA') : ''),
+                origem: AIRPORTS[seg.orig] || seg.orig || '',
+                destino: AIRPORTS[seg.dest] || seg.dest || '',
+                saida: seg.dep || '',
+                chegada: seg.arr ? (nextDay ? seg.arr + ' (' + seg.nextDate + ')' : seg.arr) : '',
+                duracao: dur,
+                aeronave: AIRCRAFT[seg.equip] || seg.equip || '',
+                escalas: seg.stops != null ? String(seg.stops) : '0'
+            };
+        }
+        function parseSabreToRows(text) {
+            const rows = [];
+            const year = parseInt(document.getElementById('ctYear').value, 10) || new Date().getFullYear();
+            const defDate = (document.getElementById('ctDefaultDate').value || '').trim().toUpperCase();
+            let curDate = defDate;
+            const lines = String(text).split(/\r?\n/);
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const dm = line.match(new RegExp('^(\\d{2})(' + MESES_RX + ')\\b', 'i'));
+                if (dm && !line.match(/^(\d{1,2})\./) && !line.match(/^\d{1,2}\.?[A-Z]{2}\d/)) {
+                    curDate = dm[1] + dm[2].toUpperCase();
+                    continue;
+                }
+                let m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})\s*(\d{1,4})\s*([A-Z])\s+(\d{2}[A-Z]{3})\s+\S+\s*([A-Z]{3})\s*([A-Z]{3})(?:(?:\*([A-Z]{2})|\s+([A-Z]{2}))\s*\d)?\s+(\d{4})\s+(\d{4})(?:\s+(\d{2}[A-Z]{3})(?:\s+\d+)?)?(?:\s+(\d{3})(?:\s+(\d))?)?(?:\s+\S+)?\s*(?:\/.*)?$/);
+                if (m) {
+                    rows.push(ctMakeRow({ date: m[5], cia: m[2], flight: m[3], cls: m[4], orig: m[6], dest: m[7], dep: m[10], arr: m[11], nextDate: m[12], stops: m[14] || '0', equip: m[13] || '', year: year }));
+                    continue;
+                }
+                m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})(\d{1,4})\s+(.+?)\s+([A-Z]{3})([A-Z]{3})\s+\S+\s+(\d{4})\s+(\d{4})\s+(\S+)\s+\S+\s+(\d)\s+/);
+                if (m) {
+                    const cls = (m[4].match(/[A-Z]/) || [''])[0];
+                    rows.push(ctMakeRow({ date: curDate, cia: m[2], flight: m[3], cls: cls, orig: m[5], dest: m[6], dep: m[7], arr: m[8], equip: m[9], stops: m[10], year: year }));
+                    continue;
+                }
+            }
+            return rows;
+        }
+        function renderCotacaoTable() {
+            const tbody = document.getElementById('ctTableBody');
+            if (!cotacaoRows.length) {
+                tbody.innerHTML = '<tr><td colspan="13" class="table-empty"><div class="empty-icon">📧</div><p>Nenhum trecho. Cole os voos do Sabre e clique em "Converter Voos".</p></td></tr>';
+                document.getElementById('statCtVoos').textContent = '0';
+                document.getElementById('statCtCias').textContent = '0';
+                document.getElementById('statCtRota').textContent = '-';
+                return;
+            }
+            tbody.innerHTML = cotacaoRows.map(function(r, i) {
+                return '<tr>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="date" value="' + ctEsc(r.date) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="semana" value="' + ctEsc(r.semana) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="cia" value="' + ctEsc(r.cia) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="voo" value="' + ctEsc(r.voo) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="classe" value="' + ctEsc(r.classe) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="origem" value="' + ctEsc(r.origem) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="destino" value="' + ctEsc(r.destino) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="saida" value="' + ctEsc(r.saida) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="chegada" value="' + ctEsc(r.chegada) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="duracao" value="' + ctEsc(r.duracao) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="aeronave" value="' + ctEsc(r.aeronave) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="escalas" value="' + ctEsc(r.escalas) + '" oninput="ctCell(this)"></td>' +
+                    '<td><button class="ct-del" onclick="removeCotacaoRow(' + i + ')" title="Remover">✕</button></td>' +
+                    '</tr>';
+            }).join('');
+            const cias = {};
+            cotacaoRows.forEach(function(r) { if (r.cia) cias[r.cia] = true; });
+            document.getElementById('statCtVoos').textContent = cotacaoRows.length;
+            document.getElementById('statCtCias').textContent = Object.keys(cias).length;
+            const orig = cotacaoRows.find(function(r) { return r.origem; });
+            const dest = cotacaoRows.slice().reverse().find(function(r) { return r.destino; });
+            document.getElementById('statCtRota').textContent = (orig ? orig.origem.split(' - ')[0] : '') + ' / ' + (dest ? dest.destino.split(' - ')[0] : '');
+        }
+        function ctCell(inp) {
+            const i = +inp.dataset.i, f = inp.dataset.f;
+            if (cotacaoRows[i]) cotacaoRows[i][f] = inp.value;
+        }
+        function removeCotacaoRow(i) {
+            cotacaoRows.splice(i, 1);
+            renderCotacaoTable();
+        }
+        function addCotacaoRow() {
+            cotacaoRows.push({ date: '', semana: '', cia: '', voo: '', classe: '', origem: '', destino: '', saida: '', chegada: '', duracao: '', aeronave: '', escalas: '0' });
+            renderCotacaoTable();
+        }
+        function clearCotacao() {
+            document.getElementById('ctPaste').value = '';
+            cotacaoRows = [];
+            renderCotacaoTable();
+            showToast('Área limpa.', 'info');
+        }
+        let ctTimer = null;
+        function scheduleCotacao() {
+            clearTimeout(ctTimer);
+            ctTimer = setTimeout(convertCotacao, 500);
+        }
+        function convertCotacao() {
+            const text = document.getElementById('ctPaste').value;
+            if (!text.trim()) {
+                cotacaoRows = [];
+                renderCotacaoTable();
+                return;
+            }
+            const rows = parseSabreToRows(text);
+            if (rows.length) {
+                cotacaoRows = rows;
+                renderCotacaoTable();
+                showToast(rows.length + ' trecho(s) convertido(s)!', 'success');
+            } else {
+                showToast('Nenhum trecho reconhecido. Cole do itinerário do PNR (após ER/IR) ou da disponibilidade do Sabre.', 'error');
+            }
+        }
+        function renderCotacaoTarifa() {
+            const tipo = document.getElementById('ctTarTipo').value;
+            const val = document.getElementById('ctTarValor').value;
+            const taxas = document.getElementById('ctTarTaxas').value;
+            const cambio = document.getElementById('ctTarCambio').value;
+            const bag = document.getElementById('ctTarBag').value;
+            const valN = ctParseNum(val);
+            const taxasN = ctParseNum(taxas);
+            const totalN = valN + taxasN;
+            const cambioN = ctParseCambio(cambio);
+            const brlN = totalN * cambioN;
+            const hasVal = String(val).trim() !== '' || String(taxas).trim() !== '';
+            const totalEl = document.getElementById('ctTarTotal');
+            const brlEl = document.getElementById('ctTarTotalBRL');
+            const fmtNum = function(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+            if (totalEl) totalEl.value = hasVal ? fmtNum(totalN) : '';
+            if (brlEl) brlEl.value = hasVal && cambioN > 0 ? fmtNum(brlN) : '';
+            ctLastTarifaLine = 'Tarifa *' + tipo + '*.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX') + ' (' + bag + ')';
+            const el = document.getElementById('ctTarifaPreview');
+            if (el) el.innerHTML = '<div class="ct-tarifa-line"><strong>Linha da tarifa (colada no e-mail):</strong><br>' + ctEsc(ctLastTarifaLine) + '</div>';
+        }
+        function ctGetRows() {
+            return cotacaoRows.map(function(r) {
+                return { date: r.date || '', semana: r.semana || '', cia: r.cia || '', voo: r.voo || '', classe: r.classe || '', origem: r.origem || '', destino: r.destino || '', saida: r.saida || '', chegada: r.chegada || '', duracao: r.duracao || '', aeronave: r.aeronave || '', escalas: r.escalas || '' };
+            });
+        }
+        function ctBuildHtmlTable() {
+            const rows = ctGetRows();
+            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
+            let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;">';
+            html += '<thead><tr style="background:#1a73e8;color:#ffffff;">' + head.map(function(h) { return '<th style="padding:6px 10px;text-align:left;">' + h + '</th>'; }).join('') + '</tr></thead><tbody>';
+            rows.forEach(function(r) {
+                html += '<tr>' + [r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].map(function(v) { return '<td style="padding:6px 10px;border:1px solid #dadce0;">' + ctEsc(v) + '</td>'; }).join('') + '</tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+        function ctBuildPlainTable() {
+            const rows = ctGetRows();
+            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
+            const lines = [head.join('\t')];
+            rows.forEach(function(r) {
+                lines.push([r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].join('\t'));
+            });
+            return lines.join('\n');
+        }
+        async function ctCopy(html, text) {
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([text], { type: 'text/plain' })
+                    });
+                    await navigator.clipboard.write([item]);
+                    return true;
+                }
+            } catch (e) {}
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (e) {}
+            try {
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                div.contentEditable = 'true';
+                div.style.position = 'fixed';
+                div.style.left = '-9999px';
+                div.style.top = '0';
+                div.style.width = '1px';
+                document.body.appendChild(div);
+                const range = document.createRange();
+                range.selectNodeContents(div);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                const ok = document.execCommand('copy');
+                sel.removeAllRanges();
+                div.remove();
+                if (ok) return true;
+            } catch (e) {}
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                ta.remove();
+                return ok;
+            } catch (e) {
+                return false;
+            }
+        }
+        async function copiarCotacaoHtml(withTarifa) {
+            if (!cotacaoRows.length) { showToast('Nenhum trecho convertido ainda.', 'error'); return; }
+            let html = ctBuildHtmlTable();
+            let text = ctBuildPlainTable();
+            if (withTarifa && ctLastTarifaLine) {
+                html += '<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;">' + ctEsc(ctLastTarifaLine) + '</p>';
+                text += '\n\n' + ctLastTarifaLine;
+            }
+            const ok = await ctCopy(html, text);
+            showToast(ok ? 'Copiado! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+        async function copiarCotacaoTexto() {
+            if (!cotacaoRows.length) { showToast('Nenhum trecho convertido ainda.', 'error'); return; }
+            let text = ctBuildPlainTable();
+            if (ctLastTarifaLine) text += '\n\n' + ctLastTarifaLine;
+            const ok = await ctCopy(text, text);
+            showToast(ok ? 'Texto copiado!' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+
+        // Toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+
+            const icons = { success: '✓', error: '✕', info: 'ℹ' };
+            toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${message}`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctYear = document.getElementById('ctYear');
+            if (ctYear) ctYear.value = new Date().getFullYear();
+            renderCotacaoTable();
+            renderCotacaoTarifa();
+            const cd = document.getElementById('currentDate');
+            if (cd) cd.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+        });
+    </script>
+</body>
+</html>
