@@ -2215,12 +2215,16 @@
                             <input type="text" id="ctTarTaxas" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (USD)</label>
-                            <input type="text" id="ctTarTotal" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (USD) — calculado</label>
+                            <input type="text" id="ctTarTotal" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (BRL)</label>
-                            <input type="text" id="ctTarTotalBRL" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Câmbio (USD→BRL)</label>
+                            <input type="text" id="ctTarCambio" placeholder="5,20" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (BRL) — calculado</label>
+                            <input type="text" id="ctTarTotalBRL" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
                         </div>
                         <div class="form-group">
                             <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
@@ -4586,6 +4590,16 @@
             if (v == null) return 0;
             return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
         }
+        function ctParseCambio(v) {
+            if (v == null) return 0;
+            const s = String(v).trim();
+            if (!s) return 0;
+            if (s.indexOf(',') >= 0) return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+            const parts = s.split('.');
+            if (parts.length === 2) return parseFloat(s) || 0;
+            if (parts.length > 2) return parseFloat(s.replace(/\./g, '')) || 0;
+            return parseFloat(s) || 0;
+        }
         function ctFmtCurrency(v) {
             if (String(v).trim() === '') return 'XXX,XX';
             const n = ctParseNum(v);
@@ -4758,10 +4772,20 @@
             const tipo = document.getElementById('ctTarTipo').value;
             const val = document.getElementById('ctTarValor').value;
             const taxas = document.getElementById('ctTarTaxas').value;
-            const total = document.getElementById('ctTarTotal').value;
-            const brl = document.getElementById('ctTarTotalBRL').value;
+            const cambio = document.getElementById('ctTarCambio').value;
             const bag = document.getElementById('ctTarBag').value;
-            ctLastTarifaLine = 'Tarifa *' + tipo + '*.....USD ' + ctFmtCurrency(val) + ' + USD ' + ctFmtCurrency(taxas) + ' taxas = Total USD ' + ctFmtCurrency(total) + ' /BRL ' + ctFmtCurrency(brl) + ' (' + bag + ')';
+            const valN = ctParseNum(val);
+            const taxasN = ctParseNum(taxas);
+            const totalN = valN + taxasN;
+            const cambioN = ctParseCambio(cambio);
+            const brlN = totalN * cambioN;
+            const hasVal = String(val).trim() !== '' || String(taxas).trim() !== '';
+            const totalEl = document.getElementById('ctTarTotal');
+            const brlEl = document.getElementById('ctTarTotalBRL');
+            const fmtNum = function(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+            if (totalEl) totalEl.value = hasVal ? fmtNum(totalN) : '';
+            if (brlEl) brlEl.value = hasVal && cambioN > 0 ? fmtNum(brlN) : '';
+            ctLastTarifaLine = 'Tarifa *' + tipo + '*.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX') + ' (' + bag + ')';
             const el = document.getElementById('ctTarifaPreview');
             if (el) el.innerHTML = '<div class="ct-tarifa-line"><strong>Linha da tarifa (colada no e-mail):</strong><br>' + ctEsc(ctLastTarifaLine) + '</div>';
         }
