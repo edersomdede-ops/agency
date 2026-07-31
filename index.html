@@ -397,6 +397,78 @@
             font-size: 14px;
         }
 
+        .sabre-cat-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        .sabre-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+        }
+        .sabre-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid var(--gray-200);
+        }
+        .sabre-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .sabre-cmd {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            background: var(--primary-light);
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: inline-block;
+            word-break: break-all;
+        }
+        .sabre-desc {
+            font-size: 13px;
+            color: var(--gray-900);
+            line-height: 1.5;
+        }
+        .sabre-ex {
+            font-size: 12px;
+            color: var(--gray-700);
+            background: var(--gray-50);
+            border-left: 3px solid var(--primary);
+            padding: 6px 10px;
+            border-radius: 0 6px 6px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .sabre-ex strong {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+        .sabre-note {
+            font-size: 12px;
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+        .sabre-empty {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -1414,6 +1486,12 @@
                     <span class="badge" id="pendenciasCount">0</span>
                 </button>
             </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Ferramentas</div>
+                <button class="nav-item" onclick="showPage('sabre')">
+                    <span class="nav-icon">🖥️</span> Referência Sabre
+                </button>
+            </div>
         </nav>
         <div class="sidebar-footer">
             <button onclick="exportData()">
@@ -1992,6 +2070,32 @@
                         </div>
                     </div>
                     <div class="kanban-board" id="kanbanBoard"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sabre Reference Page -->
+        <div class="page-view" id="page-sabre">
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Guia Rápido de Formatos Sabre</h3>
+                        <div class="table-actions">
+                            <select id="filterSabreCat" onchange="filterSabre()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="">Todas as Categorias</option>
+                            </select>
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar formato ou descrição..." id="searchSabre" oninput="filterSabre()" style="width: 300px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <p style="font-size: 13px; color: var(--gray-700); margin-bottom: 16px;">
+                            Comandos básicos do Sabre para consulta rápida. O símbolo <code>¤</code> representa a Cruz de Lorena (separador de qualificadores) e <code>1</code>/<code>0</code> identificam trechos. Dica: ao usar no teclado do Sabre, os campos terminam com <code>1</code> (campo) e a entrada com <code>ER</code>.
+                        </p>
+                        <div id="sabreCards"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4085,6 +4189,115 @@
             });
         }
 
+        // Sabre Reference
+        const SABRE_REF = [
+            { cat: 'Acesso', cmd: 'SI*1234', desc: 'Acessa o sistema Sabre. 1234 é o código (assinatura) do agente.', ex: 'SI*1234', obs: 'A senha é informada em seguida como PASSCODE.' },
+            { cat: 'Acesso', cmd: 'SO*', desc: 'Desativa a assinatura do agente (sair do sistema).', ex: 'SO*' },
+            { cat: 'Acesso', cmd: '*S', desc: 'Visualiza a assinatura do agente e o PCC atual.', ex: '*S' },
+            { cat: 'Disponibilidade', cmd: '1(data)(origem)(destino)', desc: 'Exibe a disponibilidade de voos para a data e trecho informados.', ex: '1 08MAY GRU FRA', obs: 'A data usa 2 dígitos + mês, ex.: 08MAY.' },
+            { cat: 'Disponibilidade', cmd: '1(data)(origem)(destino)¤(cia)', desc: 'Acessa a disponibilidade com Total Access, direto no banco de dados da companhia aérea.', ex: '108MAYSAONCE¤AF', obs: '¤ é a tecla de Total Access (CTRL+º / ALT GR conforme teclado).' },
+            { cat: 'Disponibilidade', cmd: 'VA\\número', desc: 'Exibe detalhes do voo da linha indicada na disponibilidade.', ex: 'VA\\3' },
+            { cat: 'Disponibilidade', cmd: 'V\\ciaNúmeroVoo/data', desc: 'Exibe detalhes de um voo específico em determinada data.', ex: 'V\\IB6324/16OCT' },
+            { cat: 'Disponibilidade', cmd: '2ciaNúmeroVoo/data', desc: 'Mostra horário de saída e chegada de um voo.', ex: '2AA930/08SEP' },
+            { cat: 'PNR', cmd: '0(cia)(nº voo)(classe)(data)(origem)(destino)NN1', desc: 'Reserva 1 lugar usando os dados completos do voo (início do PNR).', ex: '0AR1249Y2APRGRUAEPNN1', obs: 'NN + quantidade de lugares. Concluir com 1 (campo).' },
+            { cat: 'PNR', cmd: '01Y7', desc: 'Reserva 1 lugar na classe Y no voo da linha 7 da disponibilidade.', ex: '01Y7', obs: '02M8 reserva 2 lugares na classe M do voo com conexão da linha 8.' },
+            { cat: 'PNR', cmd: '-NOMESOBRENOME/NOME', desc: 'Insere o nome do passageiro (campo nominal - N).', ex: '-SILVA/JOAO', obs: 'Nunca insira o bebê como primeiro passageiro.' },
+            { cat: 'PNR', cmd: '9', desc: 'Insere telefone de contato (campo 9).', ex: '9SAO TEL 11-99999-9999' },
+            { cat: 'PNR', cmd: '6', desc: 'Insere o nome do solicitante da reserva (campo RECEIVED FROM).', ex: '6MARIA DA SILVA' },
+            { cat: 'PNR', cmd: '7', desc: 'Insere o prazo para emissão do bilhete (campo TKT).', ex: '712MAR', obs: 'Gera aviso na fila 9 no dia do vencimento.' },
+            { cat: 'PNR', cmd: 'ARNK', desc: 'Trecho terrestre (surface) na reserva, sem voo.', ex: '0GRUARNKSSAPNN1' },
+            { cat: 'PNR', cmd: 'ER', desc: 'Finaliza a criação ou modificação e mostra a reserva novamente com o localizador.', ex: 'ER' },
+            { cat: 'PNR', cmd: 'E', desc: 'Finaliza a criação ou modificação da reserva.', ex: 'E' },
+            { cat: 'PNR', cmd: 'IR', desc: 'Ignora (cancela) as alterações da reserva em andamento.', ex: 'IR', obs: 'Usar quando receber alerta ao finalizar.' },
+            { cat: 'Assentos', cmd: '4G1*', desc: 'Solicita o mapa de assentos gráfico para o segmento 1.', ex: '4G1*' },
+            { cat: 'Assentos', cmd: '4G1*/O', desc: 'Solicita o mapa original para o segmento 1.', ex: '4G1*/O' },
+            { cat: 'Assentos', cmd: '4G1/18B', desc: 'Reserva o assento B da fileira 18 do segmento 1 no mapa original.', ex: '4G1/18B' },
+            { cat: 'Assentos', cmd: '4G3/23AB', desc: 'Reserva os assentos A e B da fileira 23 do segmento 3.', ex: '4G3/23AB' },
+            { cat: 'Tarifas', cmd: 'WP', desc: 'Exibe a tarifa do itinerário da reserva de acordo com seus dados.', ex: 'WP', obs: 'Conferir com WP antes de armazenar a tarifa na reserva.' },
+            { cat: 'Tarifas', cmd: 'WPMUSD', desc: 'Exibe a tarifa do itinerário em dólar (USD).', ex: 'WPMUSD' },
+            { cat: 'Tarifas', cmd: 'WPNC', desc: 'Mostra a menor tarifa disponível para venda, sem trocar a classe dos voos.', ex: 'WPNC', obs: 'Usar somente com status HK ou SS.' },
+            { cat: 'Tarifas', cmd: 'WPNCB', desc: 'Mostra a menor tarifa disponível trocando automaticamente a classe dos voos.', ex: 'WPNCB', obs: 'Somente com status SS, na construção do PNR.' },
+            { cat: 'Tarifas', cmd: 'WPNCS', desc: 'Mostra a menor tarifa publicada pela cia, independente da disponibilidade.', ex: 'WPNCS' },
+            { cat: 'Tarifas', cmd: 'WPNI', desc: 'Bargain Finder Plus - procura a melhor tarifa considerando outros voos e cias.', ex: 'WPNI', obs: 'Mostra até 9 ou 19 opções. WPNI* revê a última consulta.' },
+            { cat: 'Tarifas', cmd: 'WC1M', desc: 'Altera o segmento 1 para a classe M.', ex: 'WC1M', obs: 'WC1L/2V altera os segmentos 1 e 2 em uma entrada.' },
+            { cat: 'Tarifas', cmd: 'WPRD', desc: 'Exibe as regras da tarifa (categorias 01 a 35).', ex: 'WPRD', obs: 'Categoria 15 informa prazo de emissão; 16 penalidades.' },
+            { cat: 'Tarifas', cmd: 'WPDF', desc: 'Exibe o enunciado completo (fare rule) da tarifa.', ex: 'WPDF' },
+            { cat: 'Tarifas', cmd: 'WPB', desc: 'Recalcula a tarifa de forma retroativa (após mudanças no PNR).', ex: 'WPB' },
+            { cat: 'Tarifas', cmd: 'PQ', desc: 'Armazena a tarifa no registro PQR (Price Quote Record) da reserva.', ex: 'PQ', obs: 'Até 9 tarifas por reserva, ligadas ao item nominal. WP¥PQ¥2 grava a opção 2.' },
+            { cat: 'Tarifas', cmd: 'WP¥A(cia)', desc: 'Filtra as tarifas para a companhia aérea informada.', ex: 'WP¥AJJ' },
+            { cat: 'Taxas', cmd: 'TXN*', desc: 'Exibe o detalhamento das taxas e o cálculo da tarifa.', ex: 'TXN*' },
+            { cat: 'Taxas', cmd: 'PXC*', desc: 'Exibe as taxas por código de cidade/companhia.', ex: 'PXC*', obs: 'Taxa DU = emissão; YQ/YR = sobretaxa de combustível; XF = taxas de aeroporto nos EUA.' },
+            { cat: 'Emissão', cmd: 'W¥PQ', desc: 'Emite o bilhete usando a tarifa armazenada no PQ.', ex: 'W¥PQ', obs: 'Emissão fase 3.0 (sem confirmar disponibilidade manualmente).' },
+            { cat: 'Emissão', cmd: 'W¥PQ¥A(cia)¥F(pagamento)', desc: 'Emite com companhia e forma de pagamento específicas.', ex: 'W¥PQ¥AC6¥FCASH' },
+            { cat: 'Emissão', cmd: '/E', desc: 'Qualificador de emissão de bilhete eletrônico.', ex: 'W¥PQ¥E' },
+            { cat: 'Emissão', cmd: 'W¥PQ¥TE/TN/TX', desc: 'Qualificadores de bilhete: TE = total a ser emitido, TN = número do bilhete, TX = texto no cupom.', ex: 'W¥PQ¥TN1234567890123' },
+            { cat: 'Emissão', cmd: 'WETR', desc: 'Visualiza o bilhete emitido e o status (OPEN, USED, VOID...).', ex: 'WETR' },
+            { cat: 'Emissão', cmd: 'WV', desc: 'Cancela (voida) um bilhete.', ex: 'WV' },
+            { cat: 'Emissão', cmd: 'W*BR', desc: 'Exibe as impressoras de emissão disponíveis.', ex: 'W*BR', obs: 'W*1Y exibe as impressoras de bilhete eletrônico (e-TKT/e-TAT).' },
+            { cat: 'Emissão', cmd: 'SSR FOID', desc: 'Insere documento de identidade obrigatório (SSR FOID).', ex: 'SRFOIDCA HK1-PASSAPORTE/AB123456' },
+            { cat: 'Emissão', cmd: 'SSR INFT', desc: 'Insere data de nascimento do bebê (SSR INFT).', ex: 'SRINFTCA HK1-DDMON/AAA', obs: 'Nome do bebê no campo nominal deve ser idêntico ao do INFT.' },
+            { cat: 'Emissão', cmd: 'SSR DOCS', desc: 'Insere os dados do documento/passaporte dos passageiros.', ex: 'SRDOCSCA HK1-P/R/WT/123456789/BR/15JAN70/M/28FEB30/SILVA/JOAO' },
+            { cat: 'Relatórios', cmd: '*PAC', desc: 'Exibe os dados contábeis da agência (PCC).', ex: '*PAC' },
+            { cat: 'Relatórios', cmd: 'DQB*', desc: 'Exibe o relatório diário de emissões.', ex: 'DQB*' },
+            { cat: 'Relatórios', cmd: 'WETP*', desc: 'Exibe o perfil de emissão da companhia aérea.', ex: 'WETP*' },
+            { cat: 'Dicas', cmd: 'N\\/CAMBIO', desc: 'Muda a página no Solar (viagens de página).', ex: 'N\\/CAMBIO' },
+            { cat: 'Dicas', cmd: '?', desc: 'Tecla DISPLAY - mostra informações gerais no campo de entrada.', ex: '?' },
+            { cat: 'Dicas', cmd: '¤', desc: 'Cruz de Lorena - separa os qualificadores em uma mesma entrada.', ex: 'W¥PQ¥A6F' },
+            { cat: 'Dicas', cmd: 'ESC', desc: 'Destrava o teclado do Sabre quando um formato não é aceito.', ex: 'ESC' }
+        ];
+
+        function renderSabreRef() {
+            const catSelect = document.getElementById('filterSabreCat');
+            if (catSelect && catSelect.options.length <= 1) {
+                const cats = [...new Set(SABRE_REF.map(r => r.cat))];
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    catSelect.appendChild(opt);
+                });
+            }
+            const term = (document.getElementById('searchSabre').value || '').trim().toLowerCase();
+            const cat = (document.getElementById('filterSabreCat').value || '').trim();
+            const cards = document.getElementById('sabreCards');
+            const filtered = SABRE_REF.filter(r => {
+                const matchCat = !cat || r.cat === cat;
+                const matchTerm = !term || r.cmd.toLowerCase().includes(term) || r.desc.toLowerCase().includes(term) || (r.obs || '').toLowerCase().includes(term) || (r.ex || '').toLowerCase().includes(term);
+                return matchCat && matchTerm;
+            });
+            if (!filtered.length) {
+                cards.innerHTML = '<div class="sabre-empty">Nenhum formato encontrado. Tente outro termo de busca.</div>';
+                return;
+            }
+            const grouped = {};
+            filtered.forEach(r => {
+                if (!grouped[r.cat]) grouped[r.cat] = [];
+                grouped[r.cat].push(r);
+            });
+            cards.innerHTML = Object.keys(grouped).map(catName => `
+                <div style="margin-bottom: 24px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <span class="sabre-cat-badge">${catName}</span>
+                        <span style="font-size:12px;color:var(--gray-500);">${grouped[catName].length} formato(s)</span>
+                    </div>
+                    <div class="sabre-cards">
+                        ${grouped[catName].map(r => `
+                            <div class="sabre-card">
+                                <span class="sabre-cmd">${r.cmd}</span>
+                                <span class="sabre-desc">${r.desc}</span>
+                                ${r.ex ? `<div class="sabre-ex">Ex.: <strong>${r.ex}</strong></div>` : ''}
+                                ${r.obs ? `<span class="sabre-note">ℹ️ ${r.obs}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterSabre() {
+            renderSabreRef();
+        }
+
         // Navigation
         function showPage(page) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
@@ -4099,7 +4312,8 @@
                 bilhetes: 'Bilhetes Não Utilizados',
                 cotacoes: 'Cotações',
                 embarques: 'Embarques Próximos',
-                pendencias: 'Pendências Administrativas'
+                pendencias: 'Pendências Administrativas',
+                sabre: 'Referência Sabre'
             };
             document.getElementById('pageTitle').textContent = titles[page];
 
@@ -4121,6 +4335,7 @@
             renderPendenciasTable();
             if (pendenciaView === 'kanban') renderKanban();
             renderDashboardTables();
+            renderSabreRef();
             updateBadges();
         }
 
