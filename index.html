@@ -4667,7 +4667,7 @@
                     curDate = dm[1] + dm[2].toUpperCase();
                     continue;
                 }
-                let m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})\s*(\d{1,4})\s*([A-Z])\s+(\d{2}[A-Z]{3})\s+\S+\s*([A-Z]{3})\s*([A-Z]{3})(?:(?:\*([A-Z]{2})|\s+([A-Z]{2}))\s*\d)?\s+(\d{4})\s+(\d{4})(?:\s+(\d{2}[A-Z]{3})(?:\s+\d+)?(?:\s+\S+)?)?(?:\s+(\d{3})(?:\s+(\d))?)?\s*(?:\/.*)?$/);
+                let m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})\s*(\d{1,4})\s*([A-Z])\s+(\d{2}[A-Z]{3})\s+\S+\s*([A-Z]{3})\s*([A-Z]{3})(?:(?:\*([A-Z]{2})|\s+([A-Z]{2}))\s*\d)?\s+(\d{4})\s+(\d{4})(?:\s+(\d{2}[A-Z]{3})(?:\s+\d+)?)?(?:\s+(\d{3})(?:\s+(\d))?)?(?:\s+\S+)?\s*(?:\/.*)?$/);
                 if (m) {
                     rows.push(ctMakeRow({ date: m[5], cia: m[2], flight: m[3], cls: m[4], orig: m[6], dest: m[7], dep: m[10], arr: m[11], nextDate: m[12], stops: m[14] || '0', equip: m[13] || '', year: year }));
                     continue;
