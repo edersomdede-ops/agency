@@ -469,6 +469,50 @@
             font-size: 14px;
         }
 
+        .ct-cell {
+            width: 100%;
+            padding: 8px 6px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            background: transparent;
+        }
+        .ct-cell:hover {
+            border-color: var(--gray-300);
+            background: var(--gray-50);
+        }
+        .ct-cell:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+        .ct-cell.ct-cmd {
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .ct-del {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+            padding: 4px 6px;
+        }
+        .ct-del:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        .ct-tarifa-line {
+            font-size: 13px;
+            color: var(--gray-900);
+            background: var(--gray-50);
+            border: 1px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            line-height: 1.6;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -1491,6 +1535,9 @@
                 <button class="nav-item" onclick="showPage('sabre')">
                     <span class="nav-icon">🖥️</span> Referência Sabre
                 </button>
+                <button class="nav-item" onclick="showPage('cotacao-sabre')">
+                    <span class="nav-icon">📧</span> Cotação E-mail
+                </button>
             </div>
         </nav>
         <div class="sidebar-footer">
@@ -2095,6 +2142,134 @@
                             Comandos básicos do Sabre para consulta rápida. O símbolo <code>¤</code> representa a Cruz de Lorena (separador de qualificadores) e <code>1</code>/<code>0</code> identificam trechos. Dica: ao usar no teclado do Sabre, os campos terminam com <code>1</code> (campo) e a entrada com <code>ER</code>.
                         </p>
                         <div id="sabreCards"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cotação E-mail Page -->
+        <div class="page-view" id="page-cotacao-sabre">
+            <div class="content">
+                <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-icon orange">📧</div>
+                        <div class="stat-info">
+                            <h3 id="statCtVoos">0</h3>
+                            <p>Trechos Convertidos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">✈</div>
+                        <div class="stat-info">
+                            <h3 id="statCtCias">0</h3>
+                            <p>Companhias</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">🌍</div>
+                        <div class="stat-info">
+                            <h3 id="statCtRota">-</h3>
+                            <p>Rota</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom: 20px;">
+                    <div class="table-header">
+                        <h3>1. Colar Voos do Sabre</h3>
+                        <div class="table-actions">
+                            <input type="text" id="ctDefaultDate" placeholder="Data padrão (ex.: 03AUG)" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
+                            <input type="text" id="ctYear" placeholder="Ano (ex.: 2026)" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 110px;">
+                            <button class="btn btn-outline" onclick="clearCotacao()">Limpar</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <textarea id="ctPaste" oninput="scheduleCotacao()" placeholder="Cole aqui o itinerário do PNR (após ER / IR / *I) ou a disponibilidade do Sabre.&#10;&#10;Exemplo (itinerário):&#10;1. EK 399Y 03AUG 5*DPSDXB HK1 0035 0535 /DCEK*FMDSDK /E&#10;2. EK 261Y 03AUG 5*DXBGRU HK1 0905 1715 /DCEK*FMDSDK /E&#10;&#10;Exemplo (disponibilidade):&#10;20FEB TUE SAO/Z-3 BUE/¤1&#10;7AR1263 J7 D7 Y7 L7 B7 H7 K7* GRUEZE N 0730 1025 737 S 0 XS /E" style="width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; font-family: 'Consolas', 'Courier New', monospace; outline: none; resize: vertical; line-height: 1.5;"></textarea>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                            <button class="btn btn-primary" onclick="convertCotacao()">
+                                🔄 Converter Voos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-bottom: 20px;">
+                    <div class="table-header">
+                        <h3>2. Tarifa</h3>
+                    </div>
+                    <div class="quick-paste-options" style="padding: 20px 24px; flex-wrap: wrap;">
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tipo</label>
+                            <select id="ctTarTipo" onchange="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="econômica">econômica</option>
+                                <option value="executiva">executiva</option>
+                                <option value="premium econômica">premium econômica</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tarifa (USD)</label>
+                            <input type="text" id="ctTarValor" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Taxas (USD)</label>
+                            <input type="text" id="ctTarTaxas" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (USD)</label>
+                            <input type="text" id="ctTarTotal" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (BRL)</label>
+                            <input type="text" id="ctTarTotalBRL" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
+                            <input type="text" id="ctTarBag" value="BAG 1 PÇ 23KG" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>3. Pré-visualização</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-outline" onclick="addCotacaoRow()">+ Linha</button>
+                            <button class="btn btn-success" onclick="copiarCotacaoHtml(true)">📋 Copiar Tabela + Tarifa</button>
+                            <button class="btn btn-outline" onclick="copiarCotacaoHtml(false)">Copiar Tabela</button>
+                            <button class="btn btn-outline" onclick="copiarCotacaoTexto()">Copiar Texto</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px; overflow-x: auto;">
+                        <div id="ctTarifaPreview" style="margin-bottom: 16px;"></div>
+                        <div class="table-wrapper" style="overflow-x: auto;">
+                            <table id="ctTable" style="min-width: 1100px;">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 70px;">DATA</th>
+                                        <th style="min-width: 120px;">SEMANA</th>
+                                        <th style="min-width: 130px;">CIA. AEREA</th>
+                                        <th style="min-width: 60px;">VOO</th>
+                                        <th style="min-width: 130px;">CLASSE</th>
+                                        <th style="min-width: 160px;">ORIGEM</th>
+                                        <th style="min-width: 160px;">DESTINO</th>
+                                        <th style="min-width: 60px;">SAIDA</th>
+                                        <th style="min-width: 80px;">CHEGADA</th>
+                                        <th style="min-width: 70px;">DURACAO</th>
+                                        <th style="min-width: 110px;">AERONAVE</th>
+                                        <th style="min-width: 60px;">ESCALAS</th>
+                                        <th style="width: 36px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ctTableBody">
+                                    <tr>
+                                        <td colspan="13" class="table-empty">
+                                            <div class="empty-icon">📧</div>
+                                            <p>Cole os voos do Sabre no campo acima e clique em "Converter Voos".</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2728,6 +2903,10 @@
             updateDate();
             renderAll();
             updateSyncBadge();
+            const ctYear = document.getElementById('ctYear');
+            if (ctYear) ctYear.value = new Date().getFullYear();
+            renderCotacaoTable();
+            renderCotacaoTarifa();
         });
 
         function updateSyncBadge() {
@@ -4298,6 +4477,369 @@
             renderSabreRef();
         }
 
+        // Cotação E-mail (Sabre -> formato de e-mail)
+        const AIRLINES = {
+            EK: 'EMIRATES', TP: 'TAP AIR PORTUGAL', AR: 'AEROLINEAS ARGENTINAS',
+            AA: 'AMERICAN AIRLINES', UA: 'UNITED AIRLINES', DL: 'DELTA AIR LINES',
+            G3: 'GOL LINHAS AEREAS', AD: 'AZUL LINHAS AEREAS', LA: 'LATAM AIRLINES',
+            JJ: 'LATAM AIRLINES BRASIL', IB: 'IBERIA', AF: 'AIR FRANCE',
+            KL: 'KLM ROYAL DUTCH', LH: 'LUFTHANSA', BA: 'BRITISH AIRWAYS',
+            ET: 'ETHIOPIAN AIRLINES', QR: 'QATAR AIRWAYS', AC: 'AIR CANADA',
+            AV: 'AVIANCA', CM: 'COPA AIRLINES', AZ: 'ITA AIRWAYS', LX: 'SWISS',
+            OS: 'AUSTRIAN AIRLINES', TK: 'TURKISH AIRLINES', AY: 'FINNAIR',
+            SK: 'SAS', SN: 'BRUSSELS AIRLINES', VY: 'VUELING', FR: 'RYANAIR',
+            U2: 'EASYJET', SU: 'AEROFLOT', NH: 'ALL NIPPON AIRWAYS',
+            JL: 'JAPAN AIRLINES', KE: 'KOREAN AIR', OZ: 'ASIANA AIRLINES',
+            CX: 'CATHAY PACIFIC', SQ: 'SINGAPORE AIRLINES', TG: 'THAI AIRWAYS',
+            EY: 'ETIHAD AIRWAYS', SV: 'SAUDIA', MS: 'EGYPTAIR', AM: 'AEROMEXICO',
+            H2: 'SKY AIRLINE', JA: 'JETSMART', W4: 'WIZZ AIR', PY: 'SURINAM AIRWAYS'
+        };
+        const AIRPORTS = {
+            DPS: 'DENPASAR BALI', DXB: 'DUBAI', LIS: 'LISBON',
+            GRU: 'SAO PAULO - GUARULHOS', SAO: 'SAO PAULO', CGH: 'SAO PAULO - CONGONHAS',
+            VCP: 'CAMPINAS - VIRACOPOS', GIG: 'RIO DE JANEIRO - GALEAO',
+            SDU: 'RIO DE JANEIRO - SANTOS DUMONT', BSB: 'BRASILIA',
+            CNF: 'BELO HORIZONTE - CONFINS', POA: 'PORTO ALEGRE', FLN: 'FLORIANOPOLIS',
+            CWB: 'CURITIBA', SSA: 'SALVADOR', REC: 'RECIFE', FOR: 'FORTALEZA',
+            NAT: 'NATAL', MAO: 'MANAUS', BEL: 'BELEM', MCZ: 'MACEIO', JPA: 'JOAO PESSOA',
+            AJU: 'ARACAJU', VIX: 'VITORIA', GOJ: 'GOIANIA', CGB: 'CUIABA',
+            PMW: 'PALMAS', SLZ: 'SAO LUIS', MCO: 'ORLANDO', ORL: 'ORLANDO',
+            MIA: 'MIAMI', JFK: 'NEW YORK - JFK', EWR: 'NEW YORK - NEWARK',
+            LAX: 'LOS ANGELES', ORD: 'CHICAGO - O HARE', IAH: 'HOUSTON',
+            DFW: 'DALLAS', ATL: 'ATLANTA', BOS: 'BOSTON', IAD: 'WASHINGTON - DULLES',
+            SFO: 'SAO FRANCISCO', SEA: 'SEATTLE', LAS: 'LAS VEGAS', DEN: 'DENVER',
+            SLC: 'SALT LAKE CITY', MEX: 'CIDADE DO MEXICO', CUN: 'CANCUN',
+            PUJ: 'PUNTA CANA', HAV: 'HAVANA', SJU: 'SAN JUAN', PTY: 'PANAMA CITY',
+            SJO: 'SAN JOSE', LIM: 'LIMA', BOG: 'BOGOTA', UIO: 'QUITO',
+            GYE: 'GUAYAQUIL', CCS: 'CARACAS', EZE: 'BUENOS AIRES - EZEIZA',
+            AEP: 'BUENOS AIRES - JORGE NEWBERY', MVD: 'MONTEVIDEO', ASU: 'ASUNCION',
+            SCL: 'SANTIAGO', CDG: 'PARIS - CHARLES DE GAULLE', ORY: 'PARIS - ORLY',
+            FRA: 'FRANKFURT', MUC: 'MUNIQUE', LHR: 'LONDRES - HEATHROW',
+            LGW: 'LONDRES - GATWICK', AMS: 'AMSTERDAM', BRU: 'BRUXELAS',
+            MAD: 'MADRID', BCN: 'BARCELONA', OPO: 'PORTO', FCO: 'ROMA - FIUMICINO',
+            MXP: 'MILAO - MALPENSA', ZRH: 'ZURIQUE', VIE: 'VIENA', ATH: 'ATENAS',
+            IST: 'ISTAMBUL', DOH: 'DOHA', AUH: 'ABU DHABI', RUH: 'RIADE',
+            JNB: 'JOHANNESBURG', CPT: 'CIDADE DO CABO', CAI: 'CAIRO', LAD: 'LUANDA',
+            SIN: 'CINGAPURA', BKK: 'BANGKOK', HKG: 'HONG KONG', KUL: 'KUALA LUMPUR',
+            NRT: 'TOQUIO - NARITA', HND: 'TOQUIO - HANEDA', ICN: 'SEUL',
+            PVG: 'XANGAI', PEK: 'PEQUIM', SYD: 'SYDNEY', MEL: 'MELBOURNE',
+            AKL: 'AUCKLAND', DEL: 'NOVA DELHI', BOM: 'MUMBAI', DMM: 'DAMAM'
+        };
+        const AIRCRAFT = {
+            '388': 'AIRBUS 388', '380': 'AIRBUS 380', '333': 'AIRBUS 333',
+            '332': 'AIRBUS 332', '330': 'AIRBUS 330', '339': 'AIRBUS 339',
+            '359': 'AIRBUS 359', '350': 'AIRBUS 350', '320': 'AIRBUS 320',
+            '321': 'AIRBUS 321', '319': 'AIRBUS 319', '318': 'AIRBUS 318',
+            '32N': 'AIRBUS 320 NEO', '21N': 'AIRBUS 220', '223': 'AIRBUS 223',
+            '788': 'BOEING 788', '789': 'BOEING 789', '787': 'BOEING 787',
+            '772': 'BOEING 772', '77W': 'BOEING 777', '773': 'BOEING 773',
+            '777': 'BOEING 777', '747': 'BOEING 747', '738': 'BOEING 738',
+            '739': 'BOEING 739', '737': 'BOEING 737', '73H': 'BOEING 737',
+            '73G': 'BOEING 737', '76W': 'BOEING 767', '763': 'BOEING 763',
+            '757': 'BOEING 757', '717': 'BOEING 717', 'E90': 'EMBRAER 190',
+            'E95': 'EMBRAER 195', 'E75': 'EMBRAER 175', 'E70': 'EMBRAER 170',
+            'AT7': 'ATR 72', 'AT4': 'ATR 42', '7M8': 'BOEING 737 MAX 8',
+            '7M9': 'BOEING 737 MAX 9'
+        };
+        const CLASS_NAMES = {
+            F: 'PRIMEIRA', P: 'PRIMEIRA', R: 'PRIMEIRA', J: 'EXECUTIVA',
+            C: 'EXECUTIVA', D: 'EXECUTIVA', I: 'EXECUTIVA', Z: 'EXECUTIVA',
+            W: 'PREMIUM ECONOMICA', A: 'PREMIUM ECONOMICA', Y: 'ECONOMICA',
+            B: 'ECONOMICA', M: 'ECONOMICA', K: 'ECONOMICA', U: 'ECONOMICA',
+            H: 'ECONOMICA', Q: 'ECONOMICA', L: 'ECONOMICA', T: 'ECONOMICA',
+            V: 'ECONOMICA', E: 'ECONOMICA', G: 'ECONOMICA', N: 'ECONOMICA',
+            O: 'ECONOMICA', S: 'ECONOMICA', X: 'ECONOMICA'
+        };
+        const TZ = {
+            GRU: -3, SAO: -3, CGH: -3, VCP: -3, GIG: -3, SDU: -3, BSB: -3,
+            CNF: -3, POA: -3, FLN: -3, CWB: -3, SSA: -3, REC: -3, FOR: -3,
+            NAT: -3, MAO: -4, BEL: -3, MCZ: -3, JPA: -3, AJU: -3, VIX: -3,
+            GOJ: -3, CGB: -4, PMW: -3, SLZ: -3, EZE: -3, AEP: -3, MVD: -3,
+            ASU: -4, SCL: '-3:cl', LIM: -5, BOG: -5, UIO: -5, GYE: -5,
+            CCS: -4, MEX: -6, CUN: -5, PUJ: -4, HAV: -5, SJO: -6, PTY: -5,
+            MIA: '-5:us', MCO: '-5:us', ORL: '-5:us', JFK: '-5:us',
+            EWR: '-5:us', BOS: '-5:us', IAD: '-5:us', ATL: '-5:us',
+            ORD: '-6:us', IAH: '-6:us', DFW: '-6:us', DEN: '-7:us',
+            LAX: '-8:us', SFO: '-8:us', SEA: '-8:us', LAS: '-8:us',
+            SLC: '-7:us', LIS: '0:eu', OPO: '0:eu', MAD: '1:eu', BCN: '1:eu',
+            CDG: '1:eu', ORY: '1:eu', FRA: '1:eu', MUC: '1:eu', LHR: '0:eu',
+            LGW: '0:eu', AMS: '1:eu', BRU: '1:eu', ZRH: '1:eu', VIE: '1:eu',
+            ATH: '2:eu', FCO: '1:eu', MXP: '1:eu', DUB: '0:eu', BUD: '1:eu',
+            PRG: '1:eu', WAW: '1:eu', CPH: '1:eu', ARN: '1:eu', HEL: '2:eu',
+            IST: 3, DOH: 3, AUH: 4, DXB: 4, DMM: 3, RUH: 3, JNB: 2, CPT: 2,
+            CAI: 2, LAD: 1, SIN: 8, BKK: 7, HKG: 8, KUL: 8, NRT: 9, HND: 9,
+            ICN: 9, PVG: 8, PEK: 8, MNL: 8, TPE: 8, SGN: 7, HAN: 7, DPS: 8,
+            CGK: 7, DEL: 5.5, BOM: 5.5, SYD: '10:au', MEL: '10:au',
+            BNE: '10:au', PER: 8, AKL: 12
+        };
+        const DIAS_PT = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERCA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SABADO'];
+        const MESES = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+        const MESES_RX = 'JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC';
+
+        let cotacaoRows = [];
+        let ctLastTarifaLine = '';
+
+        function ctEsc(v) {
+            return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function ctParseNum(v) {
+            if (v == null) return 0;
+            return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+        }
+        function ctFmtCurrency(v) {
+            if (String(v).trim() === '') return 'XXX,XX';
+            const n = ctParseNum(v);
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function ctGetMonth(dateStr) {
+            const m = String(dateStr || '').match(new RegExp('(' + MESES_RX + ')', 'i'));
+            return m ? MESES[m[1].toUpperCase()] : null;
+        }
+        function ctDiaSemana(dateStr, year) {
+            const m = String(dateStr || '').match(new RegExp('^(\\d{2})(' + MESES_RX + ')$', 'i'));
+            if (!m) return '';
+            const d = new Date(year, MESES[m[2].toUpperCase()], +m[1]);
+            return DIAS_PT[d.getDay()];
+        }
+        function ctTz(code, month) {
+            let v = TZ[code];
+            if (v === undefined) return null;
+            let base = v, dst = null;
+            if (typeof v === 'string') {
+                const parts = v.split(':');
+                base = parseFloat(parts[0]);
+                dst = parts[1];
+            }
+            const m1 = month + 1;
+            if (dst === 'us' || dst === 'eu') return (m1 >= 4 && m1 <= 10) ? base + 1 : base;
+            if (dst === 'au') return (m1 >= 11 || m1 <= 3) ? base + 1 : base;
+            if (dst === 'cl') return (m1 >= 10 || m1 <= 3) ? base + 1 : base;
+            return base;
+        }
+        function ctToMin(t) {
+            return (+t.slice(0, 2)) * 60 + (+t.slice(2, 4));
+        }
+        function ctDuracao(dep, arr, orig, dest, month, nextDay) {
+            const o = ctTz(orig, month), d = ctTz(dest, month);
+            let depM = ctToMin(dep), arrM = ctToMin(arr);
+            if (nextDay) arrM += 1440;
+            let dur;
+            if (o == null || d == null) {
+                dur = arrM - depM;
+                if (dur < 0) dur += 1440;
+            } else {
+                dur = (arrM + (o - d) * 60) - depM;
+                if (dur < 0) dur += 1440;
+            }
+            return Math.floor(dur / 60) + '.' + String(dur % 60).padStart(2, '0');
+        }
+        function ctMakeRow(seg) {
+            const date = seg.date || '';
+            const month = ctGetMonth(date);
+            const nextDay = !!seg.nextDate;
+            const dur = (seg.dep && seg.arr && month != null) ? ctDuracao(seg.dep, seg.arr, seg.orig, seg.dest, month, nextDay) : '';
+            return {
+                date: date,
+                semana: ctDiaSemana(date, seg.year),
+                cia: AIRLINES[seg.cia] || seg.cia || '',
+                voo: seg.flight || '',
+                classe: (seg.cls ? seg.cls + ' - ' + (CLASS_NAMES[seg.cls] || 'ECONOMICA') : ''),
+                origem: AIRPORTS[seg.orig] || seg.orig || '',
+                destino: AIRPORTS[seg.dest] || seg.dest || '',
+                saida: seg.dep || '',
+                chegada: seg.arr ? (nextDay ? seg.arr + ' (' + seg.nextDate + ')' : seg.arr) : '',
+                duracao: dur,
+                aeronave: AIRCRAFT[seg.equip] || seg.equip || '',
+                escalas: seg.stops != null ? String(seg.stops) : '0'
+            };
+        }
+        function parseSabreToRows(text) {
+            const rows = [];
+            const year = parseInt(document.getElementById('ctYear').value, 10) || new Date().getFullYear();
+            const defDate = (document.getElementById('ctDefaultDate').value || '').trim().toUpperCase();
+            let curDate = defDate;
+            const lines = String(text).split(/\r?\n/);
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const dm = line.match(new RegExp('^(\\d{2})(' + MESES_RX + ')\\b', 'i'));
+                if (dm && !line.match(/^(\d{1,2})\./) && !line.match(/^\d{1,2}\.?[A-Z]{2}\d/)) {
+                    curDate = dm[1] + dm[2].toUpperCase();
+                    continue;
+                }
+                let m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})\s*(\d{1,4})\s*([A-Z])\s+(\d{2}[A-Z]{3})\s+\S+\s*([A-Z]{3})\s?([A-Z]{3})(?:\*([A-Z]{2})|\s+([A-Z]{2}))\s*(\d)\s+(\d{4})\s+(\d{4})(?:\s+(\d{2}[A-Z]{3})\s+(\d+))?\s*\//);
+                if (m) {
+                    rows.push(ctMakeRow({ date: m[5], cia: m[2], flight: m[3], cls: m[4], orig: m[6], dest: m[7], dep: m[11], arr: m[12], nextDate: m[13], stops: m[14] || '0', equip: '', year: year }));
+                    continue;
+                }
+                m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})(\d{1,4})\s+(.+?)\s+([A-Z]{3})([A-Z]{3})\s+\S+\s+(\d{4})\s+(\d{4})\s+(\S+)\s+\S+\s+(\d)\s+/);
+                if (m) {
+                    const cls = (m[4].match(/[A-Z]/) || [''])[0];
+                    rows.push(ctMakeRow({ date: curDate, cia: m[2], flight: m[3], cls: cls, orig: m[5], dest: m[6], dep: m[7], arr: m[8], equip: m[9], stops: m[10], year: year }));
+                    continue;
+                }
+            }
+            return rows;
+        }
+        function renderCotacaoTable() {
+            const tbody = document.getElementById('ctTableBody');
+            if (!cotacaoRows.length) {
+                tbody.innerHTML = '<tr><td colspan="13" class="table-empty"><div class="empty-icon">📧</div><p>Nenhum trecho. Cole os voos do Sabre e clique em "Converter Voos".</p></td></tr>';
+                document.getElementById('statCtVoos').textContent = '0';
+                document.getElementById('statCtCias').textContent = '0';
+                document.getElementById('statCtRota').textContent = '-';
+                return;
+            }
+            tbody.innerHTML = cotacaoRows.map(function(r, i) {
+                return '<tr>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="date" value="' + ctEsc(r.date) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="semana" value="' + ctEsc(r.semana) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="cia" value="' + ctEsc(r.cia) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="voo" value="' + ctEsc(r.voo) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="classe" value="' + ctEsc(r.classe) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="origem" value="' + ctEsc(r.origem) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="destino" value="' + ctEsc(r.destino) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="saida" value="' + ctEsc(r.saida) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="chegada" value="' + ctEsc(r.chegada) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="duracao" value="' + ctEsc(r.duracao) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell" data-i="' + i + '" data-f="aeronave" value="' + ctEsc(r.aeronave) + '" oninput="ctCell(this)"></td>' +
+                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="escalas" value="' + ctEsc(r.escalas) + '" oninput="ctCell(this)"></td>' +
+                    '<td><button class="ct-del" onclick="removeCotacaoRow(' + i + ')" title="Remover">✕</button></td>' +
+                    '</tr>';
+            }).join('');
+            const cias = {};
+            cotacaoRows.forEach(function(r) { if (r.cia) cias[r.cia] = true; });
+            document.getElementById('statCtVoos').textContent = cotacaoRows.length;
+            document.getElementById('statCtCias').textContent = Object.keys(cias).length;
+            const orig = cotacaoRows.find(function(r) { return r.origem; });
+            const dest = cotacaoRows.slice().reverse().find(function(r) { return r.destino; });
+            document.getElementById('statCtRota').textContent = (orig ? orig.origem.split(' - ')[0] : '') + ' / ' + (dest ? dest.destino.split(' - ')[0] : '');
+        }
+        function ctCell(inp) {
+            const i = +inp.dataset.i, f = inp.dataset.f;
+            if (cotacaoRows[i]) cotacaoRows[i][f] = inp.value;
+        }
+        function removeCotacaoRow(i) {
+            cotacaoRows.splice(i, 1);
+            renderCotacaoTable();
+        }
+        function addCotacaoRow() {
+            cotacaoRows.push({ date: '', semana: '', cia: '', voo: '', classe: '', origem: '', destino: '', saida: '', chegada: '', duracao: '', aeronave: '', escalas: '0' });
+            renderCotacaoTable();
+        }
+        function clearCotacao() {
+            document.getElementById('ctPaste').value = '';
+            cotacaoRows = [];
+            renderCotacaoTable();
+            showToast('Área limpa.', 'info');
+        }
+        let ctTimer = null;
+        function scheduleCotacao() {
+            clearTimeout(ctTimer);
+            ctTimer = setTimeout(convertCotacao, 500);
+        }
+        function convertCotacao() {
+            const text = document.getElementById('ctPaste').value;
+            if (!text.trim()) {
+                cotacaoRows = [];
+                renderCotacaoTable();
+                return;
+            }
+            const rows = parseSabreToRows(text);
+            if (rows.length) {
+                cotacaoRows = rows;
+                renderCotacaoTable();
+                showToast(rows.length + ' trecho(s) convertido(s)!', 'success');
+            } else {
+                showToast('Nenhum trecho reconhecido. Cole do itinerário do PNR (após ER/IR) ou da disponibilidade do Sabre.', 'error');
+            }
+        }
+        function renderCotacaoTarifa() {
+            const tipo = document.getElementById('ctTarTipo').value;
+            const val = document.getElementById('ctTarValor').value;
+            const taxas = document.getElementById('ctTarTaxas').value;
+            const total = document.getElementById('ctTarTotal').value;
+            const brl = document.getElementById('ctTarTotalBRL').value;
+            const bag = document.getElementById('ctTarBag').value;
+            ctLastTarifaLine = 'Tarifa *' + tipo + '*.....USD ' + ctFmtCurrency(val) + ' + USD ' + ctFmtCurrency(taxas) + ' taxas = Total USD ' + ctFmtCurrency(total) + ' /BRL ' + ctFmtCurrency(brl) + ' (' + bag + ')';
+            const el = document.getElementById('ctTarifaPreview');
+            if (el) el.innerHTML = '<div class="ct-tarifa-line"><strong>Linha da tarifa (colada no e-mail):</strong><br>' + ctEsc(ctLastTarifaLine) + '</div>';
+        }
+        function ctGetRows() {
+            return cotacaoRows.map(function(r) {
+                return { date: r.date || '', semana: r.semana || '', cia: r.cia || '', voo: r.voo || '', classe: r.classe || '', origem: r.origem || '', destino: r.destino || '', saida: r.saida || '', chegada: r.chegada || '', duracao: r.duracao || '', aeronave: r.aeronave || '', escalas: r.escalas || '' };
+            });
+        }
+        function ctBuildHtmlTable() {
+            const rows = ctGetRows();
+            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
+            let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;">';
+            html += '<thead><tr style="background:#1a73e8;color:#ffffff;">' + head.map(function(h) { return '<th style="padding:6px 10px;text-align:left;">' + h + '</th>'; }).join('') + '</tr></thead><tbody>';
+            rows.forEach(function(r) {
+                html += '<tr>' + [r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].map(function(v) { return '<td style="padding:6px 10px;border:1px solid #dadce0;">' + ctEsc(v) + '</td>'; }).join('') + '</tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+        function ctBuildPlainTable() {
+            const rows = ctGetRows();
+            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
+            const lines = [head.join('\t')];
+            rows.forEach(function(r) {
+                lines.push([r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].join('\t'));
+            });
+            return lines.join('\n');
+        }
+        async function ctCopy(html, text) {
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    const item = new ClipboardItem({
+                        'text/html': new Blob([html], { type: 'text/html' }),
+                        'text/plain': new Blob([text], { type: 'text/plain' })
+                    });
+                    await navigator.clipboard.write([item]);
+                    return true;
+                }
+            } catch (e) {}
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (e) {}
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                ta.remove();
+                return ok;
+            } catch (e) {
+                return false;
+            }
+        }
+        async function copiarCotacaoHtml(withTarifa) {
+            if (!cotacaoRows.length) { showToast('Nenhum trecho convertido ainda.', 'error'); return; }
+            let html = ctBuildHtmlTable();
+            let text = ctBuildPlainTable();
+            if (withTarifa && ctLastTarifaLine) {
+                html += '<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;">' + ctEsc(ctLastTarifaLine) + '</p>';
+                text += '\n\n' + ctLastTarifaLine;
+            }
+            const ok = await ctCopy(html, text);
+            showToast(ok ? 'Copiado! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+        async function copiarCotacaoTexto() {
+            if (!cotacaoRows.length) { showToast('Nenhum trecho convertido ainda.', 'error'); return; }
+            let text = ctBuildPlainTable();
+            if (ctLastTarifaLine) text += '\n\n' + ctLastTarifaLine;
+            const ok = await ctCopy(text, text);
+            showToast(ok ? 'Texto copiado!' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+
         // Navigation
         function showPage(page) {
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
@@ -4313,7 +4855,8 @@
                 cotacoes: 'Cotações',
                 embarques: 'Embarques Próximos',
                 pendencias: 'Pendências Administrativas',
-                sabre: 'Referência Sabre'
+                sabre: 'Referência Sabre',
+                'cotacao-sabre': 'Cotação E-mail'
             };
             document.getElementById('pageTitle').textContent = titles[page];
 
