@@ -1650,6 +1650,55 @@
             margin: 0 auto 12px;
         }
         .table-empty p { color: var(--gray-700); }
+
+        /* Carrinho de cotações */
+        #page-cotacao-sabre .content > .table-container:nth-of-type(5) { border-top-color: #8b5cf6; }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(5) .table-header { background: linear-gradient(180deg, #f5f0ff, #ffffff); }
+        #page-cotacao-sabre .content > .table-container:nth-of-type(5) .table-header h3 { color: #6d28d9; }
+        #page-cotacao-sabre .stats-grid .stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #f97316, #fbbf24) !important;
+            box-shadow: 0 6px 18px rgba(249,115,22,0.30);
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border: 1px solid var(--gray-200);
+            border-left: 4px solid #8b5cf6;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        .cart-item-check input { width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer; }
+        .cart-item-info { flex: 1; min-width: 0; }
+        .cart-item-title { font-weight: 700; color: #6d28d9; font-size: 14px; }
+        .cart-item-meta { font-size: 12px; color: var(--gray-700); }
+        .cart-item-price { text-align: right; font-size: 13px; font-weight: 600; color: var(--gray-900); white-space: nowrap; }
+        .cart-item-actions { display: flex; align-items: center; gap: 6px; }
+        .cart-item-detail {
+            border: 1px solid #e9d5ff;
+            background: #faf8ff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .cart-detail-table { min-width: 1050px; }
+        .cart-detail-table th {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa) !important;
+            color: #ffffff !important;
+            border-bottom: none !important;
+            font-size: 11px;
+            padding: 8px 6px;
+            white-space: nowrap;
+            letter-spacing: 0.4px;
+        }
+        .cart-detail-table td { padding: 4px 4px; }
+        .cart-detail-table .ct-cell { background: #ffffff; border: 1px solid var(--gray-200); }
+        @media (max-width: 768px) {
+            .cart-item { flex-wrap: wrap; }
+            .cart-item-price { text-align: left; }
+        }
     </style>
 </head>
 <body>
@@ -1685,6 +1734,13 @@
                         <div class="stat-info">
                             <h3 id="statCtRota">-</h3>
                             <p>Rota</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">🛒</div>
+                        <div class="stat-info">
+                            <h3 id="statCtCart">0</h3>
+                            <p>Cotações no Carrinho</p>
                         </div>
                     </div>
                 </div>
@@ -1745,6 +1801,13 @@
                             <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
                             <input type="text" id="ctTarBag" value="BAG 1 PÇ 23KG" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
                         </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Conversão em Reais</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-700);cursor:pointer;padding:8px 0;">
+                                <input type="checkbox" id="ctTarOcultarBRL" onchange="renderCotacaoTarifa()" style="width:16px;height:16px;accent-color:var(--mint);cursor:pointer;">
+                                Ocultar (cliente sem a conversão)
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -1752,6 +1815,7 @@
                     <div class="table-header">
                         <h3>3. Pré-visualização</h3>
                         <div class="table-actions">
+                            <button class="btn btn-primary" onclick="addToCart()">➕ Adicionar ao Carrinho</button>
                             <button class="btn btn-outline" onclick="addCotacaoRow()">+ Linha</button>
                             <button class="btn btn-success" onclick="copiarCotacaoHtml(true)">📋 Copiar Tabela + Tarifa</button>
                             <button class="btn btn-outline" onclick="copiarCotacaoHtml(false)">Copiar Tabela</button>
@@ -1791,10 +1855,41 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="table-container" style="margin-top: 20px;">
+                    <div class="table-header">
+                        <h3>4. Carrinho de Cotações</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-outline" onclick="clearCart()">🗑 Limpar Carrinho</button>
+                            <button class="btn btn-outline" onclick="openCartPreview()">👁 Visualizar E-mail</button>
+                            <button class="btn btn-success" onclick="copiarCart()">📋 Copiar Selecionadas</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div id="cartList"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
     </main>
+
+    <!-- Cart Preview Modal -->
+    <div class="modal-overlay" id="cartPreviewModal">
+        <div class="modal" style="max-width: 880px;">
+            <div class="modal-header">
+                <h3>Pré-visualização do e-mail</h3>
+                <button class="modal-close" onclick="closeCartPreview()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="html-preview-content" id="cartPreviewContent" style="max-height: 60vh;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeCartPreview()">Fechar</button>
+                <button class="btn btn-success" onclick="copyCartFromPreview()">📋 Copiar e Enviar</button>
+            </div>
+        </div>
+    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
@@ -2156,6 +2251,8 @@
             const taxas = document.getElementById('ctTarTaxas').value;
             const cambio = document.getElementById('ctTarCambio').value;
             const bag = document.getElementById('ctTarBag').value;
+            const ocultarEl = document.getElementById('ctTarOcultarBRL');
+            const ocultarBRL = !!(ocultarEl && ocultarEl.checked);
             const valN = ctParseNum(val);
             const taxasN = ctParseNum(taxas);
             const totalN = valN + taxasN;
@@ -2164,10 +2261,12 @@
             const hasVal = String(val).trim() !== '' || String(taxas).trim() !== '';
             const totalEl = document.getElementById('ctTarTotal');
             const brlEl = document.getElementById('ctTarTotalBRL');
+            const brlGroup = brlEl ? brlEl.closest('.form-group') : null;
+            if (brlGroup) brlGroup.style.display = ocultarBRL ? 'none' : '';
             const fmtNum = function(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
             if (totalEl) totalEl.value = hasVal ? fmtNum(totalN) : '';
             if (brlEl) brlEl.value = hasVal && cambioN > 0 ? fmtNum(brlN) : '';
-            ctLastTarifaLine = 'Tarifa *' + tipo + '*.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX') + ' (' + bag + ')';
+            ctLastTarifaLine = 'Tarifa ' + tipo + '.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + (ocultarBRL ? '' : ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX')) + ' (' + bag + ')';
             const el = document.getElementById('ctTarifaPreview');
             if (el) el.innerHTML = '<div class="ct-tarifa-line"><strong>Linha da tarifa (colada no e-mail):</strong><br>' + ctEsc(ctLastTarifaLine) + '</div>';
         }
@@ -2176,8 +2275,8 @@
                 return { date: r.date || '', semana: r.semana || '', cia: r.cia || '', voo: r.voo || '', classe: r.classe || '', origem: r.origem || '', destino: r.destino || '', saida: r.saida || '', chegada: r.chegada || '', duracao: r.duracao || '', aeronave: r.aeronave || '', escalas: r.escalas || '' };
             });
         }
-        function ctBuildHtmlTable() {
-            const rows = ctGetRows();
+        function ctBuildHtmlTable(rows) {
+            if (!rows) rows = ctGetRows();
             const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
             let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;">';
             html += '<thead><tr style="background:#1a73e8;color:#ffffff;">' + head.map(function(h) { return '<th style="padding:6px 10px;text-align:left;">' + h + '</th>'; }).join('') + '</tr></thead><tbody>';
@@ -2187,8 +2286,8 @@
             html += '</tbody></table>';
             return html;
         }
-        function ctBuildPlainTable() {
-            const rows = ctGetRows();
+        function ctBuildPlainTable(rows) {
+            if (!rows) rows = ctGetRows();
             const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
             const lines = [head.join('\t')];
             rows.forEach(function(r) {
@@ -2265,6 +2364,193 @@
             showToast(ok ? 'Texto copiado!' : 'Não foi possível copiar.', ok ? 'success' : 'error');
         }
 
+        // Carrinho de Cotações
+        let cart = [];
+        let cartNum = 1;
+        function ctCartNome() {
+            return 'Opção ' + (cartNum++);
+        }
+        function addToCart() {
+            if (!cotacaoRows.length) { showToast('Nenhum trecho convertido ainda.', 'error'); return; }
+            const item = {
+                id: Date.now(),
+                nome: ctCartNome(),
+                checked: true,
+                rows: ctGetRows(),
+                tarifa: {
+                    tipo: document.getElementById('ctTarTipo').value,
+                    valor: document.getElementById('ctTarValor').value,
+                    taxas: document.getElementById('ctTarTaxas').value,
+                    total: document.getElementById('ctTarTotal').value,
+                    cambio: document.getElementById('ctTarCambio').value,
+                    totalBRL: document.getElementById('ctTarTotalBRL').value,
+                    bag: document.getElementById('ctTarBag').value,
+                    ocultarBRL: !!(document.getElementById('ctTarOcultarBRL') && document.getElementById('ctTarOcultarBRL').checked),
+                    line: ctLastTarifaLine
+                }
+            };
+            cart.push(item);
+            renderCart();
+            showToast('Cotação "' + item.nome + '" adicionada ao carrinho!', 'success');
+        }
+        function renderCart() {
+            const el = document.getElementById('cartList');
+            const countEl = document.getElementById('statCtCart');
+            if (countEl) countEl.textContent = cart.length;
+            if (!el) return;
+            if (!cart.length) {
+                el.innerHTML = '<div class="table-empty"><div class="empty-icon">🛒</div><p>Nenhuma cotação no carrinho. Converta os voos, preencha a tarifa e clique em "➕ Adicionar ao Carrinho".</p></div>';
+                return;
+            }
+            el.innerHTML = cart.map(function(it, i) {
+                const usd = it.tarifa.total || '';
+                const brl = it.tarifa.totalBRL || '';
+                const preco = (usd ? 'USD ' + usd : '') + (brl ? '<br>BRL ' + brl : '');
+                return '<div class="cart-item">' +
+                    '<div class="cart-item-check"><input type="checkbox" class="cart-sel" data-i="' + i + '" ' + (it.checked === false ? '' : 'checked') + ' onchange="cartSel(this)"></div>' +
+                    '<div class="cart-item-info">' +
+                        '<div class="cart-item-title">🛒 ' + ctEsc(it.nome) + '</div>' +
+                        '<div class="cart-item-meta">' + it.rows.length + ' trecho(s) · linha de tarifa ' + (it.tarifa.line ? 'incluída' : 'não preenchida') + '</div>' +
+                    '</div>' +
+                    (preco ? '<div class="cart-item-price">' + preco + '</div>' : '') +
+                    '<div class="cart-item-actions">' +
+                        '<button class="btn btn-sm btn-outline" onclick="toggleCartDetail(' + i + ')">👁 Ver/Editar</button>' +
+                        '<button class="btn btn-sm btn-outline" onclick="editCart(' + i + ')">✏️ Editar</button>' +
+                        '<button class="ct-del" onclick="removeCart(' + i + ')" title="Remover">✕</button>' +
+                    '</div>' +
+                '</div>' +
+                (it.open ? '<div class="cart-item-detail">' + buildCartDetail(it, i) + '</div>' : '');
+            }).join('');
+        }
+        function cartSel(cb) {
+            const it = cart[+cb.dataset.i];
+            if (it) it.checked = cb.checked;
+        }
+        function removeCart(i) {
+            const nome = cart[i] ? cart[i].nome : '';
+            cart.splice(i, 1);
+            renderCart();
+            showToast('Cotação "' + nome + '" removida.', 'info');
+        }
+        function toggleCartDetail(i) {
+            const it = cart[i];
+            if (!it) return;
+            it.open = !it.open;
+            renderCart();
+        }
+        function buildCartDetail(it, i) {
+            if (!it.rows.length) return '<div class="table-empty"><p>Sem trechos nesta cotação.</p></div>';
+            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
+            const fields = ['date', 'semana', 'cia', 'voo', 'classe', 'origem', 'destino', 'saida', 'chegada', 'duracao', 'aeronave', 'escalas'];
+            let html = '<div class="table-wrapper"><table class="cart-detail-table"><thead><tr>';
+            head.forEach(function(h) { html += '<th>' + h + '</th>'; });
+            html += '<th></th></tr></thead><tbody>';
+            it.rows.forEach(function(r, j) {
+                html += '<tr>';
+                fields.forEach(function(f) {
+                    html += '<td><input class="ct-cell" data-ci="' + i + '" data-r="' + j + '" data-f="' + f + '" value="' + ctEsc(r[f] || '') + '" oninput="cartCell(this)"></td>';
+                });
+                html += '<td><button class="ct-del" onclick="removeCartRow(' + i + ',' + j + ')" title="Remover trecho">✕</button></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            html += '<div style="display:flex;justify-content:flex-end;margin-top:10px;"><button class="btn btn-sm btn-outline" onclick="addCartRow(' + i + ')">+ Trecho</button></div>';
+            if (it.tarifa.line) html += '<div class="ct-tarifa-line" style="margin-top:12px;">' + ctEsc(it.tarifa.line) + '</div>';
+            return html;
+        }
+        function cartCell(inp) {
+            const it = cart[+inp.dataset.ci];
+            if (it && it.rows[+inp.dataset.r]) it.rows[+inp.dataset.r][inp.dataset.f] = inp.value;
+        }
+        function removeCartRow(i, j) {
+            const it = cart[i];
+            if (!it) return;
+            it.rows.splice(j, 1);
+            renderCart();
+        }
+        function addCartRow(i) {
+            const it = cart[i];
+            if (!it) return;
+            it.rows.push({ date: '', semana: '', cia: '', voo: '', classe: '', origem: '', destino: '', saida: '', chegada: '', duracao: '', aeronave: '', escalas: '0' });
+            renderCart();
+        }
+        function clearCart() {
+            if (!cart.length) { showToast('Carrinho já está vazio.', 'info'); return; }
+            if (!confirm('Remover todas as cotações do carrinho?')) return;
+            cart = [];
+            renderCart();
+            showToast('Carrinho limpo.', 'info');
+        }
+        function editCart(i) {
+            const it = cart[i];
+            if (!it) return;
+            cotacaoRows = it.rows.map(function(r) { return Object.assign({}, r); });
+            renderCotacaoTable();
+            if (document.getElementById('ctTarTipo')) document.getElementById('ctTarTipo').value = it.tarifa.tipo || 'econômica';
+            if (document.getElementById('ctTarValor')) document.getElementById('ctTarValor').value = it.tarifa.valor || '';
+            if (document.getElementById('ctTarTaxas')) document.getElementById('ctTarTaxas').value = it.tarifa.taxas || '';
+            if (document.getElementById('ctTarCambio')) document.getElementById('ctTarCambio').value = it.tarifa.cambio || '';
+            if (document.getElementById('ctTarBag')) document.getElementById('ctTarBag').value = it.tarifa.bag || 'BAG 1 PÇ 23KG';
+            const ocultarEl = document.getElementById('ctTarOcultarBRL');
+            if (ocultarEl) ocultarEl.checked = !!it.tarifa.ocultarBRL;
+            renderCotacaoTarifa();
+            window.scrollTo(0, 0);
+            showToast('Cotação "' + it.nome + '" carregada para edição. Ajuste e adicione novamente se quiser.', 'info');
+        }
+        function ctCartSelected() {
+            return cart.filter(function(it) { return it.checked !== false; });
+        }
+        function buildCartHtml(sel) {
+            const htmlParts = [];
+            sel.forEach(function(it, i) {
+                htmlParts.push('<div style="font-family:Arial,Helvetica,sans-serif;">' +
+                    '<p style="font-size:14px;font-weight:bold;color:#0f6cbd;margin:10px 0 4px;">' + ctEsc(it.nome) + '</p>' +
+                    ctBuildHtmlTable(it.rows) + '</div>');
+                if (it.tarifa.line) {
+                    htmlParts.push('<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;">' + ctEsc(it.tarifa.line) + '</p>');
+                }
+                if (i < sel.length - 1) {
+                    htmlParts.push('<div style="border-top:2px dashed #9aa0a6;margin:12px 0;"></div>');
+                }
+            });
+            return htmlParts.join('\n');
+        }
+        function buildCartText(sel) {
+            const textParts = [];
+            sel.forEach(function(it, i) {
+                textParts.push(it.nome);
+                textParts.push(ctBuildPlainTable(it.rows));
+                if (it.tarifa.line) textParts.push(it.tarifa.line);
+                if (i < sel.length - 1) textParts.push('----------------');
+            });
+            return textParts.join('\n\n');
+        }
+        async function copiarCart() {
+            const sel = ctCartSelected();
+            if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
+            const ok = await ctCopy(buildCartHtml(sel), buildCartText(sel));
+            showToast(ok ? 'Cotações copiadas! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+        function openCartPreview() {
+            const sel = ctCartSelected();
+            if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
+            const el = document.getElementById('cartPreviewContent');
+            if (el) el.innerHTML = buildCartHtml(sel);
+            const modal = document.getElementById('cartPreviewModal');
+            if (modal) modal.style.display = 'flex';
+        }
+        function closeCartPreview() {
+            const modal = document.getElementById('cartPreviewModal');
+            if (modal) modal.style.display = 'none';
+        }
+        async function copyCartFromPreview() {
+            const sel = ctCartSelected();
+            if (!sel.length) { closeCartPreview(); showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
+            const ok = await ctCopy(buildCartHtml(sel), buildCartText(sel));
+            closeCartPreview();
+            showToast(ok ? 'Cotações copiadas! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+
         // Toast
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -2289,6 +2575,7 @@
             if (ctYear) ctYear.value = new Date().getFullYear();
             renderCotacaoTable();
             renderCotacaoTarifa();
+            renderCart();
             const cd = document.getElementById('currentDate');
             if (cd) cd.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
         });
