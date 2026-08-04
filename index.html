@@ -1488,6 +1488,52 @@
                 align-items: stretch;
             }
         }
+
+        /* Carrinho de cotações */
+        #page-cotacao-sabre .content > .table-container:nth-of-type(5) { border-top: 3px solid #8b5cf6; }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border: 1px solid var(--gray-200);
+            border-left: 4px solid #8b5cf6;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        .cart-item-check input { width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer; }
+        .cart-item-info { flex: 1; min-width: 0; }
+        .cart-item-title { font-weight: 700; color: #6d28d9; font-size: 14px; }
+        .cart-item-meta { font-size: 12px; color: var(--gray-700); }
+        .cart-item-price { text-align: right; font-size: 13px; font-weight: 600; color: var(--gray-900); white-space: nowrap; }
+        .cart-item-actions { display: flex; align-items: center; gap: 6px; }
+        .cart-item-detail {
+            border: 1px solid #e9d5ff;
+            background: #faf8ff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .cart-detail-table { min-width: 1050px; }
+        .cart-detail-table th {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa) !important;
+            color: #ffffff !important;
+            border-bottom: none !important;
+            font-size: 11px;
+            padding: 8px 6px;
+            white-space: nowrap;
+            letter-spacing: 0.4px;
+        }
+        .cart-detail-table td { padding: 4px 4px; }
+        .cart-detail-table .ct-cell { background: #ffffff; border: 1px solid var(--gray-200); }
+        .stat-card-ct-cart {
+            border-left: 4px solid #8b5cf6;
+        }
+        @media (max-width: 768px) {
+            .cart-item { flex-wrap: wrap; }
+            .cart-item-price { text-align: left; }
+        }
     </style>
 </head>
 <body>
@@ -2172,6 +2218,13 @@
                             <p>Rota</p>
                         </div>
                     </div>
+                    <div class="stat-card stat-card-ct-cart">
+                        <div class="stat-icon orange">🛒</div>
+                        <div class="stat-info">
+                            <h3 id="statCtCart">0</h3>
+                            <p>Cotações no Carrinho</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-container" style="margin-bottom: 20px;">
@@ -2230,6 +2283,13 @@
                             <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
                             <input type="text" id="ctTarBag" value="BAG 1 PÇ 23KG" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
                         </div>
+                        <div class="form-group">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Conversão em Reais</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-700);cursor:pointer;padding:8px 0;">
+                                <input type="checkbox" id="ctTarOcultarBRL" onchange="renderCotacaoTarifa()" style="width:16px;height:16px;accent-color:var(--success);cursor:pointer;">
+                                Ocultar (cliente sem a conversão)
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -2237,6 +2297,7 @@
                     <div class="table-header">
                         <h3>3. Pré-visualização</h3>
                         <div class="table-actions">
+                            <button class="btn btn-primary" onclick="addToCart()">➕ Adicionar ao Carrinho</button>
                             <button class="btn btn-outline" onclick="addCotacaoRow()">+ Linha</button>
                             <button class="btn btn-success" onclick="copiarCotacaoHtml(true)">📋 Copiar Tabela + Tarifa</button>
                             <button class="btn btn-outline" onclick="copiarCotacaoHtml(false)">Copiar Tabela</button>
@@ -2247,23 +2308,7 @@
                         <div id="ctTarifaPreview" style="margin-bottom: 16px;"></div>
                         <div class="table-wrapper" style="overflow-x: auto;">
                             <table id="ctTable" style="min-width: 1100px;">
-                                <thead>
-                                    <tr>
-                                        <th style="min-width: 70px;">DATA</th>
-                                        <th style="min-width: 120px;">SEMANA</th>
-                                        <th style="min-width: 130px;">CIA. AEREA</th>
-                                        <th style="min-width: 60px;">VOO</th>
-                                        <th style="min-width: 130px;">CLASSE</th>
-                                        <th style="min-width: 160px;">ORIGEM</th>
-                                        <th style="min-width: 160px;">DESTINO</th>
-                                        <th style="min-width: 60px;">SAIDA</th>
-                                        <th style="min-width: 80px;">CHEGADA</th>
-                                        <th style="min-width: 70px;">DURACAO</th>
-                                        <th style="min-width: 110px;">AERONAVE</th>
-                                        <th style="min-width: 60px;">ESCALAS</th>
-                                        <th style="width: 36px;"></th>
-                                    </tr>
-                                </thead>
+                                <thead id="ctTableHead"></thead>
                                 <tbody id="ctTableBody">
                                     <tr>
                                         <td colspan="13" class="table-empty">
@@ -2274,6 +2319,66 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-top: 20px;">
+                    <div class="table-header">
+                        <h3>4. Personalização do E-mail</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-outline" onclick="resetTheme()">↺ Restaurar Padrão</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; align-items: flex-end;">
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Fonte</label>
+                                <select id="ctThemeFont" onchange="applyTheme()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background:#fff;">
+                                    <option value="Arial">Arial</option>
+                                    <option value="Verdana">Verdana</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Tahoma">Tahoma</option>
+                                    <option value="Trebuchet MS">Trebuchet MS</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tamanho</label>
+                                <select id="ctThemeSize" onchange="applyTheme()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background:#fff;">
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                    <option value="13">13</option>
+                                    <option value="14">14</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Cor do cabeçalho</label>
+                                <input type="color" id="ctThemeHeadBg" value="#1a73e8" onchange="applyTheme()" style="width:70px;height:36px;padding:2px;border:1px solid var(--gray-300);border-radius:var(--radius);cursor:pointer;background:#fff;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Cor do texto do cabeçalho</label>
+                                <input type="color" id="ctThemeHeadColor" value="#ffffff" onchange="applyTheme()" style="width:70px;height:36px;padding:2px;border:1px solid var(--gray-300);border-radius:var(--radius);cursor:pointer;background:#fff;">
+                            </div>
+                        </div>
+                        <div style="font-size:12px;color:var(--gray-700);margin-bottom:8px;">Colunas exibidas no e-mail:</div>
+                        <div id="ctColsBox" style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:6px;"></div>
+                        <div style="font-size:12px;color:var(--gray-600);margin-top:6px;">As cores da tabela são preservadas ao salvar como PDF (use "Salvar como PDF" no diálogo de impressão).</div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-top: 20px;">
+                    <div class="table-header">
+                        <h3>5. Carrinho de Cotações</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-outline" onclick="clearCart()">🗑 Limpar Carrinho</button>
+                            <button class="btn btn-outline" onclick="openCartFullscreen()">👁 Visualizar E-mail</button>
+                            <button class="btn btn-success" onclick="copiarCart()">📋 Copiar Selecionadas</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div id="cartList"></div>
                     </div>
                 </div>
             </div>
@@ -2909,8 +3014,10 @@
             updateSyncBadge();
             const ctYear = document.getElementById('ctYear');
             if (ctYear) ctYear.value = new Date().getFullYear();
+            initThemeUI();
             renderCotacaoTable();
             renderCotacaoTarifa();
+            renderCart();
         });
 
         function updateSyncBadge() {
@@ -4760,30 +4867,27 @@
             return rows;
         }
         function renderCotacaoTable() {
+            const cols = ctActiveColEntries();
+            const headEl = document.getElementById('ctTableHead');
+            if (headEl) {
+                headEl.innerHTML = '<tr>' + cols.map(function(c) { return '<th style="min-width:70px;">' + c.label + '</th>'; }).join('') + '<th style="width:36px;"></th></tr>';
+            }
             const tbody = document.getElementById('ctTableBody');
             if (!cotacaoRows.length) {
-                tbody.innerHTML = '<tr><td colspan="13" class="table-empty"><div class="empty-icon">📧</div><p>Nenhum trecho. Cole os voos do Sabre e clique em "Converter Voos".</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '" class="table-empty"><div class="empty-icon">📧</div><p>Nenhum trecho. Cole os voos do Sabre e clique em "Converter Voos".</p></td></tr>';
                 document.getElementById('statCtVoos').textContent = '0';
                 document.getElementById('statCtCias').textContent = '0';
                 document.getElementById('statCtRota').textContent = '-';
                 return;
             }
+            const cmdCols = { date: true, voo: true, saida: true, chegada: true, duracao: true, escalas: true };
             tbody.innerHTML = cotacaoRows.map(function(r, i) {
-                return '<tr>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="date" value="' + ctEsc(r.date) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="semana" value="' + ctEsc(r.semana) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="cia" value="' + ctEsc(r.cia) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="voo" value="' + ctEsc(r.voo) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="classe" value="' + ctEsc(r.classe) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="origem" value="' + ctEsc(r.origem) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="destino" value="' + ctEsc(r.destino) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="saida" value="' + ctEsc(r.saida) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="chegada" value="' + ctEsc(r.chegada) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="duracao" value="' + ctEsc(r.duracao) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="aeronave" value="' + ctEsc(r.aeronave) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="escalas" value="' + ctEsc(r.escalas) + '" oninput="ctCell(this)"></td>' +
-                    '<td><button class="ct-del" onclick="removeCotacaoRow(' + i + ')" title="Remover">✕</button></td>' +
-                    '</tr>';
+                const cells = cols.map(function(c) {
+                    const cls = cmdCols[c.key] ? 'ct-cell ct-cmd' : 'ct-cell';
+                    return '<td><input class="' + cls + '" data-i="' + i + '" data-f="' + c.key + '" value="' + ctEsc(r[c.key]) + '" oninput="ctCell(this)"></td>';
+                });
+                cells.push('<td><button class="ct-del" onclick="removeCotacaoRow(' + i + ')" title="Remover">✕</button></td>');
+                return '<tr>' + cells.join('') + '</tr>';
             }).join('');
             const cias = {};
             cotacaoRows.forEach(function(r) { if (r.cia) cias[r.cia] = true; });
@@ -4838,6 +4942,8 @@
             const taxas = document.getElementById('ctTarTaxas').value;
             const cambio = document.getElementById('ctTarCambio').value;
             const bag = document.getElementById('ctTarBag').value;
+            const ocultarEl = document.getElementById('ctTarOcultarBRL');
+            const ocultarBRL = !!(ocultarEl && ocultarEl.checked);
             const valN = ctParseNum(val);
             const taxasN = ctParseNum(taxas);
             const totalN = valN + taxasN;
@@ -4846,10 +4952,12 @@
             const hasVal = String(val).trim() !== '' || String(taxas).trim() !== '';
             const totalEl = document.getElementById('ctTarTotal');
             const brlEl = document.getElementById('ctTarTotalBRL');
+            const brlGroup = brlEl ? brlEl.closest('.form-group') : null;
+            if (brlGroup) brlGroup.style.display = ocultarBRL ? 'none' : '';
             const fmtNum = function(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
             if (totalEl) totalEl.value = hasVal ? fmtNum(totalN) : '';
             if (brlEl) brlEl.value = hasVal && cambioN > 0 ? fmtNum(brlN) : '';
-            ctLastTarifaLine = 'Tarifa *' + tipo + '*.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX') + ' (' + bag + ')';
+            ctLastTarifaLine = 'Tarifa ' + tipo + '.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + (ocultarBRL ? '' : ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX')) + ' (' + bag + ')';
             const el = document.getElementById('ctTarifaPreview');
             if (el) el.innerHTML = '<div class="ct-tarifa-line"><strong>Linha da tarifa (colada no e-mail):</strong><br>' + ctEsc(ctLastTarifaLine) + '</div>';
         }
@@ -4858,23 +4966,132 @@
                 return { date: r.date || '', semana: r.semana || '', cia: r.cia || '', voo: r.voo || '', classe: r.classe || '', origem: r.origem || '', destino: r.destino || '', saida: r.saida || '', chegada: r.chegada || '', duracao: r.duracao || '', aeronave: r.aeronave || '', escalas: r.escalas || '' };
             });
         }
-        function ctBuildHtmlTable() {
-            const rows = ctGetRows();
-            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
-            let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;">';
-            html += '<thead><tr style="background:#1a73e8;color:#ffffff;">' + head.map(function(h) { return '<th style="padding:6px 10px;text-align:left;">' + h + '</th>'; }).join('') + '</tr></thead><tbody>';
+        // Personalização do e-mail (tema + colunas)
+        const CT_COLUMNS = [
+            { key: 'date', label: 'DATA' },
+            { key: 'semana', label: 'SEMANA' },
+            { key: 'cia', label: 'CIA. AEREA' },
+            { key: 'voo', label: 'VOO' },
+            { key: 'classe', label: 'CLASSE' },
+            { key: 'origem', label: 'ORIGEM' },
+            { key: 'destino', label: 'DESTINO' },
+            { key: 'saida', label: 'SAIDA' },
+            { key: 'chegada', label: 'CHEGADA' },
+            { key: 'duracao', label: 'DURACAO' },
+            { key: 'aeronave', label: 'AERONAVE' },
+            { key: 'escalas', label: 'ESCALAS' }
+        ];
+        let ctTheme = { font: 'Arial', size: 12, headBg: '#1a73e8', headColor: '#ffffff' };
+        let ctActiveCols = null;
+        function ctGetActiveCols() {
+            return ctActiveCols || CT_COLUMNS.map(function(c) { return c.key; });
+        }
+        function ctActiveColEntries() {
+            return CT_COLUMNS.filter(function(c) { return ctGetActiveCols().indexOf(c.key) !== -1; });
+        }
+        function ctThemeFontCss() {
+            return "'" + ctTheme.font + "',Helvetica,Arial,sans-serif";
+        }
+        function loadTheme() {
+            try {
+                const t = localStorage.getItem('ctTheme');
+                if (t) ctTheme = Object.assign(ctTheme, JSON.parse(t));
+                const c = localStorage.getItem('ctActiveCols');
+                if (c) {
+                    const arr = JSON.parse(c);
+                    if (Array.isArray(arr)) ctActiveCols = arr.filter(function(k) { return CT_COLUMNS.some(function(col) { return col.key === k; }); });
+                }
+            } catch (e) {}
+        }
+        function saveTheme() {
+            try {
+                localStorage.setItem('ctTheme', JSON.stringify(ctTheme));
+                localStorage.setItem('ctActiveCols', JSON.stringify(ctGetActiveCols()));
+            } catch (e) {}
+        }
+        function renderColsBox() {
+            const el = document.getElementById('ctColsBox');
+            if (!el) return;
+            const active = ctGetActiveCols();
+            el.innerHTML = CT_COLUMNS.map(function(c) {
+                return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-700);cursor:pointer;">' +
+                    '<input type="checkbox" value="' + c.key + '" ' + (active.indexOf(c.key) !== -1 ? 'checked' : '') + ' onchange="toggleCol(this)" style="width:15px;height:15px;accent-color:var(--success);cursor:pointer;"> ' + c.label + '</label>';
+            }).join('');
+        }
+        function toggleCol(cb) {
+            const key = cb.value;
+            const active = ctGetActiveCols();
+            const i = active.indexOf(key);
+            if (cb.checked && i === -1) {
+                if (ctActiveCols === null) ctActiveCols = CT_COLUMNS.map(function(c) { return c.key; });
+                ctActiveCols.push(key);
+            } else if (!cb.checked && i !== -1) {
+                if (active.length === 1) {
+                    cb.checked = true;
+                    showToast('Deixe ao menos uma coluna.', 'error');
+                    return;
+                }
+                if (ctActiveCols === null) ctActiveCols = CT_COLUMNS.map(function(c) { return c.key; });
+                ctActiveCols.splice(i, 1);
+            }
+            applyTheme();
+        }
+        function applyTheme() {
+            const f = document.getElementById('ctThemeFont');
+            const s = document.getElementById('ctThemeSize');
+            const bg = document.getElementById('ctThemeHeadBg');
+            const tc = document.getElementById('ctThemeHeadColor');
+            if (f) ctTheme.font = f.value;
+            if (s) ctTheme.size = parseInt(s.value, 10) || 12;
+            if (bg) ctTheme.headBg = bg.value;
+            if (tc) ctTheme.headColor = tc.value;
+            saveTheme();
+            renderCotacaoTable();
+        }
+        function initThemeUI() {
+            loadTheme();
+            const f = document.getElementById('ctThemeFont');
+            const s = document.getElementById('ctThemeSize');
+            const bg = document.getElementById('ctThemeHeadBg');
+            const tc = document.getElementById('ctThemeHeadColor');
+            if (f) f.value = ctTheme.font;
+            if (s) s.value = String(ctTheme.size);
+            if (bg) bg.value = ctTheme.headBg;
+            if (tc) tc.value = ctTheme.headColor;
+            renderColsBox();
+        }
+        function resetTheme() {
+            ctTheme = { font: 'Arial', size: 12, headBg: '#1a73e8', headColor: '#ffffff' };
+            ctActiveCols = null;
+            const f = document.getElementById('ctThemeFont');
+            const s = document.getElementById('ctThemeSize');
+            const bg = document.getElementById('ctThemeHeadBg');
+            const tc = document.getElementById('ctThemeHeadColor');
+            if (f) f.value = 'Arial';
+            if (s) s.value = '12';
+            if (bg) bg.value = '#1a73e8';
+            if (tc) tc.value = '#ffffff';
+            renderColsBox();
+            applyTheme();
+            showToast('Personalização restaurada ao padrão.', 'info');
+        }
+        function ctBuildHtmlTable(rows) {
+            if (!rows) rows = ctGetRows();
+            const cols = ctActiveColEntries();
+            let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:' + ctThemeFontCss() + ';font-size:' + ctTheme.size + 'px;">';
+            html += '<thead><tr style="background:' + ctTheme.headBg + ';color:' + ctTheme.headColor + ';">' + cols.map(function(c) { return '<th style="padding:6px 10px;text-align:left;">' + c.label + '</th>'; }).join('') + '</tr></thead><tbody>';
             rows.forEach(function(r) {
-                html += '<tr>' + [r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].map(function(v) { return '<td style="padding:6px 10px;border:1px solid #dadce0;">' + ctEsc(v) + '</td>'; }).join('') + '</tr>';
+                html += '<tr>' + cols.map(function(c) { return '<td style="padding:6px 10px;border:1px solid #dadce0;">' + ctEsc(r[c.key]) + '</td>'; }).join('') + '</tr>';
             });
             html += '</tbody></table>';
             return html;
         }
-        function ctBuildPlainTable() {
-            const rows = ctGetRows();
-            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
-            const lines = [head.join('\t')];
+        function ctBuildPlainTable(rows) {
+            if (!rows) rows = ctGetRows();
+            const cols = ctActiveColEntries();
+            const lines = [cols.map(function(c) { return c.label; }).join('\t')];
             rows.forEach(function(r) {
-                lines.push([r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].join('\t'));
+                lines.push(cols.map(function(c) { return r[c.key]; }).join('\t'));
             });
             return lines.join('\n');
         }
@@ -4945,6 +5162,210 @@
             if (ctLastTarifaLine) text += '\n\n' + ctLastTarifaLine;
             const ok = await ctCopy(text, text);
             showToast(ok ? 'Texto copiado!' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+
+        // Carrinho de Cotações
+        let cart = [];
+        let cartNum = 1;
+        function ctCartNome() {
+            return 'Opção ' + (cartNum++);
+        }
+        function addToCart() {
+            if (!cotacaoRows.length) { showToast('Nenhum trecho convertido ainda.', 'error'); return; }
+            const item = {
+                id: Date.now(),
+                nome: ctCartNome(),
+                checked: true,
+                rows: ctGetRows(),
+                tarifa: {
+                    tipo: document.getElementById('ctTarTipo').value,
+                    valor: document.getElementById('ctTarValor').value,
+                    taxas: document.getElementById('ctTarTaxas').value,
+                    total: document.getElementById('ctTarTotal').value,
+                    cambio: document.getElementById('ctTarCambio').value,
+                    totalBRL: document.getElementById('ctTarTotalBRL').value,
+                    bag: document.getElementById('ctTarBag').value,
+                    ocultarBRL: !!(document.getElementById('ctTarOcultarBRL') && document.getElementById('ctTarOcultarBRL').checked),
+                    line: ctLastTarifaLine
+                }
+            };
+            cart.push(item);
+            renderCart();
+            showToast('Cotação "' + item.nome + '" adicionada ao carrinho!', 'success');
+        }
+        function renderCart() {
+            const el = document.getElementById('cartList');
+            const countEl = document.getElementById('statCtCart');
+            if (countEl) countEl.textContent = cart.length;
+            if (!el) return;
+            if (!cart.length) {
+                el.innerHTML = '<div class="table-empty"><div class="empty-icon">🛒</div><p>Nenhuma cotação no carrinho. Converta os voos, preencha a tarifa e clique em "➕ Adicionar ao Carrinho".</p></div>';
+                return;
+            }
+            el.innerHTML = cart.map(function(it, i) {
+                const usd = it.tarifa.total || '';
+                const brl = it.tarifa.totalBRL || '';
+                const preco = (usd ? 'USD ' + usd : '') + (brl ? '<br>BRL ' + brl : '');
+                return '<div class="cart-item">' +
+                    '<div class="cart-item-check"><input type="checkbox" class="cart-sel" data-i="' + i + '" ' + (it.checked === false ? '' : 'checked') + ' onchange="cartSel(this)"></div>' +
+                    '<div class="cart-item-info">' +
+                        '<div class="cart-item-title">🛒 ' + ctEsc(it.nome) + '</div>' +
+                        '<div class="cart-item-meta">' + it.rows.length + ' trecho(s) · linha de tarifa ' + (it.tarifa.line ? 'incluída' : 'não preenchida') + '</div>' +
+                    '</div>' +
+                    (preco ? '<div class="cart-item-price">' + preco + '</div>' : '') +
+                    '<div class="cart-item-actions">' +
+                        '<button class="btn btn-sm btn-outline" onclick="toggleCartDetail(' + i + ')">👁 Ver/Editar</button>' +
+                        '<button class="btn btn-sm btn-outline" onclick="editCart(' + i + ')">✏️ Editar</button>' +
+                        '<button class="ct-del" onclick="removeCart(' + i + ')" title="Remover">✕</button>' +
+                    '</div>' +
+                '</div>' +
+                (it.open ? '<div class="cart-item-detail">' + buildCartDetail(it, i) + '</div>' : '');
+            }).join('');
+        }
+        function cartSel(cb) {
+            const it = cart[+cb.dataset.i];
+            if (it) it.checked = cb.checked;
+        }
+        function removeCart(i) {
+            const nome = cart[i] ? cart[i].nome : '';
+            cart.splice(i, 1);
+            renderCart();
+            showToast('Cotação "' + nome + '" removida.', 'info');
+        }
+        function toggleCartDetail(i) {
+            const it = cart[i];
+            if (!it) return;
+            it.open = !it.open;
+            renderCart();
+        }
+        function buildCartDetail(it, i) {
+            if (!it.rows.length) return '<div class="table-empty"><p>Sem trechos nesta cotação.</p></div>';
+            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
+            const fields = ['date', 'semana', 'cia', 'voo', 'classe', 'origem', 'destino', 'saida', 'chegada', 'duracao', 'aeronave', 'escalas'];
+            let html = '<div class="table-wrapper"><table class="cart-detail-table"><thead><tr>';
+            head.forEach(function(h) { html += '<th>' + h + '</th>'; });
+            html += '<th></th></tr></thead><tbody>';
+            it.rows.forEach(function(r, j) {
+                html += '<tr>';
+                fields.forEach(function(f) {
+                    html += '<td><input class="ct-cell" data-ci="' + i + '" data-r="' + j + '" data-f="' + f + '" value="' + ctEsc(r[f] || '') + '" oninput="cartCell(this)"></td>';
+                });
+                html += '<td><button class="ct-del" onclick="removeCartRow(' + i + ',' + j + ')" title="Remover trecho">✕</button></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            html += '<div style="display:flex;justify-content:flex-end;margin-top:10px;"><button class="btn btn-sm btn-outline" onclick="addCartRow(' + i + ')">+ Trecho</button></div>';
+            if (it.tarifa.line) html += '<div class="ct-tarifa-line" style="margin-top:12px;">' + ctEsc(it.tarifa.line) + '</div>';
+            return html;
+        }
+        function cartCell(inp) {
+            const it = cart[+inp.dataset.ci];
+            if (it && it.rows[+inp.dataset.r]) it.rows[+inp.dataset.r][inp.dataset.f] = inp.value;
+        }
+        function removeCartRow(i, j) {
+            const it = cart[i];
+            if (!it) return;
+            it.rows.splice(j, 1);
+            renderCart();
+        }
+        function addCartRow(i) {
+            const it = cart[i];
+            if (!it) return;
+            it.rows.push({ date: '', semana: '', cia: '', voo: '', classe: '', origem: '', destino: '', saida: '', chegada: '', duracao: '', aeronave: '', escalas: '0' });
+            renderCart();
+        }
+        function clearCart() {
+            if (!cart.length) { showToast('Carrinho já está vazio.', 'info'); return; }
+            if (!confirm('Remover todas as cotações do carrinho?')) return;
+            cart = [];
+            renderCart();
+            showToast('Carrinho limpo.', 'info');
+        }
+        function editCart(i) {
+            const it = cart[i];
+            if (!it) return;
+            cotacaoRows = it.rows.map(function(r) { return Object.assign({}, r); });
+            renderCotacaoTable();
+            if (document.getElementById('ctTarTipo')) document.getElementById('ctTarTipo').value = it.tarifa.tipo || 'econômica';
+            if (document.getElementById('ctTarValor')) document.getElementById('ctTarValor').value = it.tarifa.valor || '';
+            if (document.getElementById('ctTarTaxas')) document.getElementById('ctTarTaxas').value = it.tarifa.taxas || '';
+            if (document.getElementById('ctTarCambio')) document.getElementById('ctTarCambio').value = it.tarifa.cambio || '';
+            if (document.getElementById('ctTarBag')) document.getElementById('ctTarBag').value = it.tarifa.bag || 'BAG 1 PÇ 23KG';
+            const ocultarEl = document.getElementById('ctTarOcultarBRL');
+            if (ocultarEl) ocultarEl.checked = !!it.tarifa.ocultarBRL;
+            renderCotacaoTarifa();
+            window.scrollTo(0, 0);
+            showToast('Cotação "' + it.nome + '" carregada para edição. Ajuste e adicione novamente se quiser.', 'info');
+        }
+        function ctCartSelected() {
+            return cart.filter(function(it) { return it.checked !== false; });
+        }
+        function buildCartHtml(sel) {
+            const htmlParts = [];
+            sel.forEach(function(it, i) {
+                htmlParts.push('<div style="font-family:Arial,Helvetica,sans-serif;">' +
+                    '<p style="font-size:14px;font-weight:bold;color:#0f6cbd;margin:10px 0 4px;">' + ctEsc(it.nome) + '</p>' +
+                    ctBuildHtmlTable(it.rows) + '</div>');
+                if (it.tarifa.line) {
+                    htmlParts.push('<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;">' + ctEsc(it.tarifa.line) + '</p>');
+                }
+                if (i < sel.length - 1) {
+                    htmlParts.push('<div style="border-top:2px dashed #9aa0a6;margin:12px 0;"></div>');
+                }
+            });
+            return htmlParts.join('\n');
+        }
+        function buildCartText(sel) {
+            const textParts = [];
+            sel.forEach(function(it, i) {
+                textParts.push(it.nome);
+                textParts.push(ctBuildPlainTable(it.rows));
+                if (it.tarifa.line) textParts.push(it.tarifa.line);
+                if (i < sel.length - 1) textParts.push('----------------');
+            });
+            return textParts.join('\n\n');
+        }
+        async function copiarCart() {
+            const sel = ctCartSelected();
+            if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
+            const ok = await ctCopy(buildCartHtml(sel), buildCartText(sel));
+            showToast(ok ? 'Cotações copiadas! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+        function buildPreviewDoc(sel) {
+            const inner = buildCartHtml(sel);
+            const scriptOpen = '<' + 'script>';
+            const scriptClose = '</' + 'script>';
+            return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Visualizar E-mail</title><style>' +
+                'body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#eef1f5;color:#202124;}' +
+                '*,*::before,*::after{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+                '.toolbar{position:sticky;top:0;z-index:10;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 20px;background:#0f6cbd;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);}' +
+                '.toolbar h1{font-size:15px;margin:0 16px 0 0;font-weight:700;}' +
+                '.toolbar button{background:#fff;color:#0f6cbd;border:none;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}' +
+                '.toolbar button:hover{background:#e8f0fa;}' +
+                '#status{margin-left:auto;font-size:13px;color:#ffe08a;}' +
+                '.content{max-width:1100px;margin:20px auto;background:#fff;padding:28px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);}' +
+                '@media print{.toolbar{display:none;}.content{margin:0;box-shadow:none;border-radius:0;padding:0;max-width:none;}}' +
+                '</style></head><body>' +
+                '<div class="toolbar"><h1>📧 Visualizar E-mail</h1>' +
+                '<button onclick="copyAll()">📋 Copiar</button>' +
+                '<button onclick="window.print()" title="Escolha Salvar como PDF no destino">🖨 Baixar PDF</button>' +
+                '<button onclick="window.close()">✕ Fechar</button>' +
+                '<span id="status"></span></div>' +
+                '<div class="content" id="content">' + inner + '</div>' +
+                scriptOpen +
+                'function copyAll(){var c=document.getElementById("content");var clone=c.cloneNode(true);clone.style.position="fixed";clone.style.left="-9999px";clone.style.top="0";clone.style.pointerEvents="none";document.body.appendChild(clone);var r=document.createRange();r.selectNodeContents(clone);var s=window.getSelection();s.removeAllRanges();s.addRange(r);var ok=document.execCommand("copy");document.body.removeChild(clone);s.removeAllRanges();var st=document.getElementById("status");if(st)st.textContent=ok?"✓ Copiado! Cole no WhatsApp (Ctrl+V).":"Não foi possível copiar — use Ctrl+A e Ctrl+C.";}' +
+                scriptClose +
+                '</body></html>';
+        }
+        function openCartFullscreen() {
+            const sel = ctCartSelected();
+            if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
+            let w;
+            try { w = window.open('', '_blank'); } catch (e) { w = null; }
+            if (!w) { showToast('Janela bloqueada pelo navegador. Permita pop-ups para esta página e tente novamente.', 'error'); return; }
+            w.document.open();
+            w.document.write(buildPreviewDoc(sel));
+            w.document.close();
         }
 
         // Navigation
