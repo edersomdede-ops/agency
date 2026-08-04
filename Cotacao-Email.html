@@ -1861,7 +1861,7 @@
                         <h3>4. Carrinho de Cotações</h3>
                         <div class="table-actions">
                             <button class="btn btn-outline" onclick="clearCart()">🗑 Limpar Carrinho</button>
-                            <button class="btn btn-outline" onclick="openCartPreview()">👁 Visualizar E-mail</button>
+                            <button class="btn btn-outline" onclick="openCartFullscreen()">👁 Visualizar E-mail</button>
                             <button class="btn btn-success" onclick="copiarCart()">📋 Copiar Selecionadas</button>
                         </div>
                     </div>
@@ -1873,23 +1873,6 @@
         </div>
 
     </main>
-
-    <!-- Cart Preview Modal -->
-    <div class="modal-overlay" id="cartPreviewModal">
-        <div class="modal" style="max-width: 880px;">
-            <div class="modal-header">
-                <h3>Pré-visualização do e-mail</h3>
-                <button class="modal-close" onclick="closeCartPreview()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="html-preview-content" id="cartPreviewContent" style="max-height: 60vh;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeCartPreview()">Fechar</button>
-                <button class="btn btn-success" onclick="copyCartFromPreview()">📋 Copiar e Enviar</button>
-            </div>
-        </div>
-    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
@@ -2531,24 +2514,40 @@
             const ok = await ctCopy(buildCartHtml(sel), buildCartText(sel));
             showToast(ok ? 'Cotações copiadas! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
         }
-        function openCartPreview() {
+        function buildPreviewDoc(sel) {
+            const inner = buildCartHtml(sel);
+            const scriptOpen = '<' + 'script>';
+            const scriptClose = '</' + 'script>';
+            return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Visualizar E-mail</title><style>' +
+                'body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#eef1f5;color:#202124;}' +
+                '.toolbar{position:sticky;top:0;z-index:10;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 20px;background:#0f6cbd;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);}' +
+                '.toolbar h1{font-size:15px;margin:0 16px 0 0;font-weight:700;}' +
+                '.toolbar button{background:#fff;color:#0f6cbd;border:none;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}' +
+                '.toolbar button:hover{background:#e8f0fa;}' +
+                '#status{margin-left:auto;font-size:13px;color:#ffe08a;}' +
+                '.content{max-width:1100px;margin:20px auto;background:#fff;padding:28px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);}' +
+                '@media print{.toolbar{display:none;}.content{margin:0;box-shadow:none;border-radius:0;padding:0;max-width:none;}}' +
+                '</style></head><body>' +
+                '<div class="toolbar"><h1>📧 Visualizar E-mail</h1>' +
+                '<button onclick="copyAll()">📋 Copiar</button>' +
+                '<button onclick="window.print()" title="Escolha Salvar como PDF no destino">🖨 Baixar PDF</button>' +
+                '<button onclick="window.close()">✕ Fechar</button>' +
+                '<span id="status"></span></div>' +
+                '<div class="content" id="content">' + inner + '</div>' +
+                scriptOpen +
+                'function copyAll(){var c=document.getElementById("content");var clone=c.cloneNode(true);clone.style.position="fixed";clone.style.left="-9999px";clone.style.top="0";clone.style.pointerEvents="none";document.body.appendChild(clone);var r=document.createRange();r.selectNodeContents(clone);var s=window.getSelection();s.removeAllRanges();s.addRange(r);var ok=document.execCommand("copy");document.body.removeChild(clone);s.removeAllRanges();var st=document.getElementById("status");if(st)st.textContent=ok?"✓ Copiado! Cole no WhatsApp (Ctrl+V).":"Não foi possível copiar — use Ctrl+A e Ctrl+C.";}' +
+                scriptClose +
+                '</body></html>';
+        }
+        function openCartFullscreen() {
             const sel = ctCartSelected();
             if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
-            const el = document.getElementById('cartPreviewContent');
-            if (el) el.innerHTML = buildCartHtml(sel);
-            const modal = document.getElementById('cartPreviewModal');
-            if (modal) modal.style.display = 'flex';
-        }
-        function closeCartPreview() {
-            const modal = document.getElementById('cartPreviewModal');
-            if (modal) modal.style.display = 'none';
-        }
-        async function copyCartFromPreview() {
-            const sel = ctCartSelected();
-            if (!sel.length) { closeCartPreview(); showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
-            const ok = await ctCopy(buildCartHtml(sel), buildCartText(sel));
-            closeCartPreview();
-            showToast(ok ? 'Cotações copiadas! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+            let w;
+            try { w = window.open('', '_blank'); } catch (e) { w = null; }
+            if (!w) { showToast('Janela bloqueada pelo navegador. Permita pop-ups para esta página e tente novamente.', 'error'); return; }
+            w.document.open();
+            w.document.write(buildPreviewDoc(sel));
+            w.document.close();
         }
 
         // Toast
