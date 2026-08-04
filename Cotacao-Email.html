@@ -1826,23 +1826,7 @@
                         <div id="ctTarifaPreview" style="margin-bottom: 16px;"></div>
                         <div class="table-wrapper" style="overflow-x: auto;">
                             <table id="ctTable" style="min-width: 1100px;">
-                                <thead>
-                                    <tr>
-                                        <th style="min-width: 70px;">DATA</th>
-                                        <th style="min-width: 120px;">SEMANA</th>
-                                        <th style="min-width: 130px;">CIA. AEREA</th>
-                                        <th style="min-width: 60px;">VOO</th>
-                                        <th style="min-width: 130px;">CLASSE</th>
-                                        <th style="min-width: 160px;">ORIGEM</th>
-                                        <th style="min-width: 160px;">DESTINO</th>
-                                        <th style="min-width: 60px;">SAIDA</th>
-                                        <th style="min-width: 80px;">CHEGADA</th>
-                                        <th style="min-width: 70px;">DURACAO</th>
-                                        <th style="min-width: 110px;">AERONAVE</th>
-                                        <th style="min-width: 60px;">ESCALAS</th>
-                                        <th style="width: 36px;"></th>
-                                    </tr>
-                                </thead>
+                                <thead id="ctTableHead"></thead>
                                 <tbody id="ctTableBody">
                                     <tr>
                                         <td colspan="13" class="table-empty">
@@ -1858,7 +1842,53 @@
 
                 <div class="table-container" style="margin-top: 20px;">
                     <div class="table-header">
-                        <h3>4. Carrinho de Cotações</h3>
+                        <h3>4. Personalização do E-mail</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-outline" onclick="resetTheme()">↺ Restaurar Padrão</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; align-items: flex-end;">
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Fonte</label>
+                                <select id="ctThemeFont" onchange="applyTheme()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background:#fff;">
+                                    <option value="Arial">Arial</option>
+                                    <option value="Verdana">Verdana</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Tahoma">Tahoma</option>
+                                    <option value="Trebuchet MS">Trebuchet MS</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tamanho</label>
+                                <select id="ctThemeSize" onchange="applyTheme()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background:#fff;">
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                    <option value="13">13</option>
+                                    <option value="14">14</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Cor do cabeçalho</label>
+                                <input type="color" id="ctThemeHeadBg" value="#1a73e8" onchange="applyTheme()" style="width:70px;height:36px;padding:2px;border:1px solid var(--gray-300);border-radius:var(--radius);cursor:pointer;background:#fff;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Cor do texto do cabeçalho</label>
+                                <input type="color" id="ctThemeHeadColor" value="#ffffff" onchange="applyTheme()" style="width:70px;height:36px;padding:2px;border:1px solid var(--gray-300);border-radius:var(--radius);cursor:pointer;background:#fff;">
+                            </div>
+                        </div>
+                        <div style="font-size:12px;color:var(--gray-700);margin-bottom:8px;">Colunas exibidas no e-mail:</div>
+                        <div id="ctColsBox" style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:6px;"></div>
+                        <div style="font-size:12px;color:var(--gray-600);margin-top:6px;">As cores da tabela são preservadas ao salvar como PDF (use "Salvar como PDF" no diálogo de impressão).</div>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-top: 20px;">
+                    <div class="table-header">
+                        <h3>5. Carrinho de Cotações</h3>
                         <div class="table-actions">
                             <button class="btn btn-outline" onclick="clearCart()">🗑 Limpar Carrinho</button>
                             <button class="btn btn-outline" onclick="openCartFullscreen()">👁 Visualizar E-mail</button>
@@ -2156,30 +2186,27 @@
             return rows;
         }
         function renderCotacaoTable() {
+            const cols = ctActiveColEntries();
+            const headEl = document.getElementById('ctTableHead');
+            if (headEl) {
+                headEl.innerHTML = '<tr>' + cols.map(function(c) { return '<th style="min-width:70px;">' + c.label + '</th>'; }).join('') + '<th style="width:36px;"></th></tr>';
+            }
             const tbody = document.getElementById('ctTableBody');
             if (!cotacaoRows.length) {
-                tbody.innerHTML = '<tr><td colspan="13" class="table-empty"><div class="empty-icon">📧</div><p>Nenhum trecho. Cole os voos do Sabre e clique em "Converter Voos".</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="' + (cols.length + 1) + '" class="table-empty"><div class="empty-icon">📧</div><p>Nenhum trecho. Cole os voos do Sabre e clique em "Converter Voos".</p></td></tr>';
                 document.getElementById('statCtVoos').textContent = '0';
                 document.getElementById('statCtCias').textContent = '0';
                 document.getElementById('statCtRota').textContent = '-';
                 return;
             }
+            const cmdCols = { date: true, voo: true, saida: true, chegada: true, duracao: true, escalas: true };
             tbody.innerHTML = cotacaoRows.map(function(r, i) {
-                return '<tr>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="date" value="' + ctEsc(r.date) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="semana" value="' + ctEsc(r.semana) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="cia" value="' + ctEsc(r.cia) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="voo" value="' + ctEsc(r.voo) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="classe" value="' + ctEsc(r.classe) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="origem" value="' + ctEsc(r.origem) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="destino" value="' + ctEsc(r.destino) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="saida" value="' + ctEsc(r.saida) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="chegada" value="' + ctEsc(r.chegada) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="duracao" value="' + ctEsc(r.duracao) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell" data-i="' + i + '" data-f="aeronave" value="' + ctEsc(r.aeronave) + '" oninput="ctCell(this)"></td>' +
-                    '<td><input class="ct-cell ct-cmd" data-i="' + i + '" data-f="escalas" value="' + ctEsc(r.escalas) + '" oninput="ctCell(this)"></td>' +
-                    '<td><button class="ct-del" onclick="removeCotacaoRow(' + i + ')" title="Remover">✕</button></td>' +
-                    '</tr>';
+                const cells = cols.map(function(c) {
+                    const cls = cmdCols[c.key] ? 'ct-cell ct-cmd' : 'ct-cell';
+                    return '<td><input class="' + cls + '" data-i="' + i + '" data-f="' + c.key + '" value="' + ctEsc(r[c.key]) + '" oninput="ctCell(this)"></td>';
+                });
+                cells.push('<td><button class="ct-del" onclick="removeCotacaoRow(' + i + ')" title="Remover">✕</button></td>');
+                return '<tr>' + cells.join('') + '</tr>';
             }).join('');
             const cias = {};
             cotacaoRows.forEach(function(r) { if (r.cia) cias[r.cia] = true; });
@@ -2258,23 +2285,132 @@
                 return { date: r.date || '', semana: r.semana || '', cia: r.cia || '', voo: r.voo || '', classe: r.classe || '', origem: r.origem || '', destino: r.destino || '', saida: r.saida || '', chegada: r.chegada || '', duracao: r.duracao || '', aeronave: r.aeronave || '', escalas: r.escalas || '' };
             });
         }
+        // Personalização do e-mail (tema + colunas)
+        const CT_COLUMNS = [
+            { key: 'date', label: 'DATA' },
+            { key: 'semana', label: 'SEMANA' },
+            { key: 'cia', label: 'CIA. AEREA' },
+            { key: 'voo', label: 'VOO' },
+            { key: 'classe', label: 'CLASSE' },
+            { key: 'origem', label: 'ORIGEM' },
+            { key: 'destino', label: 'DESTINO' },
+            { key: 'saida', label: 'SAIDA' },
+            { key: 'chegada', label: 'CHEGADA' },
+            { key: 'duracao', label: 'DURACAO' },
+            { key: 'aeronave', label: 'AERONAVE' },
+            { key: 'escalas', label: 'ESCALAS' }
+        ];
+        let ctTheme = { font: 'Arial', size: 12, headBg: '#1a73e8', headColor: '#ffffff' };
+        let ctActiveCols = null;
+        function ctGetActiveCols() {
+            return ctActiveCols || CT_COLUMNS.map(function(c) { return c.key; });
+        }
+        function ctActiveColEntries() {
+            return CT_COLUMNS.filter(function(c) { return ctGetActiveCols().indexOf(c.key) !== -1; });
+        }
+        function ctThemeFontCss() {
+            return "'" + ctTheme.font + "',Helvetica,Arial,sans-serif";
+        }
+        function loadTheme() {
+            try {
+                const t = localStorage.getItem('ctTheme');
+                if (t) ctTheme = Object.assign(ctTheme, JSON.parse(t));
+                const c = localStorage.getItem('ctActiveCols');
+                if (c) {
+                    const arr = JSON.parse(c);
+                    if (Array.isArray(arr)) ctActiveCols = arr.filter(function(k) { return CT_COLUMNS.some(function(col) { return col.key === k; }); });
+                }
+            } catch (e) {}
+        }
+        function saveTheme() {
+            try {
+                localStorage.setItem('ctTheme', JSON.stringify(ctTheme));
+                localStorage.setItem('ctActiveCols', JSON.stringify(ctGetActiveCols()));
+            } catch (e) {}
+        }
+        function renderColsBox() {
+            const el = document.getElementById('ctColsBox');
+            if (!el) return;
+            const active = ctGetActiveCols();
+            el.innerHTML = CT_COLUMNS.map(function(c) {
+                return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-700);cursor:pointer;">' +
+                    '<input type="checkbox" value="' + c.key + '" ' + (active.indexOf(c.key) !== -1 ? 'checked' : '') + ' onchange="toggleCol(this)" style="width:15px;height:15px;accent-color:var(--mint);cursor:pointer;"> ' + c.label + '</label>';
+            }).join('');
+        }
+        function toggleCol(cb) {
+            const key = cb.value;
+            const active = ctGetActiveCols();
+            const i = active.indexOf(key);
+            if (cb.checked && i === -1) {
+                if (ctActiveCols === null) ctActiveCols = CT_COLUMNS.map(function(c) { return c.key; });
+                ctActiveCols.push(key);
+            } else if (!cb.checked && i !== -1) {
+                if (active.length === 1) {
+                    cb.checked = true;
+                    showToast('Deixe ao menos uma coluna.', 'error');
+                    return;
+                }
+                if (ctActiveCols === null) ctActiveCols = CT_COLUMNS.map(function(c) { return c.key; });
+                ctActiveCols.splice(i, 1);
+            }
+            applyTheme();
+        }
+        function applyTheme() {
+            const f = document.getElementById('ctThemeFont');
+            const s = document.getElementById('ctThemeSize');
+            const bg = document.getElementById('ctThemeHeadBg');
+            const tc = document.getElementById('ctThemeHeadColor');
+            if (f) ctTheme.font = f.value;
+            if (s) ctTheme.size = parseInt(s.value, 10) || 12;
+            if (bg) ctTheme.headBg = bg.value;
+            if (tc) ctTheme.headColor = tc.value;
+            saveTheme();
+            renderCotacaoTable();
+        }
+        function initThemeUI() {
+            loadTheme();
+            const f = document.getElementById('ctThemeFont');
+            const s = document.getElementById('ctThemeSize');
+            const bg = document.getElementById('ctThemeHeadBg');
+            const tc = document.getElementById('ctThemeHeadColor');
+            if (f) f.value = ctTheme.font;
+            if (s) s.value = String(ctTheme.size);
+            if (bg) bg.value = ctTheme.headBg;
+            if (tc) tc.value = ctTheme.headColor;
+            renderColsBox();
+        }
+        function resetTheme() {
+            ctTheme = { font: 'Arial', size: 12, headBg: '#1a73e8', headColor: '#ffffff' };
+            ctActiveCols = null;
+            const f = document.getElementById('ctThemeFont');
+            const s = document.getElementById('ctThemeSize');
+            const bg = document.getElementById('ctThemeHeadBg');
+            const tc = document.getElementById('ctThemeHeadColor');
+            if (f) f.value = 'Arial';
+            if (s) s.value = '12';
+            if (bg) bg.value = '#1a73e8';
+            if (tc) tc.value = '#ffffff';
+            renderColsBox();
+            applyTheme();
+            showToast('Personalização restaurada ao padrão.', 'info');
+        }
         function ctBuildHtmlTable(rows) {
             if (!rows) rows = ctGetRows();
-            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
-            let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;">';
-            html += '<thead><tr style="background:#1a73e8;color:#ffffff;">' + head.map(function(h) { return '<th style="padding:6px 10px;text-align:left;">' + h + '</th>'; }).join('') + '</tr></thead><tbody>';
+            const cols = ctActiveColEntries();
+            let html = '<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:' + ctThemeFontCss() + ';font-size:' + ctTheme.size + 'px;">';
+            html += '<thead><tr style="background:' + ctTheme.headBg + ';color:' + ctTheme.headColor + ';">' + cols.map(function(c) { return '<th style="padding:6px 10px;text-align:left;">' + c.label + '</th>'; }).join('') + '</tr></thead><tbody>';
             rows.forEach(function(r) {
-                html += '<tr>' + [r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].map(function(v) { return '<td style="padding:6px 10px;border:1px solid #dadce0;">' + ctEsc(v) + '</td>'; }).join('') + '</tr>';
+                html += '<tr>' + cols.map(function(c) { return '<td style="padding:6px 10px;border:1px solid #dadce0;">' + ctEsc(r[c.key]) + '</td>'; }).join('') + '</tr>';
             });
             html += '</tbody></table>';
             return html;
         }
         function ctBuildPlainTable(rows) {
             if (!rows) rows = ctGetRows();
-            const head = ['DATA', 'SEMANA', 'CIA. AEREA', 'VOO', 'CLASSE', 'ORIGEM', 'DESTINO', 'SAIDA', 'CHEGADA', 'DURACAO', 'AERONAVE', 'ESCALAS'];
-            const lines = [head.join('\t')];
+            const cols = ctActiveColEntries();
+            const lines = [cols.map(function(c) { return c.label; }).join('\t')];
             rows.forEach(function(r) {
-                lines.push([r.date, r.semana, r.cia, r.voo, r.classe, r.origem, r.destino, r.saida, r.chegada, r.duracao, r.aeronave, r.escalas].join('\t'));
+                lines.push(cols.map(function(c) { return r[c.key]; }).join('\t'));
             });
             return lines.join('\n');
         }
@@ -2520,6 +2656,7 @@
             const scriptClose = '</' + 'script>';
             return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Visualizar E-mail</title><style>' +
                 'body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#eef1f5;color:#202124;}' +
+                '*,*::before,*::after{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
                 '.toolbar{position:sticky;top:0;z-index:10;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 20px;background:#0f6cbd;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);}' +
                 '.toolbar h1{font-size:15px;margin:0 16px 0 0;font-weight:700;}' +
                 '.toolbar button{background:#fff;color:#0f6cbd;border:none;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}' +
@@ -2572,6 +2709,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const ctYear = document.getElementById('ctYear');
             if (ctYear) ctYear.value = new Date().getFullYear();
+            initThemeUI();
             renderCotacaoTable();
             renderCotacaoTarifa();
             renderCart();
