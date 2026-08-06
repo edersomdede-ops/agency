@@ -4167,6 +4167,102 @@
                     grupo: "Albittex",
                     obs: "",
                     dataCadastro: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: "cli071",
+                    nome: "Candyce Vilarinho Machado Pighini",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FV443681",
+                    passaporteValidade: "2028-03-14",
+                    nascimento: "1988-04-12",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Beto",
+                    obs: "",
+                    dataCadastro: "2026-08-06T00:00:00.000Z"
+                },
+                {
+                    id: "cli072",
+                    nome: "Jaqueline Gomes Reis Pighini",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FY249656",
+                    passaporteValidade: "2029-02-18",
+                    nascimento: "1986-06-10",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Beto",
+                    obs: "Expedição: 19/02/2019",
+                    dataCadastro: "2026-08-06T00:00:00.000Z"
+                },
+                {
+                    id: "cli073",
+                    nome: "Ricardo Borges Pighini",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FY249655",
+                    passaporteValidade: "2029-02-18",
+                    nascimento: "1980-01-05",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Beto",
+                    obs: "Expedição: 19/02/2019",
+                    dataCadastro: "2026-08-06T00:00:00.000Z"
+                },
+                {
+                    id: "cli074",
+                    nome: "Ronny Borges Pighini",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FV444490",
+                    passaporteValidade: "2028-03-14",
+                    nascimento: "1984-08-01",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Beto",
+                    obs: "Expedição: 15/03/2018",
+                    dataCadastro: "2026-08-06T00:00:00.000Z"
+                },
+                {
+                    id: "cli075",
+                    nome: "Vinicius MR Freitas de Castro",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FR646044",
+                    passaporteValidade: "2026-10-04",
+                    nascimento: "1979-12-26",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Beto",
+                    obs: "Expedição: 05/10/2016",
+                    dataCadastro: "2026-08-06T00:00:00.000Z"
+                },
+                {
+                    id: "cli076",
+                    nome: "Thais Silva Sena de Castro",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "FW412751",
+                    passaporteValidade: "2028-07-09",
+                    nascimento: "1980-06-09",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Beto",
+                    obs: "Expedição: 10/07/2018",
+                    dataCadastro: "2026-08-06T00:00:00.000Z"
                 }
             ],
             bilhetes: [
@@ -4276,7 +4372,8 @@
                 const storedVersion = localStorage.getItem('travelAgencyDataVersion');
                 
                 if (stored && storedVersion === DATA_VERSION) {
-                    data = JSON.parse(stored);
+                    data = mergeInitialData(JSON.parse(stored));
+                    saveDataLocal();
                 } else {
                     data = JSON.parse(JSON.stringify(initialData));
                     saveDataLocal();
