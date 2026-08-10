@@ -4883,6 +4883,17 @@
             const d = new Date(year, MESES[m[2].toUpperCase()], +m[1]);
             return DIAS_PT[d.getDay()];
         }
+        function ctDiaSemanaNum(n) {
+            const v = parseInt(n, 10);
+            return (v >= 1 && v <= 7) ? DIAS_PT[v % 7] : '';
+        }
+        const CT_DIA_ABBR = {
+            SEG: 'SEGUNDA-FEIRA', TER: 'TERCA-FEIRA', QUA: 'QUARTA-FEIRA', QUI: 'QUINTA-FEIRA', SEX: 'SEXTA-FEIRA', SAB: 'SABADO', DOM: 'DOMINGO',
+            MON: 'SEGUNDA-FEIRA', TUE: 'TERCA-FEIRA', WED: 'QUARTA-FEIRA', THU: 'QUINTA-FEIRA', FRI: 'SEXTA-FEIRA', SAT: 'SABADO', SUN: 'DOMINGO'
+        };
+        function ctDiaAbbr(s) {
+            return CT_DIA_ABBR[String(s || '').toUpperCase()] || '';
+        }
         function ctTz(code, month) {
             let v = TZ[code];
             if (v === undefined) return null;
@@ -4922,7 +4933,7 @@
             const dur = (seg.dep && seg.arr && month != null) ? ctDuracao(seg.dep, seg.arr, seg.orig, seg.dest, month, nextDay) : '';
             return {
                 date: date,
-                semana: ctDiaSemana(date, seg.year),
+                semana: seg.dow || ctDiaSemana(date, seg.year),
                 cia: AIRLINES[seg.cia] || seg.cia || '',
                 voo: seg.flight || '',
                 classe: (seg.cls ? seg.cls + ' - ' + (CLASS_NAMES[seg.cls] || 'ECONOMICA') : ''),
@@ -4940,24 +4951,27 @@
             const year = parseInt(document.getElementById('ctYear').value, 10) || new Date().getFullYear();
             const defDate = (document.getElementById('ctDefaultDate').value || '').trim().toUpperCase();
             let curDate = defDate;
+            let curDow = '';
             const lines = String(text).split(/\r?\n/);
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
-                const dm = line.match(new RegExp('^(\\d{2})(' + MESES_RX + ')\\b', 'i'));
+                const dm = line.match(new RegExp('^(\\d{2})(' + MESES_RX + ')(?:\\s+([A-Z]{3}))?\\b', 'i'));
                 if (dm && !line.match(/^(\d{1,2})\./) && !line.match(/^\d{1,2}\.?[A-Z]{2}\d/)) {
                     curDate = dm[1] + dm[2].toUpperCase();
+                    const dw = ctDiaAbbr(dm[3]);
+                    if (dw) curDow = dw;
                     continue;
                 }
-                let m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})\s*(\d{1,4})\s*([A-Z])\s+(\d{2}[A-Z]{3})\s+\S+\s*([A-Z]{3})\s*([A-Z]{3})(?:(?:\*([A-Z]{2})|\s+([A-Z]{2}))\s*\d)?\s+(\d{4})\s+(\d{4})(?:\s+(\d{2}[A-Z]{3})(?:\s+\d+)?)?(?:\s+(\d{3})(?:\s+(\d))?)?(?:\s+\S+)?\s*(?:\/.*)?$/);
+                let m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})\s*(\d{1,4})\s*([A-Z])\s+(\d{2}[A-Z]{3})(?:\s+(\d)\*?)?\s*([A-Z]{3})\s*([A-Z]{3})(?:(?:\*([A-Z]{2})|\s+([A-Z]{2}))\s*\d)?\s+(\d{4})\s+(\d{4})(?:\s+(\d{2}[A-Z]{3})(?:\s+\d+)?)?(?:\s+(\d{3})(?:\s+(\d))?)?(?:\s+\S+)?\s*(?:\/.*)?$/);
                 if (m) {
-                    rows.push(ctMakeRow({ date: m[5], cia: m[2], flight: m[3], cls: m[4], orig: m[6], dest: m[7], dep: m[10], arr: m[11], nextDate: m[12], stops: m[14] || '0', equip: m[13] || '', year: year }));
+                    rows.push(ctMakeRow({ date: m[5], dow: ctDiaSemanaNum(m[6]), cia: m[2], flight: m[3], cls: m[4], orig: m[7], dest: m[8], dep: m[11], arr: m[12], nextDate: m[13], stops: m[15] || '0', equip: m[14] || '', year: year }));
                     continue;
                 }
                 m = line.match(/^(\d{1,2})\.?\s*([A-Z0-9]{2})(\d{1,4})\s+(.+?)\s+([A-Z]{3})([A-Z]{3})\s+\S+\s+(\d{4})\s+(\d{4})\s+(\S+)\s+\S+\s+(\d)\s+/);
                 if (m) {
                     const cls = (m[4].match(/[A-Z]/) || [''])[0];
-                    rows.push(ctMakeRow({ date: curDate, cia: m[2], flight: m[3], cls: cls, orig: m[5], dest: m[6], dep: m[7], arr: m[8], equip: m[9], stops: m[10], year: year }));
+                    rows.push(ctMakeRow({ date: curDate, dow: curDow, cia: m[2], flight: m[3], cls: cls, orig: m[5], dest: m[6], dep: m[7], arr: m[8], equip: m[9], stops: m[10], year: year }));
                     continue;
                 }
             }
