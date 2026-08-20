@@ -3032,6 +3032,9 @@
             } else if (syncStatus === 'syncing') {
                 badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f9ab00;margin-right:6px;animation:pulse 1s infinite;"></span>Sincronizando...';
                 badge.title = 'Sincronizando dados com a nuvem...';
+            } else if (syncStatus === 'retrying') {
+                badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f9ab00;margin-right:6px;animation:pulse 1s infinite;"></span>Retry...';
+                badge.title = 'Sobrecarga no servidor. Tentando novamente em 10s...';
             } else {
                 badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:6px;"></span>Sem conexão';
                 badge.title = 'Sem conexão. Usando dados locais.';
@@ -4263,6 +4266,1190 @@
                     grupo: "Beto",
                     obs: "Expedição: 10/07/2018",
                     dataCadastro: "2026-08-06T00:00:00.000Z"
+                },
+                {
+                    id: "cli077",
+                    nome: "Gisela Prochaska",
+                    email: "",
+                    telefone: "",
+                    cpf: "041.322.718-97",
+                    passaporte: "FS327568",
+                    passaporteValidade: "2027-01-16",
+                    nascimento: "1961-04-29",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "Expedição: 17/01/2017 | Naturalidade: São Paulo/SP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli078",
+                    nome: "Sergio Mansur Andalafi",
+                    email: "",
+                    telefone: "",
+                    cpf: "920.366.438-68",
+                    passaporte: "FY642090",
+                    passaporteValidade: "2029-04-02",
+                    nascimento: "1959-01-17",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Mansur",
+                    obs: "GOL 34534183 | Emissão: 03/04/2019 | Visto EUA R5189711 - Emissão 02/06/2022 - Validade 25/05/2032",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli079",
+                    nome: "Vania Assaly",
+                    email: "",
+                    telefone: "",
+                    cpf: "043.634.028-30",
+                    passaporte: "FS830960",
+                    passaporteValidade: "2027-03-27",
+                    nascimento: "1961-08-24",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Mansur",
+                    obs: "Emissão: 28/03/2017 | Visto EUA V4000784 - Emissão 03/12/2024 - Validade 21/11/2034",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli080",
+                    nome: "Diego Alencar de Oliveira",
+                    email: "",
+                    telefone: "",
+                    cpf: "216.573.028-73",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1982-12-19",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Mansur",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli081",
+                    nome: "Beatriz Assaly Nogueira",
+                    email: "",
+                    telefone: "",
+                    cpf: "368.580.128-77",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1987-11-13",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Mansur",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli082",
+                    nome: "Julia Americo Mansur Andalafi",
+                    email: "",
+                    telefone: "",
+                    cpf: "080.985.114-80",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1993-08-02",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Mansur",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli083",
+                    nome: "Andrea Soussi Rivetti de Miranda",
+                    email: "",
+                    telefone: "",
+                    cpf: "335.746.688-05",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1985-03-22",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Rivetti",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli084",
+                    nome: "Marcos Paulo de Miranda Filho",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1981-08-28",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Rivetti",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli085",
+                    nome: "Maria Rivetti de Miranda",
+                    email: "",
+                    telefone: "",
+                    cpf: "589.716.258-13",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2020-03-06",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Rivetti",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli086",
+                    nome: "Mauricio Rivetti de Miranda",
+                    email: "",
+                    telefone: "",
+                    cpf: "512.374.058-90",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2016-04-27",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Rivetti",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli087",
+                    nome: "Alexandre Borges de Freitas",
+                    email: "",
+                    telefone: "",
+                    cpf: "210.332.218-56",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1973-11-06",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli088",
+                    nome: "Luciana Pires Gil Borges",
+                    email: "",
+                    telefone: "",
+                    cpf: "297.683.718-03",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1979-12-06",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli089",
+                    nome: "Martim Gil Borges",
+                    email: "",
+                    telefone: "",
+                    cpf: "587.637.958-17",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2012-09-01",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli090",
+                    nome: "Vicente Gil Borges",
+                    email: "",
+                    telefone: "",
+                    cpf: "587.638.248-50",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2014-10-16",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli091",
+                    nome: "Dora Gil Borges",
+                    email: "",
+                    telefone: "",
+                    cpf: "523.566.878-23",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2017-01-24",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli092",
+                    nome: "Lina Gil Borges",
+                    email: "",
+                    telefone: "",
+                    cpf: "588.030.368-30",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2020-09-12",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli093",
+                    nome: "Adriana Scavone de Freitas",
+                    email: "",
+                    telefone: "",
+                    cpf: "102.510.348-36",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1949-03-02",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Alexandre Borges",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli094",
+                    nome: "Olga Maria D Maran",
+                    email: "",
+                    telefone: "",
+                    cpf: "198.514.569-34",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1954-08-24",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Maran",
+                    obs: "Doc: 5440798-0",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli095",
+                    nome: "Jaco Moacir S Maran",
+                    email: "",
+                    telefone: "",
+                    cpf: "157.181.409-44",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1952-08-21",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Maran",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli096",
+                    nome: "Thays Neves de Mello e Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "438.306.558-94",
+                    passaporte: "FV843488",
+                    passaporteValidade: "2028-04-28",
+                    nascimento: "1995-05-19",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Maran",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli097",
+                    nome: "Gustavo Alexandre Maran",
+                    email: "",
+                    telefone: "",
+                    cpf: "034.645.389-58",
+                    passaporte: "FU658020",
+                    passaporteValidade: "2027-12-03",
+                    nascimento: "1981-11-05",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Maran",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli098",
+                    nome: "Maria Victoria Teixeira Maran",
+                    email: "",
+                    telefone: "",
+                    cpf: "150.251.989-50",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2019-05-16",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Maran",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli099",
+                    nome: "Leonardo Teixeira Maran",
+                    email: "",
+                    telefone: "",
+                    cpf: "136.242.829-99",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2017-10-07",
+                    endereco: "",
+                    status: "inativo",
+                    origem: "",
+                    grupo: "Maran",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli106",
+                    nome: "Andrew Christopher Finkle",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "P263043LS",
+                    passaporteValidade: "2035-12-12",
+                    nascimento: "1987-06-29",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Tangho",
+                    obs: "Emissão: 12/02/2025",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli107",
+                    nome: "Marcos Pinhel da Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "013.086.497-89",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1968-02-01",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "RG: 52473712 | GOL: 1093816 | CC: exportação",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli108",
+                    nome: "Renan Miguel Morais",
+                    email: "",
+                    telefone: "",
+                    cpf: "377.330.998-89",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1990-02-07",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "RG: 34.236.402-9 | GOL: 378234511 | CC: exportação",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli109",
+                    nome: "Luiz Fernando Gomes Cassi",
+                    email: "",
+                    telefone: "",
+                    cpf: "296.706.748-24",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1981-03-05",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "RG: 33.020.940-1 | GOL: 248061833 | CC: exportação",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli110",
+                    nome: "Ricardo Prata Miguel",
+                    email: "",
+                    telefone: "",
+                    cpf: "288.500.938-10",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1981-07-01",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "RG: 30.193.106-9 | CC: TEC DES PVC",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli111",
+                    nome: "Marcelo Anunciação Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "271.743.138-17",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1978-02-08",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "RG: 27.223.646-9 | CC: TEC DES EP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli112",
+                    nome: "Margareth Barbosa",
+                    email: "",
+                    telefone: "",
+                    cpf: "118.969.998-24",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1969-03-25",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "TAP: 249194188 | CC: exportação",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli113",
+                    nome: "Rafael Souza Cardoso",
+                    email: "",
+                    telefone: "",
+                    cpf: "316.218.388-03",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1982-10-28",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: TEC DES EP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli114",
+                    nome: "William Rodrigues Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "311.721.248-50",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1983-10-27",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "GOL: 169905046 | CC: 409-TEC. E DESENVOLVIMENTO P",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli115",
+                    nome: "Maiko Mitio Inamori",
+                    email: "",
+                    telefone: "",
+                    cpf: "405.817.778-08",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1992-09-24",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: TEC DES PVC",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli116",
+                    nome: "Rafael Souza de Paula",
+                    email: "",
+                    telefone: "",
+                    cpf: "260.382.488-03",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1976-09-20",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: DTD EP – 420",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli117",
+                    nome: "Cristiano Secanho",
+                    email: "",
+                    telefone: "",
+                    cpf: "124.248.638-06",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1972-06-05",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "GOL: 349474624 | CC: 420-TEC. E DESENVOLVIMENTO EP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli118",
+                    nome: "Sandovaldo Rodrigues",
+                    email: "",
+                    telefone: "",
+                    cpf: "281.617.568-56",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1985-04-24",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 409-TEC. E DESENVOLVIMENTO P",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli119",
+                    nome: "Fabio Luiz Santana",
+                    email: "",
+                    telefone: "",
+                    cpf: "192.697.118-38",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1975-05-27",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "American: 8EY92N2 | CC: 120-COMPRAS",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli120",
+                    nome: "Celeste Mitico Suzuki",
+                    email: "",
+                    telefone: "",
+                    cpf: "011.017.248-54",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1959-04-27",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 420-TEC. E DESENVOLVIMENTO EP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli121",
+                    nome: "Rafael Falcao Pereira Gomes",
+                    email: "",
+                    telefone: "",
+                    cpf: "337.663.708-39",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1975-07-30",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 420-TEC. E DESENVOLVIMENTO EP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli122",
+                    nome: "Wilman Alves Schmidt",
+                    email: "",
+                    telefone: "",
+                    cpf: "270.563.428-25",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1978-04-06",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 120-COMPRAS",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli123",
+                    nome: "Graciene Belarmino de Macedo Rocha",
+                    email: "",
+                    telefone: "",
+                    cpf: "344.747.208-14",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1987-05-28",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 120-COMPRAS",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli124",
+                    nome: "Liliana Barreiros Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "228.390.088-31",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1986-02-20",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 120-COMPRAS",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli125",
+                    nome: "Marcelo Ferreira Santos",
+                    email: "",
+                    telefone: "",
+                    cpf: "279.667.118-62",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1979-01-13",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: 420-TEC. E DESENVOLVIMENTO EP",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli126",
+                    nome: "Mariana Miranda Orefice Gomes",
+                    email: "",
+                    telefone: "",
+                    cpf: "369.966.308-60",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1988-09-06",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Karina",
+                    obs: "CC: JURIDICO",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli127",
+                    nome: "Andreia Zwetsch",
+                    email: "",
+                    telefone: "",
+                    cpf: "655.130.960-72",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1974-11-03",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli128",
+                    nome: "Pamela Souza Jardim",
+                    email: "",
+                    telefone: "",
+                    cpf: "476.015.978-90",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1999-03-05",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli129",
+                    nome: "Rodrigo Antonio May Lucas",
+                    email: "",
+                    telefone: "",
+                    cpf: "406.792.548-46",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1993-04-11",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli130",
+                    nome: "Matheus dos Santos Lima",
+                    email: "",
+                    telefone: "",
+                    cpf: "346.726.248-11",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1990-10-29",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli131",
+                    nome: "José Roberto Corrêa",
+                    email: "",
+                    telefone: "",
+                    cpf: "072.016.358-75",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1965-02-28",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "RG: 16.561.171-6",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli132",
+                    nome: "Fernando Julio Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "097.742.198-80",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1970-02-14",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "RG: 226785269",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli133",
+                    nome: "Philipe Silva dos Santos",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1991-09-29",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "RG: 6611564",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli134",
+                    nome: "Tatiana Correia",
+                    email: "",
+                    telefone: "",
+                    cpf: "296.281.508-12",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1981-03-04",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Sappi",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli135",
+                    nome: "Maria Adilia Martins de Almeida",
+                    email: "",
+                    telefone: "",
+                    cpf: "213.241.548-02",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1976-08-03",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Sappi",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli136",
+                    nome: "Rossano Gastaldo",
+                    email: "",
+                    telefone: "",
+                    cpf: "003.349.690-00",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1983-08-02",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli137",
+                    nome: "Kerolin de Souza Fragoso",
+                    email: "",
+                    telefone: "",
+                    cpf: "602.766.210-77",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2006-01-21",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli138",
+                    nome: "Melina Goncalves Dorneles",
+                    email: "",
+                    telefone: "",
+                    cpf: "804.899.900-53",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1981-04-25",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli139",
+                    nome: "Silvia Viale da Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "732.160.460-87",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1954-12-21",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli140",
+                    nome: "Luciane Figueiredo Oliveira",
+                    email: "",
+                    telefone: "",
+                    cpf: "509.478.340-87",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1966-10-05",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli141",
+                    nome: "Debora Vargas Moreira",
+                    email: "",
+                    telefone: "",
+                    cpf: "265.048.390-34",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1958-03-04",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli142",
+                    nome: "Carim Silva da Luz",
+                    email: "",
+                    telefone: "",
+                    cpf: "710.241.230-49",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1973-12-19",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Conceitual",
+                    obs: "",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli143",
+                    nome: "Valdir Cortez Junior",
+                    email: "",
+                    telefone: "",
+                    cpf: "350.386.558-66",
+                    passaporte: "FT949189",
+                    passaporteValidade: "2027-08-23",
+                    nascimento: "1988-06-07",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "Emissão: 24/08/2017",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli144",
+                    nome: "Juliana Blandina Perroni",
+                    email: "",
+                    telefone: "",
+                    cpf: "370.331.948-89",
+                    passaporte: "FT949190",
+                    passaporteValidade: "2027-08-23",
+                    nascimento: "1988-12-06",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "Esposa de Valdir Cortez Junior | Emissão: 24/08/2017",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli145",
+                    nome: "Laura Perroni Cortez",
+                    email: "",
+                    telefone: "",
+                    cpf: "154.340.528-20",
+                    passaporte: "GO399958",
+                    passaporteValidade: "2027-05-18",
+                    nascimento: "2026-01-17",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "Emissão: 19/05/2026",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli146",
+                    nome: "Fernando Mininel",
+                    email: "",
+                    telefone: "",
+                    cpf: "295.167.558-52",
+                    passaporte: "GD307543",
+                    passaporteValidade: "2031-11-23",
+                    nascimento: "1982-06-30",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "Emissão: 24/11/2021",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli147",
+                    nome: "Thaizi Pessano",
+                    email: "",
+                    telefone: "",
+                    cpf: "306.132.608-13",
+                    passaporte: "GD307974",
+                    passaporteValidade: "2031-11-23",
+                    nascimento: "1982-03-25",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "Esposa de Fernando Mininel | Emissão: 24/11/2021",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli148",
+                    nome: "Pedro Pessano Mininel",
+                    email: "",
+                    telefone: "",
+                    cpf: "486.240.408-17",
+                    passaporte: "GI931296",
+                    passaporteValidade: "2029-03-03",
+                    nascimento: "2014-03-15",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "Filho | Emissão: 04/03/2024",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli149",
+                    nome: "Bernardo Mikaelian Birle",
+                    email: "",
+                    telefone: "",
+                    cpf: "607.784.698-83",
+                    passaporte: "GG110790",
+                    passaporteValidade: "2028-01-31",
+                    nascimento: "2014-03-01",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Bernardo Birle",
+                    obs: "RG: 64.979.435-7 | Emissão: 01/02/2023",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli150",
+                    nome: "Stephanie Mikaelian Birle",
+                    email: "",
+                    telefone: "",
+                    cpf: "340.674.828-76",
+                    passaporte: "GG110789",
+                    passaporteValidade: "2033-01-31",
+                    nascimento: "1986-10-15",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Bernardo Birle",
+                    obs: "Emissão: 01/02/2023",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli151",
+                    nome: "Christian Birle",
+                    email: "",
+                    telefone: "",
+                    cpf: "343.401.728-39",
+                    passaporte: "GG110791",
+                    passaporteValidade: "2033-01-31",
+                    nascimento: "1986-08-25",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Bernardo Birle",
+                    obs: "Emissão: 01/02/2023",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli152",
+                    nome: "Danilo Oliveri Deveza",
+                    email: "",
+                    telefone: "",
+                    cpf: "128.083.517-63",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1991-10-01",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Suno",
+                    obs: "RG: 38153819-9",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli153",
+                    nome: "Decio Ricardo Galvao",
+                    email: "",
+                    telefone: "",
+                    cpf: "101.893.718-89",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1968-07-10",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "",
+                    dataCadastro: "2026-08-19T00:00:00.000Z"
+                },
+                {
+                    id: "cli154",
+                    nome: "Leonardo Reis Arias Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "374.703.858-19",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1990-02-28",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Helipark",
+                    obs: "",
+                    dataCadastro: "2026-08-19T00:00:00.000Z"
+                },
+                {
+                    id: "cli155",
+                    nome: "Tiago dos Santos Patto",
+                    email: "",
+                    telefone: "",
+                    cpf: "214.824.598-84",
+                    passaporte: "GN316733",
+                    passaporteValidade: "2036-01-06",
+                    nascimento: "1979-09-17",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "",
+                    dataCadastro: "2026-08-19T00:00:00.000Z"
+                },
+                {
+                    id: "cli156",
+                    nome: "Romeu Cimini Junior",
+                    email: "",
+                    telefone: "",
+                    cpf: "135.269.098-57",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1972-10-03",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Pilotos Karina",
+                    obs: "",
+                    dataCadastro: "2026-08-19T00:00:00.000Z"
                 }
             ],
             bilhetes: [
@@ -4440,7 +5627,7 @@
                         };
                         data = mergeInitialData(data);
                         data = normalizeAllData(data);
-                        saveDataToFirestore();
+                        saveData();
                     } else {
                         const stored = localStorage.getItem('travelAgencyData');
                         if (stored) {
@@ -4448,7 +5635,7 @@
                         } else {
                             data = JSON.parse(JSON.stringify(initialData));
                         }
-                        saveDataToFirestore();
+                        saveData();
                     }
                     saveDataLocal();
                     renderAll();
@@ -4471,10 +5658,10 @@
                                 };
                                 data = mergeInitialData(data);
                                 data = normalizeAllData(data);
-                                saveDataToFirestore();
+                                saveData();
                             } else {
                                 data = JSON.parse(JSON.stringify(initialData));
-                                saveDataToFirestore();
+                                saveData();
                             }
                             saveDataLocal();
                             renderAll();
@@ -4521,6 +5708,8 @@
         }
 
         let saveDataTimeout = null;
+        let firestoreRetryTimeout = null;
+        let lastWriteCompleted = 0;
 
         function saveData() {
             data = normalizeAllData(data);
@@ -4530,7 +5719,7 @@
                 if (saveDataTimeout) clearTimeout(saveDataTimeout);
                 saveDataTimeout = setTimeout(() => {
                     saveDataToFirestore();
-                }, 300);
+                }, 2000);
             }
         }
 
@@ -4544,6 +5733,14 @@
         }
 
         function saveDataToFirestore() {
+            if (!useFirestore) return;
+            const now = Date.now();
+            const minInterval = 5000;
+            if (now - lastWriteCompleted < minInterval) {
+                if (firestoreRetryTimeout) clearTimeout(firestoreRetryTimeout);
+                firestoreRetryTimeout = setTimeout(() => saveDataToFirestore(), minInterval);
+                return;
+            }
             syncStatus = 'syncing';
             isSaving = true;
             saveGeneration++;
@@ -4559,6 +5756,7 @@
             };
             updateSyncBadge();
             db.collection('agencia').doc(DOC_ID).set(snapshot).then(() => {
+                lastWriteCompleted = Date.now();
                 if (myGeneration === saveGeneration) {
                     syncStatus = 'connected';
                     isSaving = false;
@@ -4568,11 +5766,22 @@
                 updateSyncBadge();
             }).catch(err => {
                 console.warn('Firestore write failed:', err);
-                syncStatus = 'offline';
-                if (myGeneration === saveGeneration) {
-                    isSaving = false;
+                const isResourceExhausted = err.code === 'resource-exhausted' || (err.message && err.message.includes('resource-exhausted'));
+                if (isResourceExhausted) {
+                    syncStatus = 'retrying';
+                    updateSyncBadge();
+                    if (firestoreRetryTimeout) clearTimeout(firestoreRetryTimeout);
+                    firestoreRetryTimeout = setTimeout(() => {
+                        if (myGeneration === saveGeneration) isSaving = false;
+                        saveDataToFirestore();
+                    }, 10000);
+                } else {
+                    syncStatus = 'offline';
+                    if (myGeneration === saveGeneration) {
+                        isSaving = false;
+                    }
+                    updateSyncBadge();
                 }
-                updateSyncBadge();
             });
         }
 
