@@ -2971,6 +2971,7 @@
         let syncStatus = 'pending';
         let isSaving = false;
         let saveGeneration = 0;
+        let initialLoadComplete = false;
 
         try {
             firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -3012,6 +3013,7 @@
             updateDate();
             renderAll();
             updateSyncBadge();
+            initWhatsAppDemandasImport();
             const ctYear = document.getElementById('ctYear');
             if (ctYear) ctYear.value = new Date().getFullYear();
             initThemeUI();
@@ -5436,7 +5438,39 @@
                     dataCadastro: "2026-08-19T00:00:00.000Z"
                 },
                 {
-                    id: "cli156",
+                    id: "cli159",
+                    nome: "Gisela de Queiroz Ferreira Alcantara",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "GC055219",
+                    passaporteValidade: "2030-11-12",
+                    nascimento: "1956-05-15",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "Emissão: 13/11/2020",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli157",
+                    nome: "Maria Eugenia Amaral Lattes",
+                    email: "",
+                    telefone: "",
+                    cpf: "954.192.768-87",
+                    passaporte: "GA069698",
+                    passaporteValidade: "2029-08-07",
+                    nascimento: "1955-11-19",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abdalla",
+                    obs: "Emissão: 08/08/2019",
+                    dataCadastro: "2026-08-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli158",
                     nome: "Romeu Cimini Junior",
                     email: "",
                     telefone: "",
@@ -5609,6 +5643,8 @@
             return merged;
         }
 
+        let lastKnownUpdate = null;
+
         function loadDataFromFirestore() {
             syncStatus = 'syncing';
             updateSyncBadge();
@@ -5627,6 +5663,7 @@
                         };
                         data = mergeInitialData(data);
                         data = normalizeAllData(data);
+                        lastKnownUpdate = remote.lastUpdate ? remote.lastUpdate.toMillis() : Date.now();
                         saveData();
                     } else {
                         const stored = localStorage.getItem('travelAgencyData');
@@ -5635,8 +5672,10 @@
                         } else {
                             data = JSON.parse(JSON.stringify(initialData));
                         }
+                        lastKnownUpdate = Date.now();
                         saveData();
                     }
+                    initialLoadComplete = true;
                     saveDataLocal();
                     renderAll();
                     syncStatus = 'connected';
@@ -5658,11 +5697,14 @@
                                 };
                                 data = mergeInitialData(data);
                                 data = normalizeAllData(data);
+                                lastKnownUpdate = remote.lastUpdate ? remote.lastUpdate.toMillis() : Date.now();
                                 saveData();
                             } else {
                                 data = JSON.parse(JSON.stringify(initialData));
+                                lastKnownUpdate = Date.now();
                                 saveData();
                             }
+                            initialLoadComplete = true;
                             saveDataLocal();
                             renderAll();
                             syncStatus = 'connected';
@@ -5679,8 +5721,15 @@
 
             db.collection('agencia').doc(DOC_ID).onSnapshot(doc => {
                 if (isSaving) return;
+                if (!initialLoadComplete) return;
                 if (doc.exists) {
                     const remote = doc.data();
+                    const remoteUpdate = remote.lastUpdate ? remote.lastUpdate.toMillis() : 0;
+                    if (lastKnownUpdate && remoteUpdate && remoteUpdate <= lastKnownUpdate) {
+                        syncStatus = 'connected';
+                        updateSyncBadge();
+                        return;
+                    }
                     const remoteData = {
                         clientes: remote.clientes || [],
                         bilhetes: remote.bilhetes || [],
@@ -5694,6 +5743,7 @@
                     const localStr = JSON.stringify(data);
                     if (remoteStr !== localStr) {
                         data = normalized;
+                        lastKnownUpdate = remoteUpdate;
                         saveDataLocal();
                         renderAll();
                     }
@@ -5757,6 +5807,7 @@
             updateSyncBadge();
             db.collection('agencia').doc(DOC_ID).set(snapshot).then(() => {
                 lastWriteCompleted = Date.now();
+                lastKnownUpdate = lastWriteCompleted;
                 if (myGeneration === saveGeneration) {
                     syncStatus = 'connected';
                     isSaving = false;
@@ -8424,6 +8475,67 @@
             'concluida': { label: 'Concluída', color: 'var(--success)', bg: '#e8f5e9' },
             'cancelada': { label: 'Cancelada', color: 'var(--gray-400)', bg: 'var(--gray-100)' }
         };
+
+        // Demandas vindas do app WhatsApp Multi (Segundo Cerebro)
+        let whatsappImportIniciado = false;
+        function initWhatsAppDemandasImport() {
+            if (!useFirestore || whatsappImportIniciado || !db) return;
+            whatsappImportIniciado = true;
+            try {
+                db.collection('whatsappDemandas').onSnapshot(snap => {
+                    if (!initialLoadComplete) return;
+                    const novas = [];
+                    snap.forEach(d => {
+                        const dem = d.data();
+                        if (dem.importada) return;
+                        if ((data.pendencias || []).some(p => p.id === dem.id)) return;
+                        novas.push(dem);
+                    });
+                    if (!novas.length) return;
+                    novas.forEach(dem => data.pendencias.push(criarPendenciaDeWhatsApp(dem)));
+                    saveData();
+                    setTimeout(() => {
+                        snap.forEach(d => {
+                            if (d.data().importada) return;
+                            d.ref.update({ importada: true }).catch(() => {});
+                        });
+                    }, 2000);
+                    showToast(`${novas.length} demanda(s) do WhatsApp importadas como Pendências!`, 'success');
+                }, err => console.warn('whatsappDemandas listener:', err));
+            } catch (e) {
+                console.warn('initWhatsAppDemandasImport falhou:', e);
+            }
+        }
+
+        function criarPendenciaDeWhatsApp(dem) {
+            let clienteId = '';
+            const alvoTel = String(dem.telefone || '').replace(/\D/g, '');
+            const nomeDem = String(dem.cliente || '').trim().toLowerCase();
+            if (alvoTel.length >= 8 && data.clientes) {
+                const porFone = data.clientes.find(c => String(c.telefone || '').replace(/\D/g, '').endsWith(alvoTel.slice(-8)));
+                if (porFone) clienteId = porFone.id;
+            }
+            if (!clienteId && nomeDem && data.clientes) {
+                const porNome = data.clientes.find(c => c.nome && c.nome.toLowerCase().includes(nomeDem));
+                if (porNome) clienteId = porNome.id;
+            }
+            const obsPartes = [];
+            if (dem.resumo) obsPartes.push('Resumo (IA): ' + dem.resumo);
+            if (dem.obs) obsPartes.push(dem.obs);
+            obsPartes.push('Origem: WhatsApp ' + (dem.conta || '') + ' · conversa "' + (dem.conversa || dem.cliente || '') + '"');
+            const priValidas = ['baixa', 'media', 'alta', 'urgente'];
+            return {
+                id: dem.id || ('wa-' + Date.now()),
+                titulo: dem.titulo || 'Demanda via WhatsApp',
+                categoria: pendenciaCategorias[dem.categoria] ? dem.categoria : 'solicitacao',
+                clienteId,
+                prioridade: priValidas.includes(dem.prioridade) ? dem.prioridade : 'media',
+                prazo: /^\d{4}-\d{2}-\d{2}$/.test(dem.prazo || '') ? dem.prazo : '',
+                status: 'aberta',
+                obs: obsPartes.join('\n'),
+                dataCadastro: new Date().toISOString()
+            };
+        }
 
         function renderPendenciasTable(filter = '') {
             const tbody = document.getElementById('pendenciasTable');
