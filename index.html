@@ -2191,6 +2191,56 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Cadastro de Aeroportos -->
+            <div class="content" style="margin-top: 24px;">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>✈ Cadastro de Aeroportos</h3>
+                        <p style="font-size: 12px; color: var(--gray-500);">Aeroportos adicionados aqui ficam disponíveis na conversão de cotações e no lookup automático de códigos IATA.</p>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-end;">
+                            <div class="form-group" style="flex: 0 0 120px;">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Código IATA *</label>
+                                <input type="text" id="aeroNovoCodigo" maxlength="3" placeholder="Ex: GRU" style="text-transform: uppercase; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 14px; font-weight: 600; outline: none; width: 100%;">
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 200px;">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Nome do Aeroporto *</label>
+                                <input type="text" id="aeroNovoNome" placeholder="Ex: SAO PAULO - GUARULHOS" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 14px; outline: none; width: 100%;">
+                            </div>
+                            <button class="btn btn-primary" onclick="addAeroportoCustom()" style="height: 38px;">+ Adicionar</button>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <div class="search-box" style="display: inline-block;">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar aeroporto cadastrado..." id="searchAeroportos" oninput="renderAeroportosCustom()" style="width: 300px;">
+                            </div>
+                            <span id="aeroportosCount" style="font-size: 12px; color: var(--gray-500); margin-left: 12px;"></span>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 100px;">Código IATA</th>
+                                        <th>Nome do Aeroporto</th>
+                                        <th style="width: 120px;">Status</th>
+                                        <th style="width: 80px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="aeroportosCustomTable">
+                                    <tr>
+                                        <td colspan="4" class="table-empty">
+                                            <div class="empty-icon">✈</div>
+                                            <p>Nenhum aeroporto customizado cadastrado ainda.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Cotação E-mail Page -->
@@ -3002,7 +3052,8 @@
             cotacoes: [],
             embarques: {},
             embarquesExcel: [],
-            pendencias: []
+            pendencias: [],
+            aeroportosCustom: []
         };
 
         let confirmCallback = null;
@@ -5945,6 +5996,98 @@
             renderSabreRef();
         }
 
+        // Aeroportos Customizados
+        function getAllAirports() {
+            const merged = Object.assign({}, AIRPORTS);
+            (data.aeroportosCustom || []).forEach(a => {
+                if (a.codigo && a.nome) merged[a.codigo.toUpperCase()] = a.nome.toUpperCase();
+            });
+            return merged;
+        }
+
+        function addAeroportoCustom() {
+            const codigoEl = document.getElementById('aeroNovoCodigo');
+            const nomeEl = document.getElementById('aeroNovoNome');
+            const codigo = (codigoEl.value || '').trim().toUpperCase();
+            const nome = (nomeEl.value || '').trim();
+
+            if (!codigo || codigo.length < 2) {
+                showToast('Informe um código IATA válido (mínimo 2 letras).', 'error');
+                codigoEl.focus();
+                return;
+            }
+            if (!nome) {
+                showToast('Informe o nome do aeroporto.', 'error');
+                nomeEl.focus();
+                return;
+            }
+
+            if (!data.aeroportosCustom) data.aeroportosCustom = [];
+
+            const exists = data.aeroportosCustom.find(a => a.codigo === codigo);
+            if (exists) {
+                exists.nome = nome.toUpperCase();
+                showToast('Aeroporto ' + codigo + ' atualizado!', 'success');
+            } else {
+                data.aeroportosCustom.push({ codigo: codigo, nome: nome.toUpperCase() });
+                showToast('Aeroporto ' + codigo + ' cadastrado com sucesso!', 'success');
+            }
+
+            saveData();
+            codigoEl.value = '';
+            nomeEl.value = '';
+            renderAeroportosCustom();
+        }
+
+        function removeAeroportoCustom(codigo) {
+            showConfirm('🗑️', 'Excluir aeroporto?', 'Remover o aeroporto ' + codigo + ' da lista customizada?', () => {
+                data.aeroportosCustom = (data.aeroportosCustom || []).filter(a => a.codigo !== codigo);
+                saveData();
+                renderAeroportosCustom();
+                showToast('Aeroporto ' + codigo + ' removido.', 'info');
+            });
+        }
+
+        function renderAeroportosCustom() {
+            const tbody = document.getElementById('aeroportosCustomTable');
+            const countEl = document.getElementById('aeroportosCount');
+            const searchEl = document.getElementById('searchAeroportos');
+            const term = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+            let aeroportos = (data.aeroportosCustom || []).slice();
+
+            if (term) {
+                aeroportos = aeroportos.filter(a =>
+                    a.codigo.toLowerCase().includes(term) ||
+                    a.nome.toLowerCase().includes(term)
+                );
+            }
+
+            aeroportos.sort((a, b) => a.codigo.localeCompare(b.codigo));
+
+            if (countEl) countEl.textContent = (data.aeroportosCustom || []).length + ' cadastrado(s)';
+
+            if (aeroportos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="table-empty"><div class="empty-icon">✈</div><p>' +
+                    (term ? 'Nenhum aeroporto encontrado para esta busca.' : 'Nenhum aeroporto customizado cadastrado ainda.') +
+                    '</p></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = aeroportos.map(a => {
+                const isBuiltin = !!AIRPORTS[a.codigo];
+                return '<tr>' +
+                    '<td><strong style="font-family: Consolas, monospace; font-size: 14px;">' + escapeHtml(a.codigo) + '</strong></td>' +
+                    '<td>' + escapeHtml(a.nome) + '</td>' +
+                    '<td>' + (isBuiltin
+                        ? '<span class="status-badge active"><span class="dot"></span>Padrão + Custom</span>'
+                        : '<span class="status-badge pending"><span class="dot"></span>Só Custom</span>') +
+                    '</td>' +
+                    '<td><button class="ct-del" onclick="removeAeroportoCustom(\'' + a.codigo + '\')" title="Excluir">🗑️</button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
         // Cotação E-mail (Sabre -> formato de e-mail)
         const AIRLINES = {
             EK: 'EMIRATES', TP: 'TAP AIR PORTUGAL', AR: 'AEROLINEAS ARGENTINAS',
@@ -6191,14 +6334,15 @@
             const month = ctGetMonth(date);
             const nextDay = !!seg.nextDate;
             const dur = (seg.dep && seg.arr && month != null) ? ctDuracao(seg.dep, seg.arr, seg.orig, seg.dest, month, nextDay) : '';
+            const allAirports = getAllAirports();
             return {
                 date: date,
                 semana: seg.dow || ctDiaSemana(date, seg.year),
                 cia: AIRLINES[seg.cia] || seg.cia || '',
                 voo: seg.flight || '',
                 classe: (seg.cls ? seg.cls + ' - ' + (CLASS_NAMES[seg.cls] || 'ECONOMICA') : ''),
-                origem: AIRPORTS[seg.orig] || seg.orig || '',
-                destino: AIRPORTS[seg.dest] || seg.dest || '',
+                origem: allAirports[seg.orig] || seg.orig || '',
+                destino: allAirports[seg.dest] || seg.dest || '',
                 saida: seg.dep || '',
                 chegada: seg.arr ? (nextDay ? seg.arr + ' (' + seg.nextDate + ')' : seg.arr) : '',
                 duracao: dur,
@@ -6778,6 +6922,7 @@
             if (pendenciaView === 'kanban') renderKanban();
             renderDashboardTables();
             renderSabreRef();
+            renderAeroportosCustom();
             updateBadges();
         }
 
