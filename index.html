@@ -2241,6 +2241,56 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Cadastro de Companhias Aéreas -->
+            <div class="content" style="margin-top: 24px;">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>✈ Cadastro de Companhias Aéreas</h3>
+                        <p style="font-size: 12px; color: var(--gray-500);">Companhias adicionadas aqui ficam disponíveis na conversão de cotações e no lookup automático de códigos da companhia.</p>
+                    </div>
+                    <div style="padding: 20px 24px;">
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-end;">
+                            <div class="form-group" style="flex: 0 0 120px;">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Código *</label>
+                                <input type="text" id="ciaNovoCodigo" maxlength="3" placeholder="Ex: G3" style="text-transform: uppercase; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 14px; font-weight: 600; outline: none; width: 100%;">
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 200px;">
+                                <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Nome da Companhia *</label>
+                                <input type="text" id="ciaNovoNome" placeholder="Ex: GOL LINHAS AEREAS" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 14px; outline: none; width: 100%;">
+                            </div>
+                            <button class="btn btn-primary" onclick="addCiaCustom()" style="height: 38px;">+ Adicionar</button>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <div class="search-box" style="display: inline-block;">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Buscar companhia cadastrada..." id="searchCias" oninput="renderCiasCustom()" style="width: 300px;">
+                            </div>
+                            <span id="ciasCount" style="font-size: 12px; color: var(--gray-500); margin-left: 12px;"></span>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 100px;">Código</th>
+                                        <th>Nome da Companhia</th>
+                                        <th style="width: 120px;">Status</th>
+                                        <th style="width: 80px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ciasCustomTable">
+                                    <tr>
+                                        <td colspan="4" class="table-empty">
+                                            <div class="empty-icon">✈</div>
+                                            <p>Nenhuma companhia aérea customizada cadastrada ainda.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Cotação E-mail Page -->
@@ -3053,7 +3103,8 @@
             embarques: {},
             embarquesExcel: [],
             pendencias: [],
-            aeroportosCustom: []
+            aeroportosCustom: [],
+            ciasCustom: []
         };
 
         let confirmCallback = null;
@@ -5668,6 +5719,8 @@
                     if (c.grupo) c.grupo = normalizeGrupo(c.grupo);
                 });
             }
+            if (!d.aeroportosCustom) d.aeroportosCustom = [];
+            if (!d.ciasCustom) d.ciasCustom = [];
             return d;
         }
 
@@ -5710,7 +5763,9 @@
                             cotacoes: remote.cotacoes || [],
                             embarques: remote.embarques || {},
                             embarquesExcel: remote.embarquesExcel || [],
-                            pendencias: remote.pendencias || []
+                            pendencias: remote.pendencias || [],
+                            aeroportosCustom: remote.aeroportosCustom || [],
+                            ciasCustom: remote.ciasCustom || []
                         };
                         data = mergeInitialData(data);
                         data = normalizeAllData(data);
@@ -5744,7 +5799,9 @@
                                     cotacoes: remote.cotacoes || [],
                                     embarques: remote.embarques || {},
                                     embarquesExcel: remote.embarquesExcel || [],
-                                    pendencias: remote.pendencias || []
+                                    pendencias: remote.pendencias || [],
+                                    aeroportosCustom: remote.aeroportosCustom || [],
+                                    ciasCustom: remote.ciasCustom || []
                                 };
                                 data = mergeInitialData(data);
                                 data = normalizeAllData(data);
@@ -5787,7 +5844,9 @@
                         cotacoes: remote.cotacoes || [],
                         embarques: remote.embarques || {},
                         embarquesExcel: remote.embarquesExcel || [],
-                        pendencias: remote.pendencias || []
+                        pendencias: remote.pendencias || [],
+                        aeroportosCustom: remote.aeroportosCustom || [],
+                        ciasCustom: remote.ciasCustom || []
                     };
                     const normalized = normalizeAllData(remoteData);
                     const remoteStr = JSON.stringify(normalized);
@@ -5853,6 +5912,8 @@
                 embarques: JSON.parse(JSON.stringify(data.embarques)),
                 embarquesExcel: JSON.parse(JSON.stringify(data.embarquesExcel || [])),
                 pendencias: JSON.parse(JSON.stringify(data.pendencias || [])),
+                aeroportosCustom: JSON.parse(JSON.stringify(data.aeroportosCustom || [])),
+                ciasCustom: JSON.parse(JSON.stringify(data.ciasCustom || [])),
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             };
             updateSyncBadge();
@@ -6084,6 +6145,98 @@
                         : '<span class="status-badge pending"><span class="dot"></span>Só Custom</span>') +
                     '</td>' +
                     '<td><button class="ct-del" onclick="removeAeroportoCustom(\'' + a.codigo + '\')" title="Excluir">🗑️</button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // Companhias Aéreas Customizadas
+        function getAllAirlines() {
+            const merged = Object.assign({}, AIRLINES);
+            (data.ciasCustom || []).forEach(c => {
+                if (c.codigo && c.nome) merged[c.codigo.toUpperCase()] = c.nome.toUpperCase();
+            });
+            return merged;
+        }
+
+        function addCiaCustom() {
+            const codigoEl = document.getElementById('ciaNovoCodigo');
+            const nomeEl = document.getElementById('ciaNovoNome');
+            const codigo = (codigoEl.value || '').trim().toUpperCase();
+            const nome = (nomeEl.value || '').trim();
+
+            if (!codigo || codigo.length < 2) {
+                showToast('Informe um código válido da companhia (mínimo 2 caracteres).', 'error');
+                codigoEl.focus();
+                return;
+            }
+            if (!nome) {
+                showToast('Informe o nome da companhia.', 'error');
+                nomeEl.focus();
+                return;
+            }
+
+            if (!data.ciasCustom) data.ciasCustom = [];
+
+            const exists = data.ciasCustom.find(c => c.codigo === codigo);
+            if (exists) {
+                exists.nome = nome.toUpperCase();
+                showToast('Companhia ' + codigo + ' atualizada!', 'success');
+            } else {
+                data.ciasCustom.push({ codigo: codigo, nome: nome.toUpperCase() });
+                showToast('Companhia ' + codigo + ' cadastrada com sucesso!', 'success');
+            }
+
+            saveData();
+            codigoEl.value = '';
+            nomeEl.value = '';
+            renderCiasCustom();
+        }
+
+        function removeCiaCustom(codigo) {
+            showConfirm('🗑️', 'Excluir companhia?', 'Remover a companhia ' + codigo + ' da lista customizada?', () => {
+                data.ciasCustom = (data.ciasCustom || []).filter(c => c.codigo !== codigo);
+                saveData();
+                renderCiasCustom();
+                showToast('Companhia ' + codigo + ' removida.', 'info');
+            });
+        }
+
+        function renderCiasCustom() {
+            const tbody = document.getElementById('ciasCustomTable');
+            const countEl = document.getElementById('ciasCount');
+            const searchEl = document.getElementById('searchCias');
+            const term = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+            let cias = (data.ciasCustom || []).slice();
+
+            if (term) {
+                cias = cias.filter(c =>
+                    c.codigo.toLowerCase().includes(term) ||
+                    c.nome.toLowerCase().includes(term)
+                );
+            }
+
+            cias.sort((a, b) => a.codigo.localeCompare(b.codigo));
+
+            if (countEl) countEl.textContent = (data.ciasCustom || []).length + ' cadastrada(s)';
+
+            if (cias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="table-empty"><div class="empty-icon">✈</div><p>' +
+                    (term ? 'Nenhuma companhia encontrada para esta busca.' : 'Nenhuma companhia aérea customizada cadastrada ainda.') +
+                    '</p></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = cias.map(c => {
+                const isBuiltin = !!AIRLINES[c.codigo];
+                return '<tr>' +
+                    '<td><strong style="font-family: Consolas, monospace; font-size: 14px;">' + escapeHtml(c.codigo) + '</strong></td>' +
+                    '<td>' + escapeHtml(c.nome) + '</td>' +
+                    '<td>' + (isBuiltin
+                        ? '<span class="status-badge active"><span class="dot"></span>Padrão + Custom</span>'
+                        : '<span class="status-badge pending"><span class="dot"></span>Só Custom</span>') +
+                    '</td>' +
+                    '<td><button class="ct-del" onclick="removeCiaCustom(\'' + c.codigo + '\')" title="Excluir">🗑️</button></td>' +
                     '</tr>';
             }).join('');
         }
@@ -6335,10 +6488,11 @@
             const nextDay = !!seg.nextDate;
             const dur = (seg.dep && seg.arr && month != null) ? ctDuracao(seg.dep, seg.arr, seg.orig, seg.dest, month, nextDay) : '';
             const allAirports = getAllAirports();
+            const allAirlines = getAllAirlines();
             return {
                 date: date,
                 semana: seg.dow || ctDiaSemana(date, seg.year),
-                cia: AIRLINES[seg.cia] || seg.cia || '',
+                cia: allAirlines[seg.cia] || seg.cia || '',
                 voo: seg.flight || '',
                 classe: (seg.cls ? seg.cls + ' - ' + (CLASS_NAMES[seg.cls] || 'ECONOMICA') : ''),
                 origem: allAirports[seg.orig] || seg.orig || '',
@@ -6923,6 +7077,7 @@
             renderDashboardTables();
             renderSabreRef();
             renderAeroportosCustom();
+            renderCiasCustom();
             updateBadges();
         }
 
