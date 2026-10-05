@@ -2352,7 +2352,7 @@
                     </div>
                     <div class="quick-paste-options" style="padding: 20px 24px; flex-wrap: wrap;">
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tipo</label>
+                            <label id="ctTarTipoLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tipo</label>
                             <select id="ctTarTipo" onchange="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
                                 <option value="econômica">econômica</option>
                                 <option value="executiva">executiva</option>
@@ -2360,27 +2360,34 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tarifa (USD)</label>
+                            <label id="ctTarMoedaLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Moeda da Tarifa</label>
+                            <select id="ctTarMoeda" onchange="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; background: white;">
+                                <option value="USD">USD — dólar</option>
+                                <option value="EUR">EUR — euro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label id="ctTarValorLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Tarifa (USD)</label>
                             <input type="text" id="ctTarValor" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Taxas (USD)</label>
+                            <label id="ctTarTaxasLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Taxas (USD)</label>
                             <input type="text" id="ctTarTaxas" placeholder="0,00" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (USD) — calculado</label>
+                            <label id="ctTarTotalLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (USD) — calculado</label>
                             <input type="text" id="ctTarTotal" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Câmbio (USD→BRL)</label>
+                            <label id="ctTarCambioLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Câmbio (USD→BRL)</label>
                             <input type="text" id="ctTarCambio" placeholder="5,20" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (BRL) — calculado</label>
+                            <label id="ctTarTotalBRLLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (BRL) — calculado</label>
                             <input type="text" id="ctTarTotalBRL" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
                         </div>
                         <div class="form-group">
-                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
+                            <label id="ctTarBagLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Bagagem</label>
                             <input type="text" id="ctTarBag" value="BAG 1 PÇ 23KG" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 170px;">
                         </div>
                         <div class="form-group">
@@ -2389,6 +2396,21 @@
                                 <input type="checkbox" id="ctTarOcultarBRL" onchange="renderCotacaoTarifa()" style="width:16px;height:16px;accent-color:var(--success);cursor:pointer;">
                                 Ocultar (cliente sem a conversão)
                             </label>
+                        </div>
+                        <div class="form-group" id="ctTarEURCheckGroup">
+                            <label style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Conversão em Euro</label>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-700);cursor:pointer;padding:8px 0;">
+                                <input type="checkbox" id="ctTarEUR" onchange="renderCotacaoTarifa()" style="width:16px;height:16px;accent-color:var(--success);cursor:pointer;">
+                                Incluir valores em EUR
+                            </label>
+                        </div>
+                        <div class="form-group ct-eur-field" id="ctTarCambioEURGroup" style="display:none;">
+                            <label id="ctTarCambioEURLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Câmbio (USD→EUR)</label>
+                            <input type="text" id="ctTarCambioEUR" placeholder="0,92" oninput="renderCotacaoTarifa()" style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px;">
+                        </div>
+                        <div class="form-group ct-eur-field" id="ctTarTotalEURGroup" style="display:none;">
+                            <label id="ctTarTotalEURLabel" style="font-size:12px;color:var(--gray-700);display:block;margin-bottom:4px;">Total (EUR) — calculado</label>
+                            <input type="text" id="ctTarTotalEUR" placeholder="0,00" readonly style="padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; outline: none; width: 130px; background: #f1f3f4;">
                         </div>
                     </div>
                 </div>
@@ -2475,6 +2497,7 @@
                             <button class="btn btn-outline" onclick="clearCart()">🗑 Limpar Carrinho</button>
                             <button class="btn btn-outline" onclick="openCartFullscreen()">👁 Visualizar E-mail</button>
                             <button class="btn btn-success" onclick="copiarCart()">📋 Copiar Selecionadas</button>
+                            <button class="btn btn-primary" onclick="abrirSalvarCarrinhoSelecionadas()">💾 Salvar nas Cotações</button>
                         </div>
                     </div>
                     <div style="padding: 20px 24px;">
@@ -2787,6 +2810,87 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeCotacaoModal()">Cancelar</button>
                 <button class="btn btn-primary" onclick="saveCotacao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salvar Carrinho nas Cotações Modal -->
+    <div class="modal-overlay" id="salvarCarrinhoModal">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>Salvar Cotação do Carrinho</h3>
+                <button class="modal-close" onclick="closeSalvarCarrinhoModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="ct-tarifa-line" id="ctSaveResumo" style="margin-bottom: 16px;"></div>
+                <form id="ctSaveForm" class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="ctSaveCliente">Cliente Cadastrado (opcional)</label>
+                        <select id="ctSaveCliente">
+                            <option value="">Sem cliente cadastrado</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="ctSaveClienteNome">Nome do Cliente *</label>
+                        <input type="text" id="ctSaveClienteNome" required placeholder="Informe o nome do cliente para acompanhamento">
+                    </div>
+                    <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="ctSaveNovoCliente" style="width: auto; margin: 0;">
+                        <label for="ctSaveNovoCliente" style="margin: 0; font-size: 13px; color: var(--gray-700);">Cadastrar este cliente no CRM de Clientes</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveOrigem">Origem</label>
+                        <input type="text" id="ctSaveOrigem" placeholder="Ex.: São Paulo, Brasil">
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveDestino">Destino *</label>
+                        <input type="text" id="ctSaveDestino" required placeholder="Ex.: Dubai">
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveDataIda">Data de Ida *</label>
+                        <input type="date" id="ctSaveDataIda" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveDataVolta">Data de Volta</label>
+                        <input type="date" id="ctSaveDataVolta">
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSavePax">Nº de Passageiros</label>
+                        <input type="number" id="ctSavePax" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveTipo">Tipo de Viagem</label>
+                        <select id="ctSaveTipo">
+                            <option value="lazer">Lazer</option>
+                            <option value="business">Business</option>
+                            <option value="lua-de-mel">Lua de Mel</option>
+                            <option value="familia">Família</option>
+                            <option value="grupo">Grupo</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveValor">Valor Estimado (R$)</label>
+                        <input type="text" id="ctSaveValor" inputmode="decimal" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label for="ctSaveStatus">Status</label>
+                        <select id="ctSaveStatus">
+                            <option value="pendente">Pendente</option>
+                            <option value="enviada" selected>Enviada</option>
+                            <option value="emitida">Emitida</option>
+                            <option value="cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="ctSaveObs">Observações</label>
+                        <textarea id="ctSaveObs" placeholder="Preferências do cliente, prazo de resposta, próximo follow-up..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeSalvarCarrinhoModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarCarrinhoEmCotacoes()">💾 Salvar nas Cotações</button>
             </div>
         </div>
     </div>
@@ -4072,7 +4176,7 @@
                     nome: "Gabriel Niespodzinski",
                     email: "",
                     telefone: "",
-                    cpf: "978.004.990-80",
+                    cpf: "097.800.499-08",
                     passaporte: "",
                     passaporteValidade: "",
                     nascimento: "2005-03-18",
@@ -4088,7 +4192,7 @@
                     nome: "Guilherme Reis Tavares Barbieri",
                     email: "",
                     telefone: "",
-                    cpf: "385.169.518-61",
+                    cpf: "385.169.518-63",
                     passaporte: "",
                     passaporteValidade: "",
                     nascimento: "1997-09-03",
@@ -4245,18 +4349,18 @@
                 },
                 {
                     id: "cli069",
-                    nome: "Tatiana Andreoli",
+                    nome: "Tatiana Sartori Andreoli",
                     email: "",
                     telefone: "",
                     cpf: "39886297824",
-                    passaporte: "",
-                    passaporteValidade: "",
+                    passaporte: "GA869255",
+                    passaporteValidade: "2029-11-20",
                     nascimento: "1990-05-03",
                     endereco: "",
                     status: "ativo",
                     origem: "",
                     grupo: "Albittex",
-                    obs: "",
+                    obs: "Nome no passaporte: TATIANA SARTORI ANDREOLI (cadastrado antes como Tatiana Andreoli) | Passaporte emitido em 21/11/2019 | Filiação: Almir Andreoli (cli070) e Elizabeth Suely Sartori Andreoli",
                     dataCadastro: "2024-01-01T00:00:00.000Z"
                 },
                 {
@@ -5586,6 +5690,278 @@
                     grupo: "Pilotos Karina",
                     obs: "",
                     dataCadastro: "2026-08-19T00:00:00.000Z"
+                },
+                {
+                    id: "cli160",
+                    nome: "Daniela Martoni",
+                    email: "",
+                    telefone: "",
+                    cpf: "309.479.318-56",
+                    passaporte: "FS236763",
+                    passaporteValidade: "2027-01-03",
+                    nascimento: "1983-12-11",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "Passaporte emitido em 04/01/2017 | Visto EUA N3340341 - emissão 25/07/2023 - validade 15/07/2028",
+                    dataCadastro: "2026-09-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli161",
+                    nome: "Vanessa Aparecida Casachi",
+                    email: "",
+                    telefone: "",
+                    cpf: "309.096.048-60",
+                    passaporte: "NFT631941",
+                    passaporteValidade: "2027-07-11",
+                    nascimento: "1983-07-07",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "Passaporte emitido em 12/07/2017 | Visto EUA T4036665 - emissão 10/04/2023 - validade 04/04/2033",
+                    dataCadastro: "2026-09-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli162",
+                    nome: "Jorge Morikawa",
+                    email: "",
+                    telefone: "(11)99982-2921",
+                    cpf: "089.257.858-03",
+                    passaporte: "GM158216",
+                    passaporteValidade: "",
+                    nascimento: "1967-07-07",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "",
+                    obs: "RG: 11.595.419-3",
+                    dataCadastro: "2026-09-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli163",
+                    nome: "Gabriel Zurstrassen Amorim dos Reis",
+                    email: "",
+                    telefone: "",
+                    cpf: "587.800.348-10",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "2012-08-15",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Família Abel Reis",
+                    obs: "",
+                    dataCadastro: "2026-09-14T00:00:00.000Z"
+                },
+                {
+                    id: "cli164",
+                    nome: "Euclesio Bragança Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "364.287.607-20",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1950-03-07",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli165",
+                    nome: "Tânia Bragança",
+                    email: "",
+                    telefone: "",
+                    cpf: "317.457.337-87",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1954-03-17",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli166",
+                    nome: "Filipe Figueiredo Bragança Silva",
+                    email: "",
+                    telefone: "",
+                    cpf: "215.944.748-00",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1983-03-08",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli167",
+                    nome: "Aline Almeida Cacciari de Bragança",
+                    email: "",
+                    telefone: "",
+                    cpf: "453.539.788-03",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "1995-07-08",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli168",
+                    nome: "Rafael Behar Buffara",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli169",
+                    nome: "Elizabeth Buffara",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "",
+                    passaporteValidade: "",
+                    nascimento: "",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Michelli integral medica",
+                    obs: "",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli170",
+                    nome: "Luís Manuel Ferreira Veiga Martins",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "CE333667",
+                    passaporteValidade: "2029-02-14",
+                    nascimento: "1966-01-03",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Tangho",
+                    obs: "Nacionalidade: Portugal",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli171",
+                    nome: "Luiz Felipe Felix de Oliveira",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "GE729579",
+                    passaporteValidade: "2027-07-12",
+                    nascimento: "2004-10-12",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Suno",
+                    obs: "Passaporte emitido em 13/07/2022 | Filiação: Antonio Marcos de Oliveira e Ladjane Felix da Silva",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli172",
+                    nome: "Luciana Nascimento Fairbanks",
+                    email: "",
+                    telefone: "",
+                    cpf: "113.250.318-36",
+                    passaporte: "GN834160",
+                    passaporteValidade: "2036-03-09",
+                    nascimento: "1960-05-04",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Fairbanks",
+                    obs: "Passaporte emitido em 10/03/2026 | Passaporte anterior FR217815 venceu em 09/08/2026 | Filiação: Maria Isabel Nascimento Fairbanks e Sergio Antonio Barbosa Fairbanks",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli173",
+                    nome: "Bruno Tuma Fairbanks",
+                    email: "",
+                    telefone: "",
+                    cpf: "487.885.488-05",
+                    passaporte: "GN821072",
+                    passaporteValidade: "2036-03-08",
+                    nascimento: "1997-12-11",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Fairbanks",
+                    obs: "Filho de Luciana Nascimento Fairbanks (cli172) | Passaporte emitido em 09/03/2026 | Filiação: Rubens Rezkalla Tuma e Luciana Nascimento Fairbanks",
+                    dataCadastro: "2026-09-29T00:00:00.000Z"
+                },
+                {
+                    id: "cli174",
+                    nome: "Roberta Maria Nascimento Barbosa",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "GB613603",
+                    passaporteValidade: "2030-03-02",
+                    nascimento: "1959-12-08",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Fairbanks",
+                    obs: "Passaporte emitido em 03/03/2020 | Filiação: Geraldo Fairbanks Barbosa e Maria Aparecida Nascimento Barbosa",
+                    dataCadastro: "2026-09-30T00:00:00.000Z"
+                },
+                {
+                    id: "cli175",
+                    nome: "Rejane Lassandro Cintrao",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                    passaporte: "GB467290",
+                    passaporteValidade: "2030-02-10",
+                    nascimento: "1956-01-06",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Fairbanks",
+                    obs: "Passaporte emitido em 11/02/2020 | Filiação: Esmeralda Lassandro Cintrao e Joao de Deus Cintrao",
+                    dataCadastro: "2026-09-30T00:00:00.000Z"
+                },
+                {
+                    id: "cli176",
+                    nome: "Afonso Muchon Simoes",
+                    email: "",
+                    telefone: "",
+                    cpf: "365.667.288-13",
+                    passaporte: "GP207380",
+                    passaporteValidade: "2036-08-23",
+                    nascimento: "1989-02-16",
+                    endereco: "",
+                    status: "ativo",
+                    origem: "",
+                    grupo: "Albittex",
+                    obs: "Passaporte emitido em 24/08/2026 | Filiação: Carlos Alberto da Silva Simoes e Anita do Carmo Nogueira Muchon Simoes",
+                    dataCadastro: "2026-09-30T00:00:00.000Z"
                 }
             ],
             bilhetes: [
@@ -5695,7 +6071,7 @@
                 const storedVersion = localStorage.getItem('travelAgencyDataVersion');
                 
                 if (stored && storedVersion === DATA_VERSION) {
-                    data = mergeInitialData(JSON.parse(stored));
+                    data = applySeedPatches(mergeInitialData(JSON.parse(stored)));
                     saveDataLocal();
                 } else {
                     data = JSON.parse(JSON.stringify(initialData));
@@ -5710,7 +6086,7 @@
 
         function normalizeGrupo(nome) {
             if (!nome || !nome.trim()) return '';
-            return nome.trim().replace(/\s+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return nome.trim().replace(/\s+/g, ' ');
         }
 
         function normalizeAllData(d) {
@@ -5747,6 +6123,44 @@
             return merged;
         }
 
+        // Correcoes pontuais para fichas que JA existem no Firestore.
+        // O seed (initialData) so acrescenta clientes ausentes, entao editar o
+        // seed nao altera quem ja esta cadastrado -- por isso estas correcoes
+        // sao aplicadas explicitamente depois do merge.
+        // Cada campo so e alterado se o valor atual for igual ao valor antigo
+        // esperado ('de'). Isso torna a operacao idempotente, evita sobrescrever
+        // uma edicao mais recente e garante que a correcao valha uma unica vez.
+        const SEED_FIELD_PATCHES = [
+            { id: 'cli058', campos: [
+                { campo: 'cpf', de: '978.004.990-80', para: '097.800.499-08' }
+            ]},
+            { id: 'cli059', campos: [
+                { campo: 'cpf', de: '385.169.518-61', para: '385.169.518-63' }
+            ]},
+            { id: 'cli069', campos: [
+                { campo: 'nome', de: 'Tatiana Andreoli', para: 'Tatiana Sartori Andreoli' },
+                { campo: 'passaporte', de: '', para: 'GA869255' },
+                { campo: 'passaporteValidade', de: '', para: '2029-11-20' },
+                { campo: 'obs', de: '', para: 'Nome no passaporte: TATIANA SARTORI ANDREOLI (cadastrado antes como Tatiana Andreoli) | Passaporte emitido em 21/11/2019 | Filiação: Almir Andreoli (cli070) e Elizabeth Suely Sartori Andreoli' }
+            ]}
+        ];
+
+        function applySeedPatches(d) {
+            if (!d || !Array.isArray(d.clientes)) return d;
+            SEED_FIELD_PATCHES.forEach(p => {
+                const c = d.clientes.find(x => x.id === p.id);
+                if (!c) return;
+                p.campos.forEach(f => {
+                    const atual = c[f.campo] == null ? '' : c[f.campo];
+                    if (String(atual) === String(f.de)) {
+                        c[f.campo] = f.para;
+                        console.info('[seed-patch] ' + p.id + '.' + f.campo + ': "' + f.de + '" -> "' + f.para + '"');
+                    }
+                });
+            });
+            return d;
+        }
+
         let lastKnownUpdate = null;
 
         function loadDataFromFirestore() {
@@ -5767,7 +6181,7 @@
                             aeroportosCustom: remote.aeroportosCustom || [],
                             ciasCustom: remote.ciasCustom || []
                         };
-                        data = mergeInitialData(data);
+                        data = applySeedPatches(mergeInitialData(data));
                         data = normalizeAllData(data);
                         lastKnownUpdate = remote.lastUpdate ? remote.lastUpdate.toMillis() : Date.now();
                         saveData();
@@ -5803,9 +6217,9 @@
                                     aeroportosCustom: remote.aeroportosCustom || [],
                                     ciasCustom: remote.ciasCustom || []
                                 };
-                                data = mergeInitialData(data);
-                                data = normalizeAllData(data);
-                                lastKnownUpdate = remote.lastUpdate ? remote.lastUpdate.toMillis() : Date.now();
+                            data = applySeedPatches(mergeInitialData(data));
+                            data = normalizeAllData(data);
+                            lastKnownUpdate = remote.lastUpdate ? remote.lastUpdate.toMillis() : Date.now();
                                 saveData();
                             } else {
                                 data = JSON.parse(JSON.stringify(initialData));
@@ -5848,7 +6262,7 @@
                         aeroportosCustom: remote.aeroportosCustom || [],
                         ciasCustom: remote.ciasCustom || []
                     };
-                    const normalized = normalizeAllData(remoteData);
+                    const normalized = applySeedPatches(normalizeAllData(remoteData));
                     const remoteStr = JSON.stringify(normalized);
                     const localStr = JSON.stringify(data);
                     if (remoteStr !== localStr) {
@@ -5996,6 +6410,11 @@
             { cat: 'Emissão', cmd: 'SSR FOID', desc: 'Insere documento de identidade obrigatório (SSR FOID).', ex: 'SRFOIDCA HK1-PASSAPORTE/AB123456' },
             { cat: 'Emissão', cmd: 'SSR INFT', desc: 'Insere data de nascimento do bebê (SSR INFT).', ex: 'SRINFTCA HK1-DDMON/AAA', obs: 'Nome do bebê no campo nominal deve ser idêntico ao do INFT.' },
             { cat: 'Emissão', cmd: 'SSR DOCS', desc: 'Insere os dados do documento/passaporte dos passageiros.', ex: 'SRDOCSCA HK1-P/R/WT/123456789/BR/15JAN70/M/28FEB30/SILVA/JOAO' },
+            { cat: 'Emissão', cmd: 'SSR DOCA', desc: 'Insere o endereço de residência ou destino do passageiro (obrigatório para voos aos EUA).', ex: 'SRDOCACA HK1-D/USA/301 PARK AVENUE/NEW YORK/NY/10022/P1/S3', obs: 'D=Destino, R=Residência. Formato: 3DOCA(seg)/tipo/end/país/rua/cidade/estado/cep/I-x.x' },
+            { cat: 'Emissão', cmd: 'SSR DOCO', desc: 'Insere dados de visto, número Known Traveler (Global Entry) ou Redress do passageiro.', ex: 'SRDOCOPA HK1-V/USA/B2/12345678/USA/15JAN20/USA/I/P1/S3', obs: 'V=Visto, K=Known Traveler (Global Entry). Formato: 3DOCO(seg)/local nasc/tipo doc/nº doc/pais emissão/data emissão/país aplicável/I-x.x' },
+            { cat: 'Emissão', cmd: 'SSR DOCA (endereço)', desc: 'Endereço de destino nos EUA — obrigatório para voos com destino aos Estados Unidos.', ex: 'SRDOCACA HK1-D/USA/123 MAIN ST/MIAMI/FL/33101/P1', obs: 'Preencha: D + país + rua + cidade + estado + CEP. Sempre finalizar com I-x.x (nome do passageiro).' },
+            { cat: 'Emissão', cmd: 'SSR DOCO (visto EUA)', desc: 'Número e tipo de visto americano (B1/B2, etc.) do passageiro.', ex: 'SRDOCOPA HK1-V/USA/B2/12345678/USA/15JAN20/USA/I/P1', obs: 'V=Visto. Campos: local nasc, tipo (B1/B2), nº visto, país emissão, data emissão, país aplicável (USA).' },
+            { cat: 'Emissão', cmd: 'SSR DOCO (Global Entry)', desc: 'Insere o número Known Traveler (Global Entry, TSA PreCheck, NEXUS, SENTRI) do passageiro.', ex: '3DOCO//K/159785748///US-2.1', obs: 'K=Known Traveler Number. Formato: 3DOCO//K/nº///país-2.(passageiro). Global Entry é um Trusted Traveler Number do DHS.' },
             { cat: 'Relatórios', cmd: '*PAC', desc: 'Exibe os dados contábeis da agência (PCC).', ex: '*PAC' },
             { cat: 'Relatórios', cmd: 'DQB*', desc: 'Exibe o relatório diário de emissões.', ex: 'DQB*' },
             { cat: 'Relatórios', cmd: 'WETP*', desc: 'Exibe o perfil de emissão da companhia aérea.', ex: 'WETP*' },
@@ -6645,28 +7064,57 @@
                 showToast('Nenhum trecho reconhecido. Cole do itinerário do PNR (após ER/IR no Sabre ou RT/SM no Amadeus).', 'error');
             }
         }
+        function ctTarMoedaBase() {
+            const el = document.getElementById('ctTarMoeda');
+            return el && el.value === 'EUR' ? 'EUR' : 'USD';
+        }
+        function ctTarLabel(id, txt) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = txt;
+        }
         function renderCotacaoTarifa() {
             const tipo = document.getElementById('ctTarTipo').value;
+            const moeda = ctTarMoedaBase();
             const val = document.getElementById('ctTarValor').value;
             const taxas = document.getElementById('ctTarTaxas').value;
             const cambio = document.getElementById('ctTarCambio').value;
             const bag = document.getElementById('ctTarBag').value;
             const ocultarEl = document.getElementById('ctTarOcultarBRL');
             const ocultarBRL = !!(ocultarEl && ocultarEl.checked);
+            const eurEl = document.getElementById('ctTarEUR');
+            const eurCheckGroup = document.getElementById('ctTarEURCheckGroup');
+            // A conversao em EUR so faz sentido quando a tarifa-base esta em USD
+            const usarEUR = moeda === 'USD' && !!(eurEl && eurEl.checked);
+            if (eurCheckGroup) eurCheckGroup.style.display = moeda === 'EUR' ? 'none' : '';
+            const cambioEUREl = document.getElementById('ctTarCambioEUR');
+            const cambioEUR = cambioEUREl ? cambioEUREl.value : '';
             const valN = ctParseNum(val);
             const taxasN = ctParseNum(taxas);
             const totalN = valN + taxasN;
             const cambioN = ctParseCambio(cambio);
             const brlN = totalN * cambioN;
+            const cambioEURN = ctParseCambio(cambioEUR);
+            const eurN = totalN * cambioEURN;
             const hasVal = String(val).trim() !== '' || String(taxas).trim() !== '';
             const totalEl = document.getElementById('ctTarTotal');
             const brlEl = document.getElementById('ctTarTotalBRL');
+            const eurTotalEl = document.getElementById('ctTarTotalEUR');
             const brlGroup = brlEl ? brlEl.closest('.form-group') : null;
             if (brlGroup) brlGroup.style.display = ocultarBRL ? 'none' : '';
+            document.querySelectorAll('#page-cotacao-sabre .ct-eur-field').forEach(function(g) {
+                g.style.display = usarEUR ? '' : 'none';
+            });
+            ctTarLabel('ctTarValorLabel', 'Tarifa (' + moeda + ')');
+            ctTarLabel('ctTarTaxasLabel', 'Taxas (' + moeda + ')');
+            ctTarLabel('ctTarTotalLabel', 'Total (' + moeda + ') — calculado');
+            ctTarLabel('ctTarCambioLabel', 'Câmbio (' + moeda + '→BRL)');
+            const cambioInput = document.getElementById('ctTarCambio');
+            if (cambioInput) cambioInput.placeholder = moeda === 'EUR' ? '6,20' : '5,20';
             const fmtNum = function(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
             if (totalEl) totalEl.value = hasVal ? fmtNum(totalN) : '';
             if (brlEl) brlEl.value = hasVal && cambioN > 0 ? fmtNum(brlN) : '';
-            ctLastTarifaLine = 'Tarifa ' + tipo + '.....USD ' + ctFmtCurrency(hasVal ? val : '') + ' + USD ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total USD ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + (ocultarBRL ? '' : ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX')) + ' (' + bag + ')';
+            if (eurTotalEl) eurTotalEl.value = usarEUR && hasVal && cambioEURN > 0 ? fmtNum(eurN) : '';
+            ctLastTarifaLine = 'Tarifa ' + tipo + '.....' + moeda + ' ' + ctFmtCurrency(hasVal ? val : '') + ' + ' + moeda + ' ' + ctFmtCurrency(hasVal ? taxas : '') + ' taxas = Total ' + moeda + ' ' + (hasVal ? fmtNum(totalN) : 'XXX,XX') + (ocultarBRL ? '' : ' /BRL ' + (hasVal && cambioN > 0 ? fmtNum(brlN) : 'XXX,XX')) + (usarEUR ? ' /EUR ' + (hasVal && cambioEURN > 0 ? fmtNum(eurN) : 'XXX,XX') : '') + ' (' + bag + ')';
             const el = document.getElementById('ctTarifaPreview');
             if (el) el.innerHTML = '<div class="ct-tarifa-line"><strong>Linha da tarifa (colada no e-mail):</strong><br>' + ctEsc(ctLastTarifaLine) + '</div>';
         }
@@ -6888,11 +7336,15 @@
                 rows: ctGetRows(),
                 tarifa: {
                     tipo: document.getElementById('ctTarTipo').value,
+                    moeda: ctTarMoedaBase(),
                     valor: document.getElementById('ctTarValor').value,
                     taxas: document.getElementById('ctTarTaxas').value,
                     total: document.getElementById('ctTarTotal').value,
                     cambio: document.getElementById('ctTarCambio').value,
                     totalBRL: document.getElementById('ctTarTotalBRL').value,
+                    usarEUR: !!(document.getElementById('ctTarEUR') && document.getElementById('ctTarEUR').checked),
+                    cambioEUR: document.getElementById('ctTarCambioEUR') ? document.getElementById('ctTarCambioEUR').value : '',
+                    totalEUR: document.getElementById('ctTarTotalEUR') ? document.getElementById('ctTarTotalEUR').value : '',
                     bag: document.getElementById('ctTarBag').value,
                     ocultarBRL: !!(document.getElementById('ctTarOcultarBRL') && document.getElementById('ctTarOcultarBRL').checked),
                     line: ctLastTarifaLine
@@ -6912,19 +7364,26 @@
                 return;
             }
             el.innerHTML = cart.map(function(it, i) {
-                const usd = it.tarifa.total || '';
+                const moeda = it.tarifa.moeda || 'USD';
+                const base = it.tarifa.total || '';
                 const brl = it.tarifa.totalBRL || '';
-                const preco = (usd ? 'USD ' + usd : '') + (brl ? '<br>BRL ' + brl : '');
+                const eur = it.tarifa.totalEUR || '';
+                const preco = (base ? moeda + ' ' + base : '') + (brl ? '<br>BRL ' + brl : '') + (eur ? '<br>EUR ' + eur : '');
+                const salvo = !!it.savedCotacaoId;
                 return '<div class="cart-item">' +
                     '<div class="cart-item-check"><input type="checkbox" class="cart-sel" data-i="' + i + '" ' + (it.checked === false ? '' : 'checked') + ' onchange="cartSel(this)"></div>' +
                     '<div class="cart-item-info">' +
                         '<div class="cart-item-title">🛒 ' + ctEsc(it.nome) + '</div>' +
-                        '<div class="cart-item-meta">' + it.rows.length + ' trecho(s) · linha de tarifa ' + (it.tarifa.line ? 'incluída' : 'não preenchida') + '</div>' +
+                        '<div class="cart-item-meta">' + it.rows.length + ' trecho(s) · linha de tarifa ' + (it.tarifa.line ? 'incluída' : 'não preenchida') +
+                            (salvo ? ' · <span style="color: var(--success); font-weight: 500;">✅ salva em Cotações</span>' : '') + '</div>' +
                     '</div>' +
                     (preco ? '<div class="cart-item-price">' + preco + '</div>' : '') +
                     '<div class="cart-item-actions">' +
                         '<button class="btn btn-sm btn-outline" onclick="toggleCartDetail(' + i + ')">👁 Ver/Editar</button>' +
                         '<button class="btn btn-sm btn-outline" onclick="editCart(' + i + ')">✏️ Editar</button>' +
+                        (salvo
+                            ? '<button class="btn btn-sm btn-outline" title="Ver cotação salva" onclick="viewCotacaoEnviada(\'' + it.savedCotacaoId + '\')">📎</button>'
+                            : '<button class="btn btn-sm btn-outline" title="Salvar nas Cotações" onclick="abrirSalvarCarrinho([' + i + '])">💾</button>') +
                         '<button class="ct-del" onclick="removeCart(' + i + ')" title="Remover">✕</button>' +
                     '</div>' +
                 '</div>' +
@@ -6996,12 +7455,16 @@
             cotacaoRows = it.rows.map(function(r) { return Object.assign({}, r); });
             renderCotacaoTable();
             if (document.getElementById('ctTarTipo')) document.getElementById('ctTarTipo').value = it.tarifa.tipo || 'econômica';
+            if (document.getElementById('ctTarMoeda')) document.getElementById('ctTarMoeda').value = it.tarifa.moeda || 'USD';
             if (document.getElementById('ctTarValor')) document.getElementById('ctTarValor').value = it.tarifa.valor || '';
             if (document.getElementById('ctTarTaxas')) document.getElementById('ctTarTaxas').value = it.tarifa.taxas || '';
             if (document.getElementById('ctTarCambio')) document.getElementById('ctTarCambio').value = it.tarifa.cambio || '';
+            if (document.getElementById('ctTarCambioEUR')) document.getElementById('ctTarCambioEUR').value = it.tarifa.cambioEUR || '';
             if (document.getElementById('ctTarBag')) document.getElementById('ctTarBag').value = it.tarifa.bag || 'BAG 1 PÇ 23KG';
             const ocultarEl = document.getElementById('ctTarOcultarBRL');
             if (ocultarEl) ocultarEl.checked = !!it.tarifa.ocultarBRL;
+            const usarEUREl = document.getElementById('ctTarEUR');
+            if (usarEUREl) usarEUREl.checked = !!it.tarifa.usarEUR;
             renderCotacaoTarifa();
             window.scrollTo(0, 0);
             showToast('Cotação "' + it.nome + '" carregada para edição. Ajuste e adicione novamente se quiser.', 'info');
@@ -7039,6 +7502,151 @@
             if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
             const ok = await ctCopy(buildCartHtml(sel), buildCartText(sel));
             showToast(ok ? 'Cotações copiadas! Cole no e-mail (Ctrl+V).' : 'Não foi possível copiar.', ok ? 'success' : 'error');
+        }
+
+        // Salvar cotação do carrinho na aba Cotações (acompanhamento CRM)
+        let ctSaveTargets = [];
+        let ctLastSaveClienteId = '';
+        let ctLastSaveClienteNome = '';
+        function ctDateToISO(dateStr, yearFallback) {
+            const m = String(dateStr || '').trim().toUpperCase().match(new RegExp('^(\\d{1,2})(' + MESES_RX + ')'));
+            if (!m) return '';
+            const mi = MESES[m[2]];
+            if (mi == null) return '';
+            const y = parseInt(yearFallback, 10) || new Date().getFullYear();
+            return y + '-' + String(mi + 1).padStart(2, '0') + '-' + String(+m[1]).padStart(2, '0');
+        }
+        function ctNomeCidade(v) {
+            return String(v || '').split(' - ')[0].trim();
+        }
+        function abrirSalvarCarrinhoSelecionadas() {
+            const sel = [];
+            cart.forEach(function(it, i) { if (it.checked !== false) sel.push(i); });
+            if (!sel.length) { showToast('Marque ao menos uma cotação no carrinho.', 'error'); return; }
+            abrirSalvarCarrinho(sel);
+        }
+        function abrirSalvarCarrinho(indices) {
+            const lista = (Array.isArray(indices) ? indices : [indices]).map(Number);
+            const idx = lista.filter(function(i) { return cart[i]; });
+            if (!idx.length) { showToast('Nenhuma cotação válida no carrinho.', 'error'); return; }
+            const itens = idx.map(function(i) { return cart[i]; });
+            ctSaveTargets = idx;
+
+            // Aggregate itinerary info from every selected option
+            const rows = [];
+            itens.forEach(function(it) { it.rows.forEach(function(r) { rows.push(r); }); });
+            const anoEl = document.getElementById('ctYear');
+            const ano = anoEl ? anoEl.value : '';
+            const origRow = rows.find(function(r) { return r.origem; });
+            const destRow = rows.slice().reverse().find(function(r) { return r.destino; });
+            const idaRow = rows.find(function(r) { return r.date; });
+            let voltaRow = null;
+            for (let i = rows.length - 1; i >= 0; i--) {
+                if (rows[i] && rows[i].date) { voltaRow = rows[i]; break; }
+            }
+
+            document.getElementById('ctSaveForm').reset();
+            const select = document.getElementById('ctSaveCliente');
+            select.innerHTML = '<option value="">Sem cliente cadastrado</option>' +
+                data.clientes.map(function(c) {
+                    return '<option value="' + ctEsc(c.id) + '">' + ctEsc(c.nome) + (c.grupo ? ' (' + ctEsc(c.grupo) + ')' : '') + '</option>';
+                }).join('');
+            select.value = ctLastSaveClienteId || '';
+
+            const nomeEl = document.getElementById('ctSaveClienteNome');
+            const clienteSel = data.clientes.find(function(c) { return c.id === select.value; });
+            nomeEl.value = clienteSel ? clienteSel.nome : (ctLastSaveClienteNome || '');
+
+            document.getElementById('ctSaveOrigem').value = origRow ? ctNomeCidade(origRow.origem) : '';
+            document.getElementById('ctSaveDestino').value = destRow ? ctNomeCidade(destRow.destino) : '';
+            const dataIda = idaRow ? ctDateToISO(idaRow.date, ano) : '';
+            const dataVolta = voltaRow ? ctDateToISO(voltaRow.date, ano) : '';
+            document.getElementById('ctSaveDataIda').value = dataIda;
+            document.getElementById('ctSaveDataVolta').value = (dataVolta && dataVolta !== dataIda) ? dataVolta : '';
+            document.getElementById('ctSavePax').value = 1;
+            document.getElementById('ctSaveTipo').value = 'lazer';
+            document.getElementById('ctSaveStatus').value = 'enviada';
+            document.getElementById('ctSaveObs').value = '';
+            document.getElementById('ctSaveNovoCliente').checked = false;
+
+            // Prefill estimated value with the BRL total of the last option that has one
+            const brl = itens.map(function(it) { return it.tarifa.totalBRL; }).filter(function(v) { return String(v || '').trim(); }).pop();
+            document.getElementById('ctSaveValor').value = brl || '';
+
+            const linhas = itens.map(function(it) {
+                return '• ' + it.nome + ' (' + it.rows.length + ' trecho(s)' +
+                    (it.tarifa.total ? ', total ' + (it.tarifa.moeda || 'USD') + ' ' + it.tarifa.total : '') +
+                    (it.tarifa.totalBRL ? ' / BRL ' + it.tarifa.totalBRL : '') +
+                    (it.tarifa.totalEUR ? ' / EUR ' + it.tarifa.totalEUR : '') + ')';
+            });
+            document.getElementById('ctSaveResumo').innerHTML =
+                '<strong>Opções que serão salvas:</strong><br>' +
+                linhas.map(ctEsc).join('<br>');
+
+            document.getElementById('salvarCarrinhoModal').classList.add('active');
+        }
+        function closeSalvarCarrinhoModal() {
+            document.getElementById('salvarCarrinhoModal').classList.remove('active');
+        }
+        function salvarCarrinhoEmCotacoes() {
+            const form = document.getElementById('ctSaveForm');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const idx = ctSaveTargets.filter(function(i) { return cart[i]; });
+            if (!idx.length) { showToast('Nenhuma cotação válida no carrinho.', 'error'); return; }
+            const itens = idx.map(function(i) { return cart[i]; });
+
+            const clienteNome = document.getElementById('ctSaveClienteNome').value.trim();
+            let clienteId = document.getElementById('ctSaveCliente').value;
+
+            if (document.getElementById('ctSaveNovoCliente').checked && !clienteId && clienteNome) {
+                const novo = {
+                    id: generateId(),
+                    nome: clienteNome,
+                    email: '', telefone: '', cpf: '', passaporte: '', passaporteValidade: '',
+                    nascimento: '', endereco: '',
+                    status: 'ativo', grupo: '', origem: 'outro',
+                    obs: 'Cadastrado automaticamente ao salvar cotação do Carrinho E-mail.',
+                    dataCadastro: new Date().toISOString()
+                };
+                data.clientes.push(novo);
+                clienteId = novo.id;
+            }
+
+            const valorNum = ctParseNum(document.getElementById('ctSaveValor').value);
+
+            const cotacao = {
+                id: generateId(),
+                clienteId: clienteId,
+                clienteNome: clienteNome,
+                destino: document.getElementById('ctSaveDestino').value.trim(),
+                origem: document.getElementById('ctSaveOrigem').value.trim(),
+                dataIda: document.getElementById('ctSaveDataIda').value,
+                dataVolta: document.getElementById('ctSaveDataVolta').value,
+                pax: document.getElementById('ctSavePax').value || 1,
+                tipoViagem: document.getElementById('ctSaveTipo').value,
+                valorEstimado: valorNum ? String(valorNum) : '',
+                status: document.getElementById('ctSaveStatus').value,
+                obs: document.getElementById('ctSaveObs').value.trim(),
+                htmlCotacao: buildCartHtml(itens),
+                imagens: [],
+                opcoes: itens.map(function(it) { return it.nome; }),
+                origemSistema: 'cotacao-email',
+                dataCadastro: new Date().toISOString()
+            };
+
+            data.cotacoes.push(cotacao);
+            itens.forEach(function(it) {
+                it.savedCotacaoId = cotacao.id;
+                it.savedClienteNome = clienteNome;
+            });
+            ctLastSaveClienteId = clienteId;
+            ctLastSaveClienteNome = clienteNome;
+
+            saveData();
+            renderCart();
+            closeSalvarCarrinhoModal();
+            showToast('Cotação de "' + clienteNome + '" salva na aba Cotações!', 'success');
         }
         function buildPreviewDoc(sel) {
             const inner = buildCartHtml(sel);
@@ -7885,7 +8493,7 @@
                 <tr>
                     <td><strong>${clienteNome}</strong></td>
                     <td>${grupo ? '<span style="background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;">' + escapeHtml(grupo) + '</span>' : '—'}</td>
-                    <td>${escapeHtml(c.origem ? c.origem + ' → ' : '')}${escapeHtml(c.destino)}</td>
+                    <td>${escapeHtml(c.origem ? c.origem + ' → ' : '')}${escapeHtml(c.destino)}${(c.opcoes && c.opcoes.length) ? ` <span style="background: var(--gray-100); color: var(--gray-700); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500;">${c.opcoes.length} opção(ões)</span>` : ''}</td>
                     <td>${viagemInfo}</td>
                     <td>${c.pax || 1}</td>
                     <td>${c.valorEstimado ? formatCurrency(c.valorEstimado) : '—'}</td>
@@ -8322,6 +8930,8 @@
                 obs: document.getElementById('cotacaoObs').value.trim(),
                 htmlCotacao: document.getElementById('cotacaoHtmlEditor').innerHTML,
                 imagens: imagens,
+                opcoes: existingCotacao ? (existingCotacao.opcoes || []) : [],
+                origemSistema: existingCotacao ? (existingCotacao.origemSistema || 'manual') : 'manual',
                 dataCadastro: id ? (existingCotacao ? existingCotacao.dataCadastro : new Date().toISOString()) : new Date().toISOString()
             };
 
