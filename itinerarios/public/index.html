@@ -657,12 +657,31 @@ function parseFreeText(text){
   const gdsFlights = parseGDS(text);
   if(gdsFlights.length > 0){
     gdsFlights.forEach(f => flights.push(f));
-    // PNR
-    let m = text.match(/(?:pnr|localizador|rloc)[:\s]*([A-Z0-9]{5,8})/i);
+    // PNR / record locator
+    let m = text.match(/(?:pnr|localizador|rloc|recloc|record locator)[:\s]*([A-Z0-9]{5,8})/i);
+    if(!m){
+      // Sabre header sometimes: "ABC123  1A  ..." on first line
+      const firstLine = text.split(/\n/)[0] || '';
+      const mm = firstLine.match(/\b([A-Z0-9]{6})\b/);
+      if(mm) m = mm;
+    }
     if(m) document.getElementById('pnr').value = m[1];
-    // Passenger name (Amadeus/Sabre sometimes "NOME/SOBRENOME")
-    m = text.match(/(?:passageiro|cliente|nome|pax)[:\s]+([^\n]+)/i);
-    if(m) document.getElementById('clientName').value = m[1].trim();
+    // Passenger name (Sabre: "1.SILVA/JOAO MR", Amadeus: "1 SILVA/JOAO MR")
+    m = text.match(/^\s*\d+\.?\s*([A-Z][A-Z' -]+)\/([A-Z][A-Z' -]+?)(?:\s+(MR|MRS|MS|DR|CHD|INF))?\s*$/m);
+    if(m){
+      const surname = m[1].trim();
+      const given = m[2].trim();
+      document.getElementById('clientName').value = given + ' ' + surname;
+    } else {
+      m = text.match(/(?:passageiro|cliente|nome|pax)[:\s]+([^\n]+)/i);
+      if(m) document.getElementById('clientName').value = m[1].trim();
+    }
+    // Phone
+    m = text.match(/(?:tel|phone|fone|AP\s*\d)[^\n]*?(\+?\d[\d\s().-]{7,})/i);
+    if(m) document.getElementById('clientPhone').value = m[1].trim();
+    // Email
+    m = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    if(m) document.getElementById('clientEmail').value = m[0];
     return;
   }
   let m = text.match(/(?:pnr|localizador)[:\s]*([A-Z0-9]{5,8})/i);
