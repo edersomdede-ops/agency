@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itinerário de Viagem</title>
+<style>
+  :root { --brand: #1a73e8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+  header.hero { color: #fff; padding: 28px 20px; border-radius: 0 0 16px 16px; }
+  header.hero h1 { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  header.hero p { opacity: .85; font-size: 13px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 13px; opacity: .95; }
+  .card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 12px; }
+  .day { margin-bottom: 24px; }
+  .day-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 4px rgba(26,115,232,.15); }
+  .day-title { font-size: 18px; font-weight: 600; color: var(--brand); }
+  .tl { border-left: 2px solid #e2e8f0; margin-left: 6px; padding-left: 18px; }
+  .ev { display: flex; gap: 12px; margin-bottom: 12px; }
+  .ev-icon { font-size: 24px; }
+  .ev-body { flex: 1; }
+  .ev-title { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+  .ev-time { font-size: 12px; color: #64748b; }
+  .ev-detail { font-size: 13px; color: #475569; margin-top: 6px; }
+  .ev-detail div { margin-bottom: 2px; }
+  .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { display: inline-block; padding: 6px 12px; font-size: 12px; border-radius: 8px; text-decoration: none; border: 1px solid #cbd5e1; color: #334155; background: #f8fafc; }
+  .btn.primary { color: #fff; border: none; }
+  .section { margin-top: 16px; }
+  .section h2 { font-size: 16px; margin-bottom: 8px; }
+  .section ul { list-style: none; font-size: 13px; color: #475569; }
+  .section ul li { margin-bottom: 4px; }
+  .section a { color: #2563eb; }
+  footer { text-align: center; font-size: 11px; color: #94a3b8; padding: 24px 0; }
+  .toolbar { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; }
+  .toolbar button { padding: 8px 14px; font-size: 13px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; }
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .card { box-shadow: none; border: 1px solid #e2e8f0; break-inside: avoid; }
+    header.hero { border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+<script>
+const data = window.__ITINERARIO__ || null;
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toDate(d){ if(!d) return null; const s = String(d).length===10 ? d+'T00:00:00' : d; const dt = new Date(s); return isNaN(dt.getTime()) ? null : dt; }
+function fmtDate(d){ const dt = toDate(d); if(!dt) return d||''; return dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
+function fmtDateShort(d){ const dt = toDate(d); if(!dt) return d||''; return dt.toLocaleDateString('pt-BR'); }
+function fmtTime(d){ if(!d || String(d).length<=10) return ''; const dt = toDate(d); if(!dt) return ''; return dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function dayKey(d){ if(!d) return 'sem-data'; return String(d).slice(0,10); }
+
+if(!data){
+  document.getElementById('root').innerHTML = '<div class="card"><p>Nenhum itinerário carregado. Este arquivo precisa conter os dados do itinerário.</p></div>';
+} else {
+  document.documentElement.style.setProperty('--brand', data.agency?.color || '#1a73e8');
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div class="toolbar no-print">
+      <button onclick="window.print()">📄 Exportar PDF</button>
+    </div>
+    <header class="hero" style="background:${esc(data.agency?.color||'#1a73e8')}">
+      <p>Itinerário de Viagem</p>
+      <h1>${esc(data.client?.name||'')}</h1>
+      <div class="meta">
+        <span>🗓️ ${fmtDateShort(data.trip?.start)} a ${fmtDateShort(data.trip?.end)}</span>
+        <span>🔖 PNR: ${esc(data.pnr||'—')}</span>
+        <span>📎 Código: ${esc(data.slug||'')}</span>
+      </div>
+      ${data.agency?.logo?`<div style="margin-top:12px"><img src="${esc(data.agency.logo)}" alt="logo" style="height:40px;object-fit:contain"></div>`:''}
+    </header>
+    <div style="height:16px"></div>
+    <div id="timeline"></div>
+    ${data.usefulDocs?.length?`<div class="card section"><h2>📎 Documentos Úteis</h2><ul>${data.usefulDocs.map(d=>`<li>• <a href="${esc(d.url)}" target="_blank">${esc(d.title||d.url)}</a></li>`).join('')}</ul></div>`:''}
+    ${data.emergencyContacts?.length?`<div class="card section"><h2>🚨 Contatos de Emergência</h2><ul>${data.emergencyContacts.map(c=>`<li>• <strong>${esc(c.name)}</strong> — ${esc(c.phone)}</li>`).join('')}</ul></div>`:''}
+    ${data.notes?`<div class="card section"><h2>📝 Observações</h2><p style="font-size:13px;color:#475569;white-space:pre-wrap">${esc(data.notes)}</p></div>`:''}
+    <footer>${esc(data.agency?.name||'Agência de Viagens')} · Itinerário gerado digitalmente</footer>
+  `;
+
+  const eventsByDay = {};
+  function addEvent(date, time, icon, title, bodyHtml, actions) {
+    const key = dayKey(date);
+    if(!eventsByDay[key]) eventsByDay[key] = [];
+    eventsByDay[key].push({ time, icon, title, bodyHtml, actions: actions||[] });
+  }
+
+  (data.services?.flights||[]).forEach(f => {
+    addEvent(f.departureAt, f.departureAt, '✈️', `${f.airline} ${f.flightNumber} · ${f.origin} → ${f.destination}`,
+      `<div><strong>Partida:</strong> ${fmtTime(f.departureAt)} ${esc(f.origin)}${f.terminal?' · Terminal '+esc(f.terminal):''}</div>
+       <div><strong>Chegada:</strong> ${fmtTime(f.arrivalAt)} ${esc(f.destination)}</div>
+       ${f.locator?`<div><strong>Localizador:</strong> ${esc(f.locator)}</div>`:''}
+       ${f.notes?`<div style="color:#64748b">${esc(f.notes)}</div>`:''}`,
+      f.checkinUrl ? [{label:'Fazer Check-in',href:f.checkinUrl,primary:true}] : []
+    );
+  });
+  (data.services?.hotels||[]).forEach(h => {
+    addEvent(h.checkin, h.checkin, '🏨', h.name,
+      `<div><strong>Check-in:</strong> ${fmtDateShort(h.checkin)} · <strong>Check-out:</strong> ${fmtDateShort(h.checkout)}</div>
+       ${h.address?`<div>${esc(h.address)}</div>`:''}
+       ${h.roomType?`<div><strong>Quarto:</strong> ${esc(h.roomType)}</div>`:''}
+       ${h.confirmation?`<div><strong>Confirmação:</strong> ${esc(h.confirmation)}</div>`:''}
+       ${h.phone?`<div><strong>Telefone:</strong> ${esc(h.phone)}</div>`:''}
+       ${h.notes?`<div style="color:#64748b">${esc(h.notes)}</div>`:''}`,
+      h.mapUrl ? [{label:'Ver no Mapa',href:h.mapUrl,primary:false}] : []
+    );
+  });
+  (data.services?.cars||[]).forEach(c => {
+    addEvent(c.pickupAt, c.pickupAt, '🚗', `${c.rentalCompany} · ${c.category||'Carro'}`,
+      `<div><strong>Retirada:</strong> ${fmtDateShort(c.pickupAt)} ${fmtTime(c.pickupAt)} · ${esc(c.pickupLocation||'')}</div>
+       <div><strong>Devolução:</strong> ${fmtDateShort(c.dropoffAt)} ${fmtTime(c.dropoffAt)} · ${esc(c.dropoffLocation||'')}</div>
+       ${c.confirmation?`<div><strong>Confirmação:</strong> ${esc(c.confirmation)}</div>`:''}
+       ${c.notes?`<div style="color:#64748b">${esc(c.notes)}</div>`:''}`,
+      c.managementUrl ? [{label:'Gerenciar Reserva',href:c.managementUrl,primary:false}] : []
+    );
+  });
+  (data.services?.transfers||[]).forEach(t => {
+    addEvent(t.time, t.time, '🚐', `${t.type==='privativo'?'Transfer Privativo':'Transfer Compartilhado'} · ${t.company}`,
+      `<div><strong>Horário:</strong> ${fmtDateShort(t.time)} ${fmtTime(t.time)}</div>
+       <div><strong>Rota:</strong> ${esc(t.route)}</div>
+       ${t.confirmation?`<div><strong>Confirmação:</strong> ${esc(t.confirmation)}</div>`:''}
+       ${t.notes?`<div style="color:#64748b">${esc(t.notes)}</div>`:''}`,
+      []
+    );
+  });
+
+  const days = Object.keys(eventsByDay).sort();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = days.map(day => {
+    const events = eventsByDay[day].sort((a,b)=> (a.time||'').localeCompare(b.time||''));
+    const label = day==='sem-data' ? 'Sem data definida' : fmtDate(day+'T00:00:00');
+    return `<div class="day">
+      <div class="day-head"><div class="dot"></div><div class="day-title">${label}</div></div>
+      <div class="tl">
+        ${events.map(e => `
+          <div class="ev">
+            <div class="ev-icon">${e.icon}</div>
+            <div class="ev-body">
+              <div class="ev-title"><span>${esc(e.title)}</span><span class="ev-time">${fmtTime(e.time)}</span></div>
+              <div class="ev-detail">${e.bodyHtml}</div>
+              ${e.actions.length?`<div class="actions">${e.actions.map(a=>`<a class="btn${a.primary?' primary':''}" style="${a.primary?'background:var(--brand)':''}" href="${esc(a.href)}" target="_blank" rel="noopener">${esc(a.label)} ↗</a>`).join('')}</div>`:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

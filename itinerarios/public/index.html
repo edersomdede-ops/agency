@@ -1,0 +1,595 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itinerários - Painel do Agente</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; color: #1e293b; }
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px; }
+  input, textarea, select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.15); }
+  label { font-size: 11px; color: #64748b; display: block; margin-bottom: 4px; }
+  button { cursor: pointer; font-family: inherit; }
+  .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 13px; }
+  .btn.primary { background: #1a73e8; color: #fff; border: none; }
+  .btn.danger { color: #dc2626; }
+  .btn.small { padding: 4px 8px; font-size: 12px; }
+  header { background: #0f172a; color: #fff; }
+  header .inner { max-width: 1200px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  main { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .grid { display: grid; gap: 16px; }
+  .grid-3 { grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .grid-3 { grid-template-columns: 340px 1fr; } }
+  .space-y > * + * { margin-top: 12px; }
+  .hidden { display: none !important; }
+  .modal-back { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .modal { background: #fff; border-radius: 14px; max-width: 720px; width: 100%; max-height: 90vh; overflow: auto; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:8px;background:#1a73e8;display:flex;align-items:center;justify-content:center;font-weight:700">IT</div>
+      <div>
+        <div style="font-weight:600">Painel de Itinerários</div>
+        <div style="font-size:11px;opacity:.7">Agência de Viagens · 100% offline</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="showList()">Meus Itinerários</button>
+      <button class="btn primary" onclick="newItinerary()">+ Novo</button>
+      <button class="btn" onclick="openImport()">📋 Colar/Importar</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="viewList">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <h2 style="font-size:20px;font-weight:600">Itinerários salvos</h2>
+      <input id="searchBox" oninput="filterList()" placeholder="Buscar por cliente ou PNR..." style="max-width:260px">
+    </div>
+    <div id="listContainer" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px"></div>
+    <p id="emptyList" class="hidden" style="text-align:center;color:#64748b;padding:40px">Nenhum itinerário salvo neste navegador.</p>
+  </section>
+
+  <section id="viewForm" class="hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <h2 id="formTitle" style="font-size:20px;font-weight:600">Novo Itinerário</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="showList()">Cancelar</button>
+        <button class="btn primary" onclick="saveItinerary()">Salvar</button>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <div class="space-y">
+        <div class="card space-y">
+          <h3 style="font-weight:600">Cliente</h3>
+          <div><label>Nome *</label><input id="clientName" placeholder="Nome completo"></div>
+          <div><label>E-mail</label><input id="clientEmail" type="email" placeholder="cliente@email.com"></div>
+          <div><label>Telefone</label><input id="clientPhone" placeholder="+55 ..."></div>
+          <div><label>Localizador / PNR</label><input id="pnr" placeholder="ABC123"></div>
+        </div>
+        <div class="card space-y">
+          <h3 style="font-weight:600">Viagem</h3>
+          <div><label>Início *</label><input id="tripStart" type="date"></div>
+          <div><label>Fim *</label><input id="tripEnd" type="date"></div>
+        </div>
+        <div class="card space-y">
+          <h3 style="font-weight:600">Agência</h3>
+          <div><label>Nome</label><input id="agencyName" value="Agência de Viagens"></div>
+          <div><label>Cor principal</label><input id="agencyColor" type="color" value="#1a73e8" style="height:40px"></div>
+          <div><label>Logo (URL)</label><input id="agencyLogo" placeholder="https://..."></div>
+        </div>
+        <div class="card space-y">
+          <h3 style="font-weight:600">Contatos de Emergência</h3>
+          <div id="emergencyList" class="space-y"></div>
+          <button class="btn small" onclick="addEmergency()">+ Adicionar contato</button>
+        </div>
+        <div class="card space-y">
+          <h3 style="font-weight:600">Documentos Úteis</h3>
+          <div id="docsList" class="space-y"></div>
+          <button class="btn small" onclick="addDoc()">+ Adicionar documento</button>
+        </div>
+        <div class="card space-y">
+          <h3 style="font-weight:600">Observações</h3>
+          <textarea id="notes" rows="3" placeholder="Notas gerais..."></textarea>
+        </div>
+      </div>
+      <div class="space-y">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <h3 style="font-weight:600">✈️ Voos</h3>
+            <button class="btn small" onclick="addFlight()">+ Adicionar</button>
+          </div>
+          <div id="flightsList" class="space-y"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <h3 style="font-weight:600">🏨 Hotéis</h3>
+            <button class="btn small" onclick="addHotel()">+ Adicionar</button>
+          </div>
+          <div id="hotelsList" class="space-y"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <h3 style="font-weight:600">🚗 Carros</h3>
+            <button class="btn small" onclick="addCar()">+ Adicionar</button>
+          </div>
+          <div id="carsList" class="space-y"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <h3 style="font-weight:600">🚐 Transfers</h3>
+            <button class="btn small" onclick="addTransfer()">+ Adicionar</button>
+          </div>
+          <div id="transfersList" class="space-y"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="importModal" class="modal-back hidden">
+  <div class="modal">
+    <h2 style="font-size:18px;font-weight:600;margin-bottom:8px">Colar / Importar dados</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:10px">Cole texto de e-ticket/voucher, JSON ou CSV. O sistema tentará preencher os campos. Você poderá revisar antes de salvar.</p>
+    <textarea id="importText" rows="12" placeholder="Cole aqui..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn primary" onclick="analyzeImport()">Analisar e preencher</button>
+      <button class="btn" onclick="closeImport()">Fechar</button>
+    </div>
+    <div id="importPreview" style="margin-top:10px;font-size:12px;color:#475569"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'agencia_itinerarios_v1';
+const VIEWER_B64 = 'PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9InB0LUJSIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xLjAiPgo8dGl0bGU+SXRpbmVyw6FyaW8gZGUgVmlhZ2VtPC90aXRsZT4KPHN0eWxlPgogIDpyb290IHsgLS1icmFuZDogIzFhNzNlODsgfQogICogeyBib3gtc2l6aW5nOiBib3JkZXItYm94OyBtYXJnaW46IDA7IHBhZGRpbmc6IDA7IH0KICBib2R5IHsgZm9udC1mYW1pbHk6ICdTZWdvZSBVSScsIHN5c3RlbS11aSwgLWFwcGxlLXN5c3RlbSwgc2Fucy1zZXJpZjsgYmFja2dyb3VuZDogI2Y4ZmFmYzsgY29sb3I6ICMxZTI5M2I7IGxpbmUtaGVpZ2h0OiAxLjU7IH0KICAud3JhcCB7IG1heC13aWR0aDogNzYwcHg7IG1hcmdpbjogMCBhdXRvOyBwYWRkaW5nOiAxNnB4OyB9CiAgaGVhZGVyLmhlcm8geyBjb2xvcjogI2ZmZjsgcGFkZGluZzogMjhweCAyMHB4OyBib3JkZXItcmFkaXVzOiAwIDAgMTZweCAxNnB4OyB9CiAgaGVhZGVyLmhlcm8gaDEgeyBmb250LXNpemU6IDI4cHg7IGZvbnQtd2VpZ2h0OiA3MDA7IG1hcmdpbi10b3A6IDRweDsgfQogIGhlYWRlci5oZXJvIHAgeyBvcGFjaXR5OiAuODU7IGZvbnQtc2l6ZTogMTNweDsgfQogIC5tZXRhIHsgZGlzcGxheTogZmxleDsgZmxleC13cmFwOiB3cmFwOyBnYXA6IDEycHg7IG1hcmdpbi10b3A6IDEycHg7IGZvbnQtc2l6ZTogMTNweDsgb3BhY2l0eTogLjk1OyB9CiAgLmNhcmQgeyBiYWNrZ3JvdW5kOiAjZmZmOyBib3JkZXItcmFkaXVzOiAxNHB4OyBwYWRkaW5nOiAxNnB4OyBib3gtc2hhZG93OiAwIDJweCA4cHggcmdiYSgwLDAsMCwuMDYpOyBtYXJnaW4tYm90dG9tOiAxMnB4OyB9CiAgLmRheSB7IG1hcmdpbi1ib3R0b206IDI0cHg7IH0KICAuZGF5LWhlYWQgeyBkaXNwbGF5OiBmbGV4OyBhbGlnbi1pdGVtczogY2VudGVyOyBnYXA6IDEwcHg7IG1hcmdpbi1ib3R0b206IDEwcHg7IH0KICAuZG90IHsgd2lkdGg6IDE0cHg7IGhlaWdodDogMTRweDsgYm9yZGVyLXJhZGl1czogNTAlOyBiYWNrZ3JvdW5kOiB2YXIoLS1icmFuZCk7IGJveC1zaGFkb3c6IDAgMCAwIDRweCByZ2JhKDI2LDExNSwyMzIsLjE1KTsgfQogIC5kYXktdGl0bGUgeyBmb250LXNpemU6IDE4cHg7IGZvbnQtd2VpZ2h0OiA2MDA7IGNvbG9yOiB2YXIoLS1icmFuZCk7IH0KICAudGwgeyBib3JkZXItbGVmdDogMnB4IHNvbGlkICNlMmU4ZjA7IG1hcmdpbi1sZWZ0OiA2cHg7IHBhZGRpbmctbGVmdDogMThweDsgfQogIC5ldiB7IGRpc3BsYXk6IGZsZXg7IGdhcDogMTJweDsgbWFyZ2luLWJvdHRvbTogMTJweDsgfQogIC5ldi1pY29uIHsgZm9udC1zaXplOiAyNHB4OyB9CiAgLmV2LWJvZHkgeyBmbGV4OiAxOyB9CiAgLmV2LXRpdGxlIHsgZm9udC13ZWlnaHQ6IDYwMDsgZGlzcGxheTogZmxleDsganVzdGlmeS1jb250ZW50OiBzcGFjZS1iZXR3ZWVuOyBnYXA6IDhweDsgfQogIC5ldi10aW1lIHsgZm9udC1zaXplOiAxMnB4OyBjb2xvcjogIzY0NzQ4YjsgfQogIC5ldi1kZXRhaWwgeyBmb250LXNpemU6IDEzcHg7IGNvbG9yOiAjNDc1NTY5OyBtYXJnaW4tdG9wOiA2cHg7IH0KICAuZXYtZGV0YWlsIGRpdiB7IG1hcmdpbi1ib3R0b206IDJweDsgfQogIC5hY3Rpb25zIHsgbWFyZ2luLXRvcDogOHB4OyBkaXNwbGF5OiBmbGV4OyBmbGV4LXdyYXA6IHdyYXA7IGdhcDogOHB4OyB9CiAgLmJ0biB7IGRpc3BsYXk6IGlubGluZS1ibG9jazsgcGFkZGluZzogNnB4IDEycHg7IGZvbnQtc2l6ZTogMTJweDsgYm9yZGVyLXJhZGl1czogOHB4OyB0ZXh0LWRlY29yYXRpb246IG5vbmU7IGJvcmRlcjogMXB4IHNvbGlkICNjYmQ1ZTE7IGNvbG9yOiAjMzM0MTU1OyBiYWNrZ3JvdW5kOiAjZjhmYWZjOyB9CiAgLmJ0bi5wcmltYXJ5IHsgY29sb3I6ICNmZmY7IGJvcmRlcjogbm9uZTsgfQogIC5zZWN0aW9uIHsgbWFyZ2luLXRvcDogMTZweDsgfQogIC5zZWN0aW9uIGgyIHsgZm9udC1zaXplOiAxNnB4OyBtYXJnaW4tYm90dG9tOiA4cHg7IH0KICAuc2VjdGlvbiB1bCB7IGxpc3Qtc3R5bGU6IG5vbmU7IGZvbnQtc2l6ZTogMTNweDsgY29sb3I6ICM0NzU1Njk7IH0KICAuc2VjdGlvbiB1bCBsaSB7IG1hcmdpbi1ib3R0b206IDRweDsgfQogIC5zZWN0aW9uIGEgeyBjb2xvcjogIzI1NjNlYjsgfQogIGZvb3RlciB7IHRleHQtYWxpZ246IGNlbnRlcjsgZm9udC1zaXplOiAxMXB4OyBjb2xvcjogIzk0YTNiODsgcGFkZGluZzogMjRweCAwOyB9CiAgLnRvb2xiYXIgeyBkaXNwbGF5OiBmbGV4OyBnYXA6IDhweDsganVzdGlmeS1jb250ZW50OiBmbGV4LWVuZDsgbWFyZ2luLWJvdHRvbTogMTJweDsgfQogIC50b29sYmFyIGJ1dHRvbiB7IHBhZGRpbmc6IDhweCAxNHB4OyBmb250LXNpemU6IDEzcHg7IGJvcmRlci1yYWRpdXM6IDhweDsgYm9yZGVyOiAxcHggc29saWQgI2NiZDVlMTsgYmFja2dyb3VuZDogI2ZmZjsgY3Vyc29yOiBwb2ludGVyOyB9CiAgQG1lZGlhIHByaW50IHsKICAgIGJvZHkgeyBiYWNrZ3JvdW5kOiAjZmZmOyB9CiAgICAudG9vbGJhciB7IGRpc3BsYXk6IG5vbmU7IH0KICAgIC5jYXJkIHsgYm94LXNoYWRvdzogbm9uZTsgYm9yZGVyOiAxcHggc29saWQgI2UyZThmMDsgYnJlYWstaW5zaWRlOiBhdm9pZDsgfQogICAgaGVhZGVyLmhlcm8geyBib3JkZXItcmFkaXVzOiAwOyB9CiAgfQo8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5Pgo8ZGl2IGNsYXNzPSJ3cmFwIiBpZD0icm9vdCI+PC9kaXY+CjxzY3JpcHQ+CmNvbnN0IGRhdGEgPSB3aW5kb3cuX19JVElORVJBUklPX18gfHwgbnVsbDsKCmZ1bmN0aW9uIGVzYyhzKXsgcmV0dXJuIFN0cmluZyhzPT1udWxsPycnOnMpLnJlcGxhY2UoL1smPD4iJ10vZywgYz0+KHsnJic6JyZhbXA7JywnPCc6JyZsdDsnLCc+JzonJmd0OycsJyInOicmcXVvdDsnLCInIjonJiMzOTsnfVtjXSkpOyB9CmZ1bmN0aW9uIHRvRGF0ZShkKXsgaWYoIWQpIHJldHVybiBudWxsOyBjb25zdCBzID0gU3RyaW5nKGQpLmxlbmd0aD09PTEwID8gZCsnVDAwOjAwOjAwJyA6IGQ7IGNvbnN0IGR0ID0gbmV3IERhdGUocyk7IHJldHVybiBpc05hTihkdC5nZXRUaW1lKCkpID8gbnVsbCA6IGR0OyB9CmZ1bmN0aW9uIGZtdERhdGUoZCl7IGNvbnN0IGR0ID0gdG9EYXRlKGQpOyBpZighZHQpIHJldHVybiBkfHwnJzsgcmV0dXJuIGR0LnRvTG9jYWxlRGF0ZVN0cmluZygncHQtQlInLHt3ZWVrZGF5Oidsb25nJyxkYXk6JzItZGlnaXQnLG1vbnRoOidsb25nJyx5ZWFyOidudW1lcmljJ30pOyB9CmZ1bmN0aW9uIGZtdERhdGVTaG9ydChkKXsgY29uc3QgZHQgPSB0b0RhdGUoZCk7IGlmKCFkdCkgcmV0dXJuIGR8fCcnOyByZXR1cm4gZHQudG9Mb2NhbGVEYXRlU3RyaW5nKCdwdC1CUicpOyB9CmZ1bmN0aW9uIGZtdFRpbWUoZCl7IGlmKCFkIHx8IFN0cmluZyhkKS5sZW5ndGg8PTEwKSByZXR1cm4gJyc7IGNvbnN0IGR0ID0gdG9EYXRlKGQpOyBpZighZHQpIHJldHVybiAnJzsgcmV0dXJuIGR0LnRvTG9jYWxlVGltZVN0cmluZygncHQtQlInLHtob3VyOicyLWRpZ2l0JyxtaW51dGU6JzItZGlnaXQnfSk7IH0KZnVuY3Rpb24gZGF5S2V5KGQpeyBpZighZCkgcmV0dXJuICdzZW0tZGF0YSc7IHJldHVybiBTdHJpbmcoZCkuc2xpY2UoMCwxMCk7IH0KCmlmKCFkYXRhKXsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncm9vdCcpLmlubmVySFRNTCA9ICc8ZGl2IGNsYXNzPSJjYXJkIj48cD5OZW5odW0gaXRpbmVyw6FyaW8gY2FycmVnYWRvLiBFc3RlIGFycXVpdm8gcHJlY2lzYSBjb250ZXIgb3MgZGFkb3MgZG8gaXRpbmVyw6FyaW8uPC9wPjwvZGl2Pic7Cn0gZWxzZSB7CiAgZG9jdW1lbnQuZG9jdW1lbnRFbGVtZW50LnN0eWxlLnNldFByb3BlcnR5KCctLWJyYW5kJywgZGF0YS5hZ2VuY3k/LmNvbG9yIHx8ICcjMWE3M2U4Jyk7CiAgY29uc3Qgcm9vdCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyb290Jyk7CiAgcm9vdC5pbm5lckhUTUwgPSBgCiAgICA8ZGl2IGNsYXNzPSJ0b29sYmFyIG5vLXByaW50Ij4KICAgICAgPGJ1dHRvbiBvbmNsaWNrPSJ3aW5kb3cucHJpbnQoKSI+8J+ThCBFeHBvcnRhciBQREY8L2J1dHRvbj4KICAgIDwvZGl2PgogICAgPGhlYWRlciBjbGFzcz0iaGVybyIgc3R5bGU9ImJhY2tncm91bmQ6JHtlc2MoZGF0YS5hZ2VuY3k/LmNvbG9yfHwnIzFhNzNlOCcpfSI+CiAgICAgIDxwPkl0aW5lcsOhcmlvIGRlIFZpYWdlbTwvcD4KICAgICAgPGgxPiR7ZXNjKGRhdGEuY2xpZW50Py5uYW1lfHwnJyl9PC9oMT4KICAgICAgPGRpdiBjbGFzcz0ibWV0YSI+CiAgICAgICAgPHNwYW4+8J+Xk++4jyAke2ZtdERhdGVTaG9ydChkYXRhLnRyaXA/LnN0YXJ0KX0gYSAke2ZtdERhdGVTaG9ydChkYXRhLnRyaXA/LmVuZCl9PC9zcGFuPgogICAgICAgIDxzcGFuPvCflJYgUE5SOiAke2VzYyhkYXRhLnBucnx8J+KAlCcpfTwvc3Bhbj4KICAgICAgICA8c3Bhbj7wn5OOIEPDs2RpZ286ICR7ZXNjKGRhdGEuc2x1Z3x8JycpfTwvc3Bhbj4KICAgICAgPC9kaXY+CiAgICAgICR7ZGF0YS5hZ2VuY3k/LmxvZ28/YDxkaXYgc3R5bGU9Im1hcmdpbi10b3A6MTJweCI+PGltZyBzcmM9IiR7ZXNjKGRhdGEuYWdlbmN5LmxvZ28pfSIgYWx0PSJsb2dvIiBzdHlsZT0iaGVpZ2h0OjQwcHg7b2JqZWN0LWZpdDpjb250YWluIj48L2Rpdj5gOicnfQogICAgPC9oZWFkZXI+CiAgICA8ZGl2IHN0eWxlPSJoZWlnaHQ6MTZweCI+PC9kaXY+CiAgICA8ZGl2IGlkPSJ0aW1lbGluZSI+PC9kaXY+CiAgICAke2RhdGEudXNlZnVsRG9jcz8ubGVuZ3RoP2A8ZGl2IGNsYXNzPSJjYXJkIHNlY3Rpb24iPjxoMj7wn5OOIERvY3VtZW50b3Mgw5p0ZWlzPC9oMj48dWw+JHtkYXRhLnVzZWZ1bERvY3MubWFwKGQ9PmA8bGk+4oCiIDxhIGhyZWY9IiR7ZXNjKGQudXJsKX0iIHRhcmdldD0iX2JsYW5rIj4ke2VzYyhkLnRpdGxlfHxkLnVybCl9PC9hPjwvbGk+YCkuam9pbignJyl9PC91bD48L2Rpdj5gOicnfQogICAgJHtkYXRhLmVtZXJnZW5jeUNvbnRhY3RzPy5sZW5ndGg/YDxkaXYgY2xhc3M9ImNhcmQgc2VjdGlvbiI+PGgyPvCfmqggQ29udGF0b3MgZGUgRW1lcmfDqm5jaWE8L2gyPjx1bD4ke2RhdGEuZW1lcmdlbmN5Q29udGFjdHMubWFwKGM9PmA8bGk+4oCiIDxzdHJvbmc+JHtlc2MoYy5uYW1lKX08L3N0cm9uZz4g4oCUICR7ZXNjKGMucGhvbmUpfTwvbGk+YCkuam9pbignJyl9PC91bD48L2Rpdj5gOicnfQogICAgJHtkYXRhLm5vdGVzP2A8ZGl2IGNsYXNzPSJjYXJkIHNlY3Rpb24iPjxoMj7wn5OdIE9ic2VydmHDp8O1ZXM8L2gyPjxwIHN0eWxlPSJmb250LXNpemU6MTNweDtjb2xvcjojNDc1NTY5O3doaXRlLXNwYWNlOnByZS13cmFwIj4ke2VzYyhkYXRhLm5vdGVzKX08L3A+PC9kaXY+YDonJ30KICAgIDxmb290ZXI+JHtlc2MoZGF0YS5hZ2VuY3k/Lm5hbWV8fCdBZ8OqbmNpYSBkZSBWaWFnZW5zJyl9IMK3IEl0aW5lcsOhcmlvIGdlcmFkbyBkaWdpdGFsbWVudGU8L2Zvb3Rlcj4KICBgOwoKICBjb25zdCBldmVudHNCeURheSA9IHt9OwogIGZ1bmN0aW9uIGFkZEV2ZW50KGRhdGUsIHRpbWUsIGljb24sIHRpdGxlLCBib2R5SHRtbCwgYWN0aW9ucykgewogICAgY29uc3Qga2V5ID0gZGF5S2V5KGRhdGUpOwogICAgaWYoIWV2ZW50c0J5RGF5W2tleV0pIGV2ZW50c0J5RGF5W2tleV0gPSBbXTsKICAgIGV2ZW50c0J5RGF5W2tleV0ucHVzaCh7IHRpbWUsIGljb24sIHRpdGxlLCBib2R5SHRtbCwgYWN0aW9uczogYWN0aW9uc3x8W10gfSk7CiAgfQoKICAoZGF0YS5zZXJ2aWNlcz8uZmxpZ2h0c3x8W10pLmZvckVhY2goZiA9PiB7CiAgICBhZGRFdmVudChmLmRlcGFydHVyZUF0LCBmLmRlcGFydHVyZUF0LCAn4pyI77iPJywgYCR7Zi5haXJsaW5lfSAke2YuZmxpZ2h0TnVtYmVyfSDCtyAke2Yub3JpZ2lufSDihpIgJHtmLmRlc3RpbmF0aW9ufWAsCiAgICAgIGA8ZGl2PjxzdHJvbmc+UGFydGlkYTo8L3N0cm9uZz4gJHtmbXRUaW1lKGYuZGVwYXJ0dXJlQXQpfSAke2VzYyhmLm9yaWdpbil9JHtmLnRlcm1pbmFsPycgwrcgVGVybWluYWwgJytlc2MoZi50ZXJtaW5hbCk6Jyd9PC9kaXY+CiAgICAgICA8ZGl2PjxzdHJvbmc+Q2hlZ2FkYTo8L3N0cm9uZz4gJHtmbXRUaW1lKGYuYXJyaXZhbEF0KX0gJHtlc2MoZi5kZXN0aW5hdGlvbil9PC9kaXY+CiAgICAgICAke2YubG9jYXRvcj9gPGRpdj48c3Ryb25nPkxvY2FsaXphZG9yOjwvc3Ryb25nPiAke2VzYyhmLmxvY2F0b3IpfTwvZGl2PmA6Jyd9CiAgICAgICAke2Yubm90ZXM/YDxkaXYgc3R5bGU9ImNvbG9yOiM2NDc0OGIiPiR7ZXNjKGYubm90ZXMpfTwvZGl2PmA6Jyd9YCwKICAgICAgZi5jaGVja2luVXJsID8gW3tsYWJlbDonRmF6ZXIgQ2hlY2staW4nLGhyZWY6Zi5jaGVja2luVXJsLHByaW1hcnk6dHJ1ZX1dIDogW10KICAgICk7CiAgfSk7CiAgKGRhdGEuc2VydmljZXM/LmhvdGVsc3x8W10pLmZvckVhY2goaCA9PiB7CiAgICBhZGRFdmVudChoLmNoZWNraW4sIGguY2hlY2tpbiwgJ/Cfj6gnLCBoLm5hbWUsCiAgICAgIGA8ZGl2PjxzdHJvbmc+Q2hlY2staW46PC9zdHJvbmc+ICR7Zm10RGF0ZVNob3J0KGguY2hlY2tpbil9IMK3IDxzdHJvbmc+Q2hlY2stb3V0Ojwvc3Ryb25nPiAke2ZtdERhdGVTaG9ydChoLmNoZWNrb3V0KX08L2Rpdj4KICAgICAgICR7aC5hZGRyZXNzP2A8ZGl2PiR7ZXNjKGguYWRkcmVzcyl9PC9kaXY+YDonJ30KICAgICAgICR7aC5yb29tVHlwZT9gPGRpdj48c3Ryb25nPlF1YXJ0bzo8L3N0cm9uZz4gJHtlc2MoaC5yb29tVHlwZSl9PC9kaXY+YDonJ30KICAgICAgICR7aC5jb25maXJtYXRpb24/YDxkaXY+PHN0cm9uZz5Db25maXJtYcOnw6NvOjwvc3Ryb25nPiAke2VzYyhoLmNvbmZpcm1hdGlvbil9PC9kaXY+YDonJ30KICAgICAgICR7aC5waG9uZT9gPGRpdj48c3Ryb25nPlRlbGVmb25lOjwvc3Ryb25nPiAke2VzYyhoLnBob25lKX08L2Rpdj5gOicnfQogICAgICAgJHtoLm5vdGVzP2A8ZGl2IHN0eWxlPSJjb2xvcjojNjQ3NDhiIj4ke2VzYyhoLm5vdGVzKX08L2Rpdj5gOicnfWAsCiAgICAgIGgubWFwVXJsID8gW3tsYWJlbDonVmVyIG5vIE1hcGEnLGhyZWY6aC5tYXBVcmwscHJpbWFyeTpmYWxzZX1dIDogW10KICAgICk7CiAgfSk7CiAgKGRhdGEuc2VydmljZXM/LmNhcnN8fFtdKS5mb3JFYWNoKGMgPT4gewogICAgYWRkRXZlbnQoYy5waWNrdXBBdCwgYy5waWNrdXBBdCwgJ/CfmpcnLCBgJHtjLnJlbnRhbENvbXBhbnl9IMK3ICR7Yy5jYXRlZ29yeXx8J0NhcnJvJ31gLAogICAgICBgPGRpdj48c3Ryb25nPlJldGlyYWRhOjwvc3Ryb25nPiAke2ZtdERhdGVTaG9ydChjLnBpY2t1cEF0KX0gJHtmbXRUaW1lKGMucGlja3VwQXQpfSDCtyAke2VzYyhjLnBpY2t1cExvY2F0aW9ufHwnJyl9PC9kaXY+CiAgICAgICA8ZGl2PjxzdHJvbmc+RGV2b2x1w6fDo286PC9zdHJvbmc+ICR7Zm10RGF0ZVNob3J0KGMuZHJvcG9mZkF0KX0gJHtmbXRUaW1lKGMuZHJvcG9mZkF0KX0gwrcgJHtlc2MoYy5kcm9wb2ZmTG9jYXRpb258fCcnKX08L2Rpdj4KICAgICAgICR7Yy5jb25maXJtYXRpb24/YDxkaXY+PHN0cm9uZz5Db25maXJtYcOnw6NvOjwvc3Ryb25nPiAke2VzYyhjLmNvbmZpcm1hdGlvbil9PC9kaXY+YDonJ30KICAgICAgICR7Yy5ub3Rlcz9gPGRpdiBzdHlsZT0iY29sb3I6IzY0NzQ4YiI+JHtlc2MoYy5ub3Rlcyl9PC9kaXY+YDonJ31gLAogICAgICBjLm1hbmFnZW1lbnRVcmwgPyBbe2xhYmVsOidHZXJlbmNpYXIgUmVzZXJ2YScsaHJlZjpjLm1hbmFnZW1lbnRVcmwscHJpbWFyeTpmYWxzZX1dIDogW10KICAgICk7CiAgfSk7CiAgKGRhdGEuc2VydmljZXM/LnRyYW5zZmVyc3x8W10pLmZvckVhY2godCA9PiB7CiAgICBhZGRFdmVudCh0LnRpbWUsIHQudGltZSwgJ/CfmpAnLCBgJHt0LnR5cGU9PT0ncHJpdmF0aXZvJz8nVHJhbnNmZXIgUHJpdmF0aXZvJzonVHJhbnNmZXIgQ29tcGFydGlsaGFkbyd9IMK3ICR7dC5jb21wYW55fWAsCiAgICAgIGA8ZGl2PjxzdHJvbmc+SG9yw6FyaW86PC9zdHJvbmc+ICR7Zm10RGF0ZVNob3J0KHQudGltZSl9ICR7Zm10VGltZSh0LnRpbWUpfTwvZGl2PgogICAgICAgPGRpdj48c3Ryb25nPlJvdGE6PC9zdHJvbmc+ICR7ZXNjKHQucm91dGUpfTwvZGl2PgogICAgICAgJHt0LmNvbmZpcm1hdGlvbj9gPGRpdj48c3Ryb25nPkNvbmZpcm1hw6fDo286PC9zdHJvbmc+ICR7ZXNjKHQuY29uZmlybWF0aW9uKX08L2Rpdj5gOicnfQogICAgICAgJHt0Lm5vdGVzP2A8ZGl2IHN0eWxlPSJjb2xvcjojNjQ3NDhiIj4ke2VzYyh0Lm5vdGVzKX08L2Rpdj5gOicnfWAsCiAgICAgIFtdCiAgICApOwogIH0pOwoKICBjb25zdCBkYXlzID0gT2JqZWN0LmtleXMoZXZlbnRzQnlEYXkpLnNvcnQoKTsKICBjb25zdCB0bCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd0aW1lbGluZScpOwogIHRsLmlubmVySFRNTCA9IGRheXMubWFwKGRheSA9PiB7CiAgICBjb25zdCBldmVudHMgPSBldmVudHNCeURheVtkYXldLnNvcnQoKGEsYik9PiAoYS50aW1lfHwnJykubG9jYWxlQ29tcGFyZShiLnRpbWV8fCcnKSk7CiAgICBjb25zdCBsYWJlbCA9IGRheT09PSdzZW0tZGF0YScgPyAnU2VtIGRhdGEgZGVmaW5pZGEnIDogZm10RGF0ZShkYXkrJ1QwMDowMDowMCcpOwogICAgcmV0dXJuIGA8ZGl2IGNsYXNzPSJkYXkiPgogICAgICA8ZGl2IGNsYXNzPSJkYXktaGVhZCI+PGRpdiBjbGFzcz0iZG90Ij48L2Rpdj48ZGl2IGNsYXNzPSJkYXktdGl0bGUiPiR7bGFiZWx9PC9kaXY+PC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9InRsIj4KICAgICAgICAke2V2ZW50cy5tYXAoZSA9PiBgCiAgICAgICAgICA8ZGl2IGNsYXNzPSJldiI+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9ImV2LWljb24iPiR7ZS5pY29ufTwvZGl2PgogICAgICAgICAgICA8ZGl2IGNsYXNzPSJldi1ib2R5Ij4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJldi10aXRsZSI+PHNwYW4+JHtlc2MoZS50aXRsZSl9PC9zcGFuPjxzcGFuIGNsYXNzPSJldi10aW1lIj4ke2ZtdFRpbWUoZS50aW1lKX08L3NwYW4+PC9kaXY+CiAgICAgICAgICAgICAgPGRpdiBjbGFzcz0iZXYtZGV0YWlsIj4ke2UuYm9keUh0bWx9PC9kaXY+CiAgICAgICAgICAgICAgJHtlLmFjdGlvbnMubGVuZ3RoP2A8ZGl2IGNsYXNzPSJhY3Rpb25zIj4ke2UuYWN0aW9ucy5tYXAoYT0+YDxhIGNsYXNzPSJidG4ke2EucHJpbWFyeT8nIHByaW1hcnknOicnfSIgc3R5bGU9IiR7YS5wcmltYXJ5PydiYWNrZ3JvdW5kOnZhcigtLWJyYW5kKSc6Jyd9IiBocmVmPSIke2VzYyhhLmhyZWYpfSIgdGFyZ2V0PSJfYmxhbmsiIHJlbD0ibm9vcGVuZXIiPiR7ZXNjKGEubGFiZWwpfSDihpc8L2E+YCkuam9pbignJyl9PC9kaXY+YDonJ30KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICBgKS5qb2luKCcnKX0KICAgICAgPC9kaXY+CiAgICA8L2Rpdj5gOwogIH0pLmpvaW4oJycpOwp9Cjwvc2NyaXB0Pgo8L2JvZHk+CjwvaHRtbD4=';
+let currentId = null;
+let itineraries = [];
+let emergency = [];
+let docs = [];
+let flights = [];
+let hotels = [];
+let cars = [];
+let transfers = [];
+
+function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(36).slice(2)); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toLocal(v){ if(!v) return ''; return String(v).slice(0,16); }
+
+function loadAll(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch { return []; } }
+function saveAll(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+function showList(){
+  document.getElementById('viewForm').classList.add('hidden');
+  document.getElementById('viewList').classList.remove('hidden');
+  itineraries = loadAll();
+  renderList();
+}
+function newItinerary(){
+  currentId = null;
+  resetForm();
+  document.getElementById('formTitle').textContent = 'Novo Itinerário';
+  document.getElementById('viewList').classList.add('hidden');
+  document.getElementById('viewForm').classList.remove('hidden');
+}
+function resetForm(){
+  document.getElementById('clientName').value='';
+  document.getElementById('clientEmail').value='';
+  document.getElementById('clientPhone').value='';
+  document.getElementById('pnr').value='';
+  document.getElementById('tripStart').value='';
+  document.getElementById('tripEnd').value='';
+  document.getElementById('agencyName').value='Agência de Viagens';
+  document.getElementById('agencyColor').value='#1a73e8';
+  document.getElementById('agencyLogo').value='';
+  document.getElementById('notes').value='';
+  emergency=[]; docs=[]; flights=[]; hotels=[]; cars=[]; transfers=[];
+  renderEmergency(); renderDocs(); renderFlights(); renderHotels(); renderCars(); renderTransfers();
+}
+
+function renderList(){
+  const cont = document.getElementById('listContainer');
+  const empty = document.getElementById('emptyList');
+  const search = (document.getElementById('searchBox')?.value||'').toLowerCase();
+  const filtered = itineraries.filter(it => (it.client.name+' '+(it.pnr||'')).toLowerCase().includes(search));
+  if(filtered.length===0){ cont.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  cont.innerHTML = filtered.map(it => `
+    <div class="card">
+      <h3 style="font-weight:600">${esc(it.client.name)}</h3>
+      <p style="font-size:12px;color:#64748b;margin-top:4px">PNR: ${esc(it.pnr||'—')} · ${it.trip.start} → ${it.trip.end}</p>
+      <p style="font-size:11px;color:#94a3b8;margin-top:2px">Código: ${it.slug}</p>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn small" onclick="editItinerary('${it.id}')">Editar</button>
+        <button class="btn small primary" onclick="exportClient('${it.id}')">Exportar HTML</button>
+        <button class="btn small" onclick="exportJson('${it.id}')">JSON</button>
+        <button class="btn small danger" onclick="deleteItinerary('${it.id}')">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+function filterList(){ renderList(); }
+
+function collectForm(){
+  return {
+    id: currentId,
+    slug: currentId ? (itineraries.find(i=>i.id===currentId)?.slug) : generateSlug(),
+    client: { name: document.getElementById('clientName').value.trim(), email: document.getElementById('clientEmail').value.trim(), phone: document.getElementById('clientPhone').value.trim() },
+    pnr: document.getElementById('pnr').value.trim(),
+    trip: { start: document.getElementById('tripStart').value, end: document.getElementById('tripEnd').value },
+    agency: { name: document.getElementById('agencyName').value.trim(), color: document.getElementById('agencyColor').value, logo: document.getElementById('agencyLogo').value.trim() },
+    emergencyContacts: emergency,
+    usefulDocs: docs,
+    notes: document.getElementById('notes').value.trim(),
+    services: { flights, hotels, cars, transfers },
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function generateSlug(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 7; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function saveItinerary(){
+  const data = collectForm();
+  if(!data.client.name){ alert('Nome do cliente é obrigatório'); return; }
+  if(!data.trip.start || !data.trip.end){ alert('Datas da viagem são obrigatórias'); return; }
+  const list = loadAll();
+  if(currentId){
+    const idx = list.findIndex(i=>i.id===currentId);
+    if(idx>=0) list[idx] = data; else list.unshift(data);
+  } else {
+    data.id = uid();
+    data.slug = generateSlug();
+    data.createdAt = new Date().toISOString();
+    list.unshift(data);
+    currentId = data.id;
+  }
+  data.updatedAt = new Date().toISOString();
+  saveAll(list);
+  itineraries = list;
+  alert('Itinerário salvo! Código: '+data.slug);
+  showList();
+}
+
+function editItinerary(id){
+  const it = loadAll().find(i=>i.id===id);
+  if(!it) return;
+  currentId = it.id;
+  document.getElementById('clientName').value = it.client.name||'';
+  document.getElementById('clientEmail').value = it.client.email||'';
+  document.getElementById('clientPhone').value = it.client.phone||'';
+  document.getElementById('pnr').value = it.pnr||'';
+  document.getElementById('tripStart').value = it.trip.start||'';
+  document.getElementById('tripEnd').value = it.trip.end||'';
+  document.getElementById('agencyName').value = it.agency.name||'';
+  document.getElementById('agencyColor').value = it.agency.color||'#1a73e8';
+  document.getElementById('agencyLogo').value = it.agency.logo||'';
+  document.getElementById('notes').value = it.notes||'';
+  emergency = (it.emergencyContacts||[]).map(x=>({...x}));
+  docs = (it.usefulDocs||[]).map(x=>({...x}));
+  flights = (it.services?.flights||[]).map(x=>({...x}));
+  hotels = (it.services?.hotels||[]).map(x=>({...x}));
+  cars = (it.services?.cars||[]).map(x=>({...x}));
+  transfers = (it.services?.transfers||[]).map(x=>({...x}));
+  renderEmergency(); renderDocs(); renderFlights(); renderHotels(); renderCars(); renderTransfers();
+  document.getElementById('formTitle').textContent = 'Editar Itinerário';
+  document.getElementById('viewList').classList.add('hidden');
+  document.getElementById('viewForm').classList.remove('hidden');
+}
+
+function deleteItinerary(id){
+  if(!confirm('Excluir este itinerário?')) return;
+  const list = loadAll().filter(i=>i.id!==id);
+  saveAll(list);
+  itineraries = list;
+  renderList();
+}
+
+function addEmergency(){ emergency.push({name:'',phone:''}); renderEmergency(); }
+function removeEmergency(i){ emergency.splice(i,1); renderEmergency(); }
+function renderEmergency(){
+  document.getElementById('emergencyList').innerHTML = emergency.map((e,i)=>`
+    <div style="display:flex;gap:6px">
+      <input value="${esc(e.name)}" oninput="emergency[${i}].name=this.value" placeholder="Nome">
+      <input value="${esc(e.phone)}" oninput="emergency[${i}].phone=this.value" placeholder="Telefone">
+      <button class="btn small danger" onclick="removeEmergency(${i})">✕</button>
+    </div>`).join('');
+}
+function addDoc(){ docs.push({title:'',url:''}); renderDocs(); }
+function removeDoc(i){ docs.splice(i,1); renderDocs(); }
+function renderDocs(){
+  document.getElementById('docsList').innerHTML = docs.map((d,i)=>`
+    <div style="display:flex;gap:6px">
+      <input value="${esc(d.title)}" oninput="docs[${i}].title=this.value" placeholder="Título">
+      <input value="${esc(d.url)}" oninput="docs[${i}].url=this.value" placeholder="URL">
+      <button class="btn small danger" onclick="removeDoc(${i})">✕</button>
+    </div>`).join('');
+}
+function addFlight(){ flights.push({id:uid(), airline:'', flightNumber:'', origin:'', destination:'', departureAt:'', arrivalAt:'', locator:'', checkinUrl:'', terminal:'', notes:''}); renderFlights(); }
+function removeFlight(i){ flights.splice(i,1); renderFlights(); }
+function renderFlights(){
+  document.getElementById('flightsList').innerHTML = flights.map((f,i)=>`
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#475569">Voo ${i+1}</span>
+        <button class="btn small danger" onclick="removeFlight(${i})">Remover</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <input value="${esc(f.airline)}" oninput="flights[${i}].airline=this.value" placeholder="Companhia aérea">
+        <input value="${esc(f.flightNumber)}" oninput="flights[${i}].flightNumber=this.value" placeholder="Nº do voo">
+        <input value="${esc(f.origin)}" oninput="flights[${i}].origin=this.value" placeholder="Origem (GRU)">
+        <input value="${esc(f.destination)}" oninput="flights[${i}].destination=this.value" placeholder="Destino (LIS)">
+        <div><label>Partida</label><input type="datetime-local" value="${toLocal(f.departureAt)}" oninput="flights[${i}].departureAt=this.value"></div>
+        <div><label>Chegada</label><input type="datetime-local" value="${toLocal(f.arrivalAt)}" oninput="flights[${i}].arrivalAt=this.value"></div>
+        <input value="${esc(f.locator)}" oninput="flights[${i}].locator=this.value" placeholder="Localizador">
+        <input value="${esc(f.terminal)}" oninput="flights[${i}].terminal=this.value" placeholder="Terminal">
+        <input style="grid-column:1/-1" value="${esc(f.checkinUrl)}" oninput="flights[${i}].checkinUrl=this.value" placeholder="Link check-in / gerenciar reserva">
+        <textarea style="grid-column:1/-1" oninput="flights[${i}].notes=this.value" placeholder="Observações" rows="2">${esc(f.notes)}</textarea>
+      </div>
+    </div>`).join('');
+}
+function addHotel(){ hotels.push({id:uid(), name:'', address:'', checkin:'', checkout:'', roomType:'', confirmation:'', mapUrl:'', phone:'', notes:''}); renderHotels(); }
+function removeHotel(i){ hotels.splice(i,1); renderHotels(); }
+function renderHotels(){
+  document.getElementById('hotelsList').innerHTML = hotels.map((h,i)=>`
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#475569">Hotel ${i+1}</span>
+        <button class="btn small danger" onclick="removeHotel(${i})">Remover</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <input style="grid-column:1/-1" value="${esc(h.name)}" oninput="hotels[${i}].name=this.value" placeholder="Nome do hotel">
+        <input style="grid-column:1/-1" value="${esc(h.address)}" oninput="hotels[${i}].address=this.value" placeholder="Endereço">
+        <div><label>Check-in</label><input type="date" value="${(h.checkin||'').slice(0,10)}" oninput="hotels[${i}].checkin=this.value"></div>
+        <div><label>Check-out</label><input type="date" value="${(h.checkout||'').slice(0,10)}" oninput="hotels[${i}].checkout=this.value"></div>
+        <input value="${esc(h.roomType)}" oninput="hotels[${i}].roomType=this.value" placeholder="Tipo de quarto">
+        <input value="${esc(h.confirmation)}" oninput="hotels[${i}].confirmation=this.value" placeholder="Confirmação">
+        <input value="${esc(h.phone)}" oninput="hotels[${i}].phone=this.value" placeholder="Telefone">
+        <input value="${esc(h.mapUrl)}" oninput="hotels[${i}].mapUrl=this.value" placeholder="Link hotel / Google Maps">
+        <textarea style="grid-column:1/-1" oninput="hotels[${i}].notes=this.value" placeholder="Observações" rows="2">${esc(h.notes)}</textarea>
+      </div>
+    </div>`).join('');
+}
+function addCar(){ cars.push({id:uid(), rentalCompany:'', category:'', pickupAt:'', dropoffAt:'', pickupLocation:'', dropoffLocation:'', confirmation:'', managementUrl:'', notes:''}); renderCars(); }
+function removeCar(i){ cars.splice(i,1); renderCars(); }
+function renderCars(){
+  document.getElementById('carsList').innerHTML = cars.map((c,i)=>`
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#475569">Carro ${i+1}</span>
+        <button class="btn small danger" onclick="removeCar(${i})">Remover</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <input value="${esc(c.rentalCompany)}" oninput="cars[${i}].rentalCompany=this.value" placeholder="Locadora">
+        <input value="${esc(c.category)}" oninput="cars[${i}].category=this.value" placeholder="Categoria">
+        <div><label>Retirada</label><input type="datetime-local" value="${toLocal(c.pickupAt)}" oninput="cars[${i}].pickupAt=this.value"></div>
+        <div><label>Devolução</label><input type="datetime-local" value="${toLocal(c.dropoffAt)}" oninput="cars[${i}].dropoffAt=this.value"></div>
+        <input value="${esc(c.pickupLocation)}" oninput="cars[${i}].pickupLocation=this.value" placeholder="Local de retirada">
+        <input value="${esc(c.dropoffLocation)}" oninput="cars[${i}].dropoffLocation=this.value" placeholder="Local de devolução">
+        <input value="${esc(c.confirmation)}" oninput="cars[${i}].confirmation=this.value" placeholder="Confirmação">
+        <input value="${esc(c.managementUrl)}" oninput="cars[${i}].managementUrl=this.value" placeholder="Link de gestão da reserva">
+        <textarea style="grid-column:1/-1" oninput="cars[${i}].notes=this.value" placeholder="Observações" rows="2">${esc(c.notes)}</textarea>
+      </div>
+    </div>`).join('');
+}
+function addTransfer(){ transfers.push({id:uid(), type:'privativo', company:'', time:'', route:'', confirmation:'', notes:''}); renderTransfers(); }
+function removeTransfer(i){ transfers.splice(i,1); renderTransfers(); }
+function renderTransfers(){
+  document.getElementById('transfersList').innerHTML = transfers.map((t,i)=>`
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#f8fafc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#475569">Transfer ${i+1}</span>
+        <button class="btn small danger" onclick="removeTransfer(${i})">Remover</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <select onchange="transfers[${i}].type=this.value">
+          <option value="privativo" ${t.type==='privativo'?'selected':''}>Privativo</option>
+          <option value="compartilhado" ${t.type==='compartilhado'?'selected':''}>Compartilhado</option>
+        </select>
+        <input value="${esc(t.company)}" oninput="transfers[${i}].company=this.value" placeholder="Empresa">
+        <div><label>Horário</label><input type="datetime-local" value="${toLocal(t.time)}" oninput="transfers[${i}].time=this.value"></div>
+        <input value="${esc(t.confirmation)}" oninput="transfers[${i}].confirmation=this.value" placeholder="Confirmação">
+        <input style="grid-column:1/-1" value="${esc(t.route)}" oninput="transfers[${i}].route=this.value" placeholder="Rota (ex: Aeroporto → Hotel)">
+        <textarea style="grid-column:1/-1" oninput="transfers[${i}].notes=this.value" placeholder="Observações" rows="2">${esc(t.notes)}</textarea>
+      </div>
+    </div>`).join('');
+}
+
+function exportClient(id){
+  const it = loadAll().find(i=>i.id===id);
+  if(!it) return;
+  const tpl = decodeURIComponent(escape(atob(VIEWER_B64)));
+  const html = tpl.replace('</head>', '<script>window.__ITINERARIO__ = ' + JSON.stringify(it) + ';</' + 'script>\n</head>');
+  downloadFile('itinerario_' + it.slug + '.html', html, 'text/html');
+}
+function exportJson(id){
+  const it = loadAll().find(i=>i.id===id);
+  if(!it) return;
+  downloadFile('itinerario_' + it.slug + '.json', JSON.stringify(it,null,2), 'application/json');
+}
+function downloadFile(name, content, type){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100);
+}
+
+function openImport(){ document.getElementById('importModal').classList.remove('hidden'); }
+function closeImport(){ document.getElementById('importModal').classList.add('hidden'); }
+
+function analyzeImport(){
+  const text = document.getElementById('importText').value.trim();
+  if(!text){ alert('Cole algum conteúdo primeiro.'); return; }
+  let filled = false;
+  if(text.startsWith('{') || text.startsWith('[')){
+    try {
+      const obj = JSON.parse(text);
+      if(Array.isArray(obj)){
+        obj.forEach(item => classifyAndAppend(item));
+        filled = true;
+      } else {
+        fillFromObject(obj);
+        filled = true;
+      }
+    } catch(e){ }
+  }
+  if(!filled && (text.includes(',') || text.includes(';')) && text.split(/\n/).length>=2){
+    const rows = parseCsv(text);
+    if(rows.length>0){
+      rows.forEach(r => classifyAndAppend(r));
+      filled = true;
+    }
+  }
+  if(!filled){
+    parseFreeText(text);
+    filled = true;
+  }
+  renderEmergency(); renderDocs(); renderFlights(); renderHotels(); renderCars(); renderTransfers();
+  document.getElementById('importPreview').textContent = 'Dados analisados. Revise os campos antes de salvar.';
+  if(document.getElementById('viewForm').classList.contains('hidden')){
+    newItinerary();
+  }
+  closeImport();
+}
+
+function fillFromObject(obj){
+  if(obj.client){
+    if(obj.client.name) document.getElementById('clientName').value = obj.client.name;
+    if(obj.client.email) document.getElementById('clientEmail').value = obj.client.email;
+    if(obj.client.phone) document.getElementById('clientPhone').value = obj.client.phone;
+  }
+  if(obj.pnr) document.getElementById('pnr').value = obj.pnr;
+  if(obj.trip){
+    if(obj.trip.start) document.getElementById('tripStart').value = obj.trip.start;
+    if(obj.trip.end) document.getElementById('tripEnd').value = obj.trip.end;
+  }
+  if(obj.agency){
+    if(obj.agency.name) document.getElementById('agencyName').value = obj.agency.name;
+    if(obj.agency.color) document.getElementById('agencyColor').value = obj.agency.color;
+    if(obj.agency.logo) document.getElementById('agencyLogo').value = obj.agency.logo;
+  }
+  if(Array.isArray(obj.emergencyContacts)) emergency = obj.emergencyContacts.map(x=>({...x}));
+  if(Array.isArray(obj.usefulDocs)) docs = obj.usefulDocs.map(x=>({...x}));
+  if(obj.notes) document.getElementById('notes').value = obj.notes;
+  if(obj.services){
+    if(Array.isArray(obj.services.flights)) flights = obj.services.flights.map(x=>({...x}));
+    if(Array.isArray(obj.services.hotels)) hotels = obj.services.hotels.map(x=>({...x}));
+    if(Array.isArray(obj.services.cars)) cars = obj.services.cars.map(x=>({...x}));
+    if(Array.isArray(obj.services.transfers)) transfers = obj.services.transfers.map(x=>({...x}));
+  }
+}
+
+function classifyAndAppend(item){
+  if(!item || typeof item !== 'object') return;
+  const keys = Object.keys(item).map(k=>k.toLowerCase());
+  if(keys.includes('airline') || keys.includes('flightnumber') || keys.includes('flight_number')){
+    flights.push(normalizeFlight(item));
+  } else if(keys.includes('rentalcompany') || keys.includes('rental_company') || keys.includes('pickupat') || keys.includes('pickup_at')){
+    cars.push(normalizeCar(item));
+  } else if(keys.includes('route') && (keys.includes('company') || keys.includes('type'))){
+    transfers.push(normalizeTransfer(item));
+  } else if(keys.includes('checkin') || keys.includes('checkout') || keys.includes('roomtype') || keys.includes('name')){
+    if(keys.includes('checkin') || keys.includes('checkout')) hotels.push(normalizeHotel(item));
+  }
+}
+
+function normalizeFlight(o){
+  return { id: uid(), airline: o.airline||'', flightNumber: o.flightNumber||o.flight_number||'', origin: o.origin||'', destination: o.destination||'', departureAt: o.departureAt||o.departure_at||'', arrivalAt: o.arrivalAt||o.arrival_at||'', locator: o.locator||'', checkinUrl: o.checkinUrl||o.checkin_url||'', terminal: o.terminal||'', notes: o.notes||'' };
+}
+function normalizeHotel(o){
+  return { id: uid(), name: o.name||'', address: o.address||'', checkin: (o.checkin||'').slice(0,10), checkout: (o.checkout||'').slice(0,10), roomType: o.roomType||o.room_type||'', confirmation: o.confirmation||'', mapUrl: o.mapUrl||o.map_url||'', phone: o.phone||'', notes: o.notes||'' };
+}
+function normalizeCar(o){
+  return { id: uid(), rentalCompany: o.rentalCompany||o.rental_company||'', category: o.category||'', pickupAt: o.pickupAt||o.pickup_at||'', dropoffAt: o.dropoffAt||o.dropoff_at||'', pickupLocation: o.pickupLocation||o.pickup_location||'', dropoffLocation: o.dropoffLocation||o.dropoff_location||'', confirmation: o.confirmation||'', managementUrl: o.managementUrl||o.management_url||'', notes: o.notes||'' };
+}
+function normalizeTransfer(o){
+  return { id: uid(), type: o.type||'privativo', company: o.company||'', time: o.time||'', route: o.route||'', confirmation: o.confirmation||'', notes: o.notes||'' };
+}
+
+function parseCsv(text){
+  const lines = text.trim().split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2) return [];
+  const delim = lines[0].includes(';') ? ';' : ',';
+  const header = lines[0].split(delim).map(h=>h.trim().replace(/^"|"$/g,''));
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cols = lines[i].split(delim).map(c=>c.trim().replace(/^"|"$/g,''));
+    const obj = {};
+    header.forEach((h,idx)=>{ obj[h] = cols[idx]||''; });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function parseFreeText(text){
+  let m = text.match(/(?:pnr|localizador)[:\s]*([A-Z0-9]{5,8})/i);
+  if(m) document.getElementById('pnr').value = m[1];
+  m = text.match(/(?:passageiro|cliente|nome)[:\s]+([^\n]+)/i);
+  if(m) document.getElementById('clientName').value = m[1].trim();
+  const flightCodeRe = /([A-Z]{2,3})\s*(\d{3,4})/;
+  const airportRe = /\b([A-Z]{3})\b/g;
+  const timeRe = /\b(\d{1,2}:\d{2})\b/g;
+  text.split(/\n/).forEach(line => {
+    const fc = line.match(flightCodeRe);
+    const airports = [...line.matchAll(airportRe)].map(x=>x[1]);
+    if(fc && airports.length>=2){
+      const times = [...line.matchAll(timeRe)].map(x=>x[1]);
+      flights.push({
+        id: uid(),
+        airline: fc[1],
+        flightNumber: fc[1]+fc[2],
+        origin: airports[0],
+        destination: airports[1],
+        departureAt: times[0] ? times[0] : '',
+        arrivalAt: times[1] ? times[1] : '',
+        locator: '',
+        checkinUrl: '',
+        terminal: '',
+        notes: line.trim()
+      });
+    }
+    if(/hotel/i.test(line)){
+      const dm = line.match(/(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/g);
+      hotels.push({
+        id: uid(),
+        name: line.replace(/check-?in|check-?out/gi,'').trim().slice(0,80),
+        address: '',
+        checkin: dm && dm[0] ? dm[0] : '',
+        checkout: dm && dm[1] ? dm[1] : '',
+        roomType: '',
+        confirmation: '',
+        mapUrl: '',
+        phone: '',
+        notes: ''
+      });
+    }
+    if(/transfer/i.test(line)){
+      transfers.push({
+        id: uid(),
+        type: /compart/i.test(line) ? 'compartilhado' : 'privativo',
+        company: '',
+        time: '',
+        route: line.trim().slice(0,120),
+        confirmation: '',
+        notes: ''
+      });
+    }
+  });
+}
+
+itineraries = loadAll();
+showList();
+</script>
+</body>
+</html>

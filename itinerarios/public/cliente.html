@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itinerário de Viagem</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --brand: #1a73e8; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .card { background:#fff; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .timeline-dot { width:14px; height:14px; border-radius:50%; background:var(--brand); box-shadow:0 0 0 4px rgba(26,115,232,.15); }
+  @media print {
+    body { background:#fff !important; }
+    .no-print { display:none !important; }
+    .card { box-shadow:none; border:1px solid #e5e7eb; break-inside:avoid; }
+  }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+<div id="loading" class="flex items-center justify-center min-h-screen text-slate-500">Carregando itinerário...</div>
+<div id="error" class="hidden flex items-center justify-center min-h-screen text-red-600"></div>
+<div id="app" class="hidden">
+  <header id="hero" class="text-white" style="background:var(--brand)">
+    <div class="max-w-3xl mx-auto px-5 py-8">
+      <div id="logoWrap" class="mb-4 hidden"><img id="logo" src="" alt="logo" class="h-12 object-contain"></div>
+      <p class="text-sm opacity-80">Itinerário de Viagem</p>
+      <h1 id="clientName" class="text-3xl font-bold mt-1"></h1>
+      <div class="mt-3 flex flex-wrap gap-3 text-sm opacity-90">
+        <span>🗓️ <span id="tripDates"></span></span>
+        <span>🔖 PNR: <span id="pnr"></span></span>
+        <span>📎 Código: <span id="slug"></span></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-5 py-6 space-y-6">
+    <div class="no-print flex gap-2 justify-end">
+      <button onclick="window.print()" class="px-4 py-2 text-sm rounded-lg bg-white border border-slate-300 hover:bg-slate-50 shadow-sm">📄 Exportar PDF</button>
+      <button onclick="copyLink()" class="px-4 py-2 text-sm rounded-lg bg-white border border-slate-300 hover:bg-slate-50 shadow-sm">🔗 Copiar link</button>
+    </div>
+
+    <div id="timeline" class="space-y-8"></div>
+
+    <section id="docsSection" class="hidden card p-5">
+      <h2 class="text-lg font-semibold mb-3">📎 Documentos Úteis</h2>
+      <ul id="docsList" class="space-y-2 text-sm"></ul>
+    </section>
+
+    <section id="emergencySection" class="hidden card p-5">
+      <h2 class="text-lg font-semibold mb-3">🚨 Contatos de Emergência</h2>
+      <ul id="emergencyList" class="space-y-2 text-sm"></ul>
+    </section>
+
+    <section id="notesSection" class="hidden card p-5">
+      <h2 class="text-lg font-semibold mb-3">📝 Observações</h2>
+      <p id="notes" class="text-sm text-slate-600 whitespace-pre-wrap"></p>
+    </section>
+
+    <footer class="text-center text-xs text-slate-400 py-6">
+      <span id="agencyName"></span> · Itinerário gerado digitalmente
+    </footer>
+  </main>
+</div>
+
+<script>
+const slug = location.pathname.split('/').pop();
+async function init(){
+  try {
+    const res = await fetch('/api/itineraries/slug/'+slug);
+    if(!res.ok){ throw new Error('Itinerário não encontrado'); }
+    const json = await res.json();
+    render(json.data);
+  } catch(e){
+    document.getElementById('loading').classList.add('hidden');
+    const err = document.getElementById('error');
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  }
+}
+
+function toDate(d){ if(!d) return null; const s = String(d).length===10 ? d+'T00:00:00' : d; const dt = new Date(s); return isNaN(dt.getTime()) ? null : dt; }
+function fmtDate(d){ const dt = toDate(d); if(!dt) return d||''; return dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); }
+function fmtTime(d){ if(!d || String(d).length<=10) return ''; const dt = toDate(d); if(!dt) return ''; return dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDateShort(d){ const dt = toDate(d); if(!dt) return d||''; return dt.toLocaleDateString('pt-BR'); }
+function dayKey(d){ if(!d) return ''; return String(d).slice(0,10); }
+
+function render(it){
+  document.documentElement.style.setProperty('--brand', it.agency.color || '#1a73e8');
+  document.getElementById('hero').style.background = it.agency.color || '#1a73e8';
+  if(it.agency.logo){ document.getElementById('logo').src = it.agency.logo; document.getElementById('logoWrap').classList.remove('hidden'); }
+  document.getElementById('clientName').textContent = it.client.name;
+  document.getElementById('tripDates').textContent = `${fmtDateShort(it.trip.start)} a ${fmtDateShort(it.trip.end)}`;
+  document.getElementById('pnr').textContent = it.pnr || '—';
+  document.getElementById('slug').textContent = it.slug;
+  document.getElementById('agencyName').textContent = it.agency.name;
+
+  // Build timeline events
+  const eventsByDay = {};
+  function addEvent(date, time, type, icon, title, bodyHtml, actions) {
+    const key = dayKey(date) || 'sem-data';
+    if(!eventsByDay[key]) eventsByDay[key] = [];
+    eventsByDay[key].push({ time, type, icon, title, bodyHtml, actions });
+  }
+
+  (it.services.flights||[]).forEach(f => {
+    addEvent(f.departureAt, f.departureAt, 'flight', '✈️',
+      `${f.airline} ${f.flightNumber} · ${f.origin} → ${f.destination}`,
+      `<div class="text-sm text-slate-600 space-y-1">
+        <div><strong>Partida:</strong> ${fmtTime(f.departureAt)} ${f.origin}${f.terminal?' · Terminal '+f.terminal:''}</div>
+        <div><strong>Chegada:</strong> ${fmtTime(f.arrivalAt)} ${f.destination}</div>
+        ${f.locator?`<div><strong>Localizador:</strong> ${esc(f.locator)}</div>`:''}
+        ${f.notes?`<div class="text-slate-500">${esc(f.notes)}</div>`:''}
+      </div>`,
+      f.checkinUrl ? [{label:'Fazer Check-in', href:f.checkinUrl, primary:true}] : []
+    );
+  });
+
+  (it.services.hotels||[]).forEach(h => {
+    addEvent(h.checkin, h.checkin, 'hotel', '🏨',
+      h.name,
+      `<div class="text-sm text-slate-600 space-y-1">
+        <div><strong>Check-in:</strong> ${fmtDateShort(h.checkin)} · <strong>Check-out:</strong> ${fmtDateShort(h.checkout)}</div>
+        ${h.address?`<div>${esc(h.address)}</div>`:''}
+        ${h.roomType?`<div><strong>Quarto:</strong> ${esc(h.roomType)}</div>`:''}
+        ${h.confirmation?`<div><strong>Confirmação:</strong> ${esc(h.confirmation)}</div>`:''}
+        ${h.phone?`<div><strong>Telefone:</strong> ${esc(h.phone)}</div>`:''}
+        ${h.notes?`<div class="text-slate-500">${esc(h.notes)}</div>`:''}
+      </div>`,
+      h.mapUrl ? [{label:'Ver no Mapa', href:h.mapUrl, primary:false}] : []
+    );
+  });
+
+  (it.services.cars||[]).forEach(c => {
+    addEvent(c.pickupAt, c.pickupAt, 'car', '🚗',
+      `${c.rentalCompany} · ${c.category||'Carro'}`,
+      `<div class="text-sm text-slate-600 space-y-1">
+        <div><strong>Retirada:</strong> ${fmtDateShort(c.pickupAt)} ${fmtTime(c.pickupAt)} · ${esc(c.pickupLocation||'')}</div>
+        <div><strong>Devolução:</strong> ${fmtDateShort(c.dropoffAt)} ${fmtTime(c.dropoffAt)} · ${esc(c.dropoffLocation||'')}</div>
+        ${c.confirmation?`<div><strong>Confirmação:</strong> ${esc(c.confirmation)}</div>`:''}
+        ${c.notes?`<div class="text-slate-500">${esc(c.notes)}</div>`:''}
+      </div>`,
+      c.managementUrl ? [{label:'Gerenciar Reserva', href:c.managementUrl, primary:false}] : []
+    );
+  });
+
+  (it.services.transfers||[]).forEach(t => {
+    addEvent(t.time, t.time, 'transfer', '🚐',
+      `${t.type==='privativo'?'Transfer Privativo':'Transfer Compartilhado'} · ${t.company}`,
+      `<div class="text-sm text-slate-600 space-y-1">
+        <div><strong>Horário:</strong> ${fmtDateShort(t.time)} ${fmtTime(t.time)}</div>
+        <div><strong>Rota:</strong> ${esc(t.route)}</div>
+        ${t.confirmation?`<div><strong>Confirmação:</strong> ${esc(t.confirmation)}</div>`:''}
+        ${t.notes?`<div class="text-slate-500">${esc(t.notes)}</div>`:''}
+      </div>`,
+      []
+    );
+  });
+
+  // Sort days
+  const days = Object.keys(eventsByDay).sort();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = days.map(day => {
+    const events = eventsByDay[day].sort((a,b)=> (a.time||'').localeCompare(b.time||''));
+    const dayLabel = day==='sem-data' ? 'Sem data definida' : fmtDate(day+'T00:00:00');
+    return `
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="timeline-dot"></div>
+          <h2 class="text-lg font-semibold" style="color:var(--brand)">${dayLabel}</h2>
+        </div>
+        <div class="ml-7 space-y-3 border-l-2 border-slate-200 pl-5">
+          ${events.map(e => `
+            <div class="card p-4">
+              <div class="flex items-start gap-3">
+                <div class="text-2xl">${e.icon}</div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <h3 class="font-semibold text-slate-800">${esc(e.title)}</h3>
+                    ${e.time?`<span class="text-xs text-slate-400">${fmtTime(e.time)}</span>`:''}
+                  </div>
+                  <div class="mt-2">${e.bodyHtml}</div>
+                  ${e.actions && e.actions.length?`<div class="mt-3 flex flex-wrap gap-2 no-print">
+                    ${e.actions.map(a=>`<a href="${esc(a.href)}" target="_blank" rel="noopener" class="px-3 py-1.5 text-xs rounded-lg ${a.primary?'text-white':'bg-slate-100 text-slate-700'}" ${a.primary?'style="background:var(--brand)"':''}>${esc(a.label)} ↗</a>`).join('')}
+                  </div>`:''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Docs
+  if(it.usefulDocs && it.usefulDocs.length){
+    document.getElementById('docsSection').classList.remove('hidden');
+    document.getElementById('docsList').innerHTML = it.usefulDocs.map(d=>`<li>• <a class="text-blue-600 hover:underline" href="${esc(d.url)}" target="_blank">${esc(d.title||d.url)}</a></li>`).join('');
+  }
+  // Emergency
+  if(it.emergencyContacts && it.emergencyContacts.length){
+    document.getElementById('emergencySection').classList.remove('hidden');
+    document.getElementById('emergencyList').innerHTML = it.emergencyContacts.map(c=>`<li>• <strong>${esc(c.name)}</strong> — ${esc(c.phone)}</li>`).join('');
+  }
+  // Notes
+  if(it.notes){
+    document.getElementById('notesSection').classList.remove('hidden');
+    document.getElementById('notes').textContent = it.notes;
+  }
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function copyLink(){
+  navigator.clipboard.writeText(location.href).then(()=>alert('Link copiado!'));
+}
+
+init();
+</script>
+</body>
+</html>
