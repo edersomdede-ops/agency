@@ -60,6 +60,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <h2 id="formTitle" style="font-size:20px;font-weight:600">Novo Itinerário</h2>
       <div style="display:flex;gap:8px">
+        <button class="btn" onclick="previewItinerary()">👁️ Visualizar</button>
         <button class="btn" onclick="showList()">Cancelar</button>
         <button class="btn primary" onclick="saveItinerary()">Salvar</button>
       </div>
@@ -83,6 +84,8 @@
           <div><label>Nome</label><input id="agencyName" value="Agência de Viagens"></div>
           <div><label>Cor principal</label><input id="agencyColor" type="color" value="#1a73e8" style="height:40px"></div>
           <div><label>Logo (URL)</label><input id="agencyLogo" placeholder="https://..."></div>
+          <div><label>Logo (imagem do computador)</label><input type="file" id="agencyLogoFile" accept="image/*" onchange="handleLogoUpload(event)"></div>
+          <div id="logoPreviewWrap" class="hidden"><img id="logoPreview" style="max-height:48px;border-radius:6px;border:1px solid #e2e8f0"></div>
         </div>
         <div class="card space-y">
           <h3 style="font-weight:600">Contatos de Emergência</h3>
@@ -132,6 +135,16 @@
     </div>
   </section>
 </main>
+
+<div id="previewModal" class="modal-back hidden">
+  <div class="modal" style="max-width:960px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h2 style="font-size:18px;font-weight:600">Visualização do Itinerário</h2>
+      <button class="btn" onclick="closePreview()">Fechar</button>
+    </div>
+    <iframe id="previewFrame" style="width:100%;height:72vh;border:1px solid #e2e8f0;border-radius:8px;background:#fff"></iframe>
+  </div>
+</div>
 
 <div id="importModal" class="modal-back hidden">
   <div class="modal">
@@ -188,6 +201,8 @@ function resetForm(){
   document.getElementById('agencyName').value='Agência de Viagens';
   document.getElementById('agencyColor').value='#1a73e8';
   document.getElementById('agencyLogo').value='';
+  document.getElementById('agencyLogoFile').value='';
+  document.getElementById('logoPreviewWrap').classList.add('hidden');
   document.getElementById('notes').value='';
   emergency=[]; docs=[]; flights=[]; hotels=[]; cars=[]; transfers=[];
   renderEmergency(); renderDocs(); renderFlights(); renderHotels(); renderCars(); renderTransfers();
@@ -207,6 +222,7 @@ function renderList(){
       <p style="font-size:11px;color:#94a3b8;margin-top:2px">Código: ${it.slug}</p>
       <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn small" onclick="editItinerary('${it.id}')">Editar</button>
+        <button class="btn small" onclick="previewItinerary('${it.id}')">Visualizar</button>
         <button class="btn small primary" onclick="exportClient('${it.id}')">Exportar HTML</button>
         <button class="btn small" onclick="exportJson('${it.id}')">JSON</button>
         <button class="btn small danger" onclick="deleteItinerary('${it.id}')">Excluir</button>
@@ -273,6 +289,7 @@ function editItinerary(id){
   document.getElementById('agencyName').value = it.agency.name||'';
   document.getElementById('agencyColor').value = it.agency.color||'#1a73e8';
   document.getElementById('agencyLogo').value = it.agency.logo||'';
+  if(it.agency.logo){ document.getElementById('logoPreview').src = it.agency.logo; document.getElementById('logoPreviewWrap').classList.remove('hidden'); } else { document.getElementById('logoPreviewWrap').classList.add('hidden'); }
   document.getElementById('notes').value = it.notes||'';
   emergency = (it.emergencyContacts||[]).map(x=>({...x}));
   docs = (it.usefulDocs||[]).map(x=>({...x}));
@@ -404,12 +421,48 @@ function renderTransfers(){
     </div>`).join('');
 }
 
+function buildClientHtml(it){
+  const tpl = decodeURIComponent(escape(atob(VIEWER_B64)));
+  return tpl.replace('</head>', '<script>window.__ITINERARIO__ = ' + JSON.stringify(it) + ';</' + 'script>\n</head>');
+}
 function exportClient(id){
   const it = loadAll().find(i=>i.id===id);
   if(!it) return;
-  const tpl = decodeURIComponent(escape(atob(VIEWER_B64)));
-  const html = tpl.replace('</head>', '<script>window.__ITINERARIO__ = ' + JSON.stringify(it) + ';</' + 'script>\n</head>');
-  downloadFile('itinerario_' + it.slug + '.html', html, 'text/html');
+  downloadFile('itinerario_' + it.slug + '.html', buildClientHtml(it), 'text/html');
+}
+function previewItinerary(id){
+  let it;
+  if(id){ it = loadAll().find(i=>i.id===id); }
+  else { it = collectForm(); it.id = it.id || uid(); it.slug = it.slug || generateSlug(); }
+  if(!it) return;
+  document.getElementById('previewFrame').srcdoc = buildClientHtml(it);
+  document.getElementById('previewModal').classList.remove('hidden');
+}
+function closePreview(){ document.getElementById('previewModal').classList.add('hidden'); document.getElementById('previewFrame').srcdoc = ''; }
+
+function handleLogoUpload(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 400;
+      let w = img.width, h = img.height;
+      if(w > maxW){ h = Math.round(h * maxW / w); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/png');
+      document.getElementById('agencyLogo').value = dataUrl;
+      const preview = document.getElementById('logoPreview');
+      preview.src = dataUrl;
+      document.getElementById('logoPreviewWrap').classList.remove('hidden');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 function exportJson(id){
   const it = loadAll().find(i=>i.id===id);
